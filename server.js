@@ -7,29 +7,31 @@ const app = express();
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 // --- CONFIGURATION ---
-const ADMINS = [6137845806]; // O'z ID raqamingizni tekshiring
-const CHANNEL_ID = '-1003900850005'; 
-const CHANNEL_LINK = 'https://t.me/+9av2s696xVczMjJi';
-const APPS_CHANNEL = 'https://t.me/apple_ilovalar'; 
+const ADMINS = [6137845806]; 
 const WEB_APP_URL = process.env.WEB_APP_URL;
 
-// --- DATABASE SCHEMA ---
+// --- DATABASE SCHEMAS ---
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("✅ DB Connected"))
     .catch(e => console.log("❌ DB Error:", e));
 
-const UserSchema = new mongoose.Schema({
+const User = mongoose.model('User', new mongoose.Schema({
     userId: { type: Number, unique: true },
     firstName: String,
     username: String,
-    status: { type: String, default: 'none' }, // 'member', 'requested', 'none'
+    status: { type: String, default: 'none' },
     joinedAt: { type: Date, default: Date.now }
-});
-const User = mongoose.model('User', UserSchema);
+}));
+
+const Channel = mongoose.model('Channel', new mongoose.Schema({
+    channelId: String,
+    channelName: String,
+    inviteLink: String
+}));
 
 // --- LOGIC ---
 
-// 1. ZAYAVKANI TUTISH (Join Request Handler)
+// 1. ZAYAVKANI TUTISH
 bot.on('chat_join_request', async (ctx) => {
     try {
         const { id, first_name, username } = ctx.from;
@@ -38,8 +40,7 @@ bot.on('chat_join_request', async (ctx) => {
             { firstName: first_name, username, status: 'requested' }, 
             { upsert: true }
         );
-        console.log(`✅ Zayavka keldi: ${id}`);
-    } catch (e) { console.log(e); }
+    } catch (e) { console.log("Join Request Error:", e); }
 });
 
 // 2. START BUYRUG'I
@@ -49,98 +50,90 @@ bot.start(async (ctx) => {
     
     await ctx.replyWithHTML(
         `<b>Assalomu alaykum, ${first_name}! 👋</b>\n\n` +
-        `Tizimdan foydalanish uchun botni ishga tushirish tugmasini bosing:`,
-        Markup.inlineKeyboard([
-            [Markup.button.callback('🚀 Botni ishga tushirish', 'main_menu')]
-        ])
+        `RICHI28 tizimiga xush kelibsiz. Davom etish uchun tugmani bosing:`,
+        Markup.inlineKeyboard([[Markup.button.callback('🚀 Botni ishga tushirish', 'main_menu')]])
     );
 });
 
 // 3. ASOSIY MENYU
 bot.action('main_menu', async (ctx) => {
-    await ctx.editMessageText(`<b>Asosiy menyu:</b>\n\nKerakli bo'limni tanlang 👇`, {
+    await ctx.editMessageText(`<b>Asosiy menyu:</b>`, {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
-            [Markup.button.url('📱 Ilovalar', APPS_CHANNEL)],
+            [Markup.button.url('📱 Ilovalar', 'https://t.me/apple_ilovalar')],
             [Markup.button.callback('🍎 Signal olish', 'get_signal')],
             [Markup.button.callback('📹 Video qo\'llanma', 'get_tutorial')]
         ])
     });
 });
 
-// 4. SIGNAL OLISH (Zayavka va Obunani tekshirish)
+// 4. SIGNAL OLISH (OBUNA TEKSHIRISH)
 bot.action('get_signal', async (ctx) => {
     const userId = ctx.from.id;
-    try {
-        // Avval bazadagi statusini tekshiramiz (zayavka tashlaganmi?)
-        const user = await User.findOne({ userId });
-        
-        // Telegram API orqali kanaldagi holatini tekshiramiz
-        const member = await ctx.telegram.getChatMember(CHANNEL_ID, userId).catch(() => ({ status: 'left' }));
-        const isMember = ['member', 'administrator', 'creator'].includes(member.status);
-        const hasRequested = user && user.status === 'requested';
-
-        if (isMember || hasRequested) {
-            await ctx.replyWithHTML(
-                `<b>Ruxsat berildi! ✅</b>\n\nTerminal yuklandi:`,
-                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]])
-            );
-        } else {
-            await ctx.replyWithHTML(
-                `<b>DIQQAT! ⚠️</b>\n\nSiz hali kanalga obuna bo'lmagansiz yoki zayavka yubormagansiz.\n\n` +
-                `Iltimos, pastdagi kanalga zayavka yuboring va qayta tekshiring:`,
-                Markup.inlineKeyboard([
-                    [Markup.button.url('📢 ZAYAVKA YUBORISH', CHANNEL_LINK)],
-                    [Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]
-                ])
-            );
-        }
-    } catch (e) {
-        console.log(e);
-        ctx.reply("Texnik xatolik, qaytadan urinib ko'ring.");
+    const channels = await Channel.find();
+    
+    if (channels.length === 0) {
+        return ctx.replyWithHTML(`<b>Terminal yuklandi:</b>`, 
+            Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
     }
-});
 
-// 5. VIDEO QO'LLANMA
-bot.action('get_tutorial', async (ctx) => {
-    await ctx.reply("📹 Video qo'llanma yuklanmoqda... (File ID qo'shilishi kerak)");
+    let mustJoin = [];
+    for (const ch of channels) {
+        try {
+            const member = await ctx.telegram.getChatMember(ch.channelId, userId);
+            if (!['member', 'administrator', 'creator'].includes(member.status)) {
+                const user = await User.findOne({ userId });
+                if (user?.status !== 'requested') mustJoin.push(ch);
+            }
+        } catch (e) { mustJoin.push(ch); }
+    }
+
+    if (mustJoin.length === 0) {
+        await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>`,
+            Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
+    } else {
+        const buttons = mustJoin.map(ch => [Markup.button.url(ch.channelName, ch.inviteLink)]);
+        buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
+        await ctx.replyWithHTML(`<b>DIQQAT! ⚠️</b>\n\nTerminalga kirish uchun quyidagi kanallarga zayavka yuboring:`, Markup.inlineKeyboard(buttons));
+    }
 });
 
 // --- ADMIN PANEL ---
 bot.command('admin', async (ctx) => {
     if (!ADMINS.includes(ctx.from.id)) return;
-    const count = await User.countDocuments();
-    const requests = await User.countDocuments({ status: 'requested' });
-
-    await ctx.replyWithHTML(
-        `<b>📊 ADMIN PANEL</b>\n\n` +
-        `👤 Jami foydalanuvchilar: <b>${count}</b>\n` +
-        `📩 Zayavka tashlaganlar: <b>${requests}</b>`,
-        Markup.inlineKeyboard([
-            [Markup.button.callback('📢 Xabar yuborish', 'start_broadcast')],
-            [Markup.button.callback('📈 Batafsil statistika', 'stats')]
-        ])
-    );
+    const users = await User.countDocuments();
+    const adminMenu = Markup.inlineKeyboard([
+        [Markup.button.callback('📢 Reklama', 'broadcast')],
+        [Markup.button.callback('📡 Kanallar', 'manage_ch')],
+        [Markup.button.callback('📊 Statistika', 'stats')]
+    ]);
+    ctx.replyWithHTML(`<b>🏦 ADMIN PANEL</b>\n\nFoydalanuvchilar: ${users}`, adminMenu);
 });
 
-// Xabar yuborish logikasi
-bot.action('start_broadcast', async (ctx) => {
-    await ctx.reply("Yubormoqchi bo'lgan xabaringizni (matn, rasm yoki video) menga yuboring:");
-    bot.on('message', async (newCtx) => {
-        if (!ADMINS.includes(newCtx.from.id)) return;
-        const users = await User.find();
-        let count = 0;
-        for (let u of users) {
-            try {
-                await newCtx.copyMessage(u.userId);
-                count++;
-            } catch (e) {}
-        }
-        await newCtx.reply(`Xabar ${count} kishiga yuborildi! ✅`);
-    });
+// Kanallarni boshqarish
+bot.action('manage_ch', async (ctx) => {
+    const channels = await Channel.find();
+    const buttons = channels.map(ch => [Markup.button.callback(`❌ ${ch.channelName}`, `del_${ch._id}`)]);
+    buttons.push([Markup.button.callback('➕ Qo\'shish', 'add_ch')], [Markup.button.callback('⬅️ Orqaga', 'main_menu')]);
+    ctx.editMessageText("<b>📡 Kanallar:</b>", { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
 });
 
-// --- SERVER ---
+bot.action('add_ch', ctx => ctx.reply("Format: <code>ID | Nomi | Link</code>", { parse_mode: 'HTML' }));
+
+bot.on('text', async (ctx) => {
+    if (!ADMINS.includes(ctx.from.id)) return;
+    if (ctx.message.text.includes('|')) {
+        const [id, name, link] = ctx.message.text.split('|').map(p => p.trim());
+        await Channel.create({ channelId: id, channelName: name, inviteLink: link });
+        ctx.reply("✅ Qo'shildi!");
+    }
+});
+
+bot.action(/^del_(.+)$/, async (ctx) => {
+    await Channel.findByIdAndDelete(ctx.match[1]);
+    ctx.answerCbQuery("O'chirildi!");
+});
+
 bot.launch();
 app.get('/', (req, res) => res.send('Bot is Live!'));
 app.listen(process.env.PORT || 3000);
