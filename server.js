@@ -9,10 +9,7 @@ const CHANNEL_LINK = 'https://t.me/+9av2s696xVczMjJi';
 
 bot.start(async (ctx) => {
     const userId = ctx.from.id;
-    const userName = ctx.from.first_name || 'User';
-
-    // Birinchi "ulanish" xabari
-    const statusMsg = await ctx.replyWithHTML('<code>[SYSTEM]: Initializing exploit...</code>');
+    const msg = await ctx.replyWithHTML('<code>[SYSTEM]: Connecting to proxy...</code>');
 
     setTimeout(async () => {
         try {
@@ -20,38 +17,24 @@ bot.start(async (ctx) => {
             const isSubscribed = ['creator', 'administrator', 'member'].includes(member.status);
 
             if (isSubscribed) {
-                // Obuna bo'lgan bo'lsa - Root Access
-                await ctx.telegram.editMessageText(ctx.chat.id, statusMsg.message_id, null, 
-                    `<b>CONNECTION ESTABLISHED. 🟢</b>\n\n` +
-                    `<code>USER: ${userName}\n` +
-                    `ID: ${userId}\n` +
-                    `STATUS: ROOT_ACCESS_GRANTED\n` +
-                    `EXPLOIT: ACTIVE_V3</code>\n\n` +
-                    `<i>Tizim muvaffaqiyatli buzib o'tildi. Terminalni ishga tushiring:</i>`,
-                    {
-                        parse_mode: 'HTML',
-                        ...Markup.inlineKeyboard([[Markup.button.webApp('⚡️ LAUNCH TERMINAL', URL)]])
-                    }
+                await ctx.telegram.editMessageText(ctx.chat.id, msg.message_id, null, 
+                    `<b>ROOT ACCESS GRANTED. 🟢</b>\n\n` +
+                    `<code>USER_ID: ${userId}\nSTATUS: BYPASS_ACTIVE\nOS: TERMINAL_V3</code>\n\n` +
+                    `<i>Terminal yuklandi. Exploitni ishga tushiring:</i>`,
+                    { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.webApp('⚡️ LAUNCH CONSOLE', URL)]]) }
                 );
             } else {
-                // Obuna bo'lmagan bo'lsa - Access Denied
-                await ctx.telegram.editMessageText(ctx.chat.id, statusMsg.message_id, null, 
+                await ctx.telegram.editMessageText(ctx.chat.id, msg.message_id, null, 
                     `<b>ACCESS DENIED! 🔴</b>\n\n` +
-                    `<code>ERROR_CODE: 0x403\n` +
-                    `REASON: FIREWALL_BLOCK</code>\n\n` +
-                    `Tizimga kirish uchun "ACCESS KEY" (obuna) kerak. Kanalga a'zo bo'ling va qayta /start bosing:`,
-                    {
-                        parse_mode: 'HTML',
-                        ...Markup.inlineKeyboard([[Markup.button.url('📡 GET ACCESS KEY', CHANNEL_LINK)]])
-                    }
+                    `<code>FIREWALL_DETECTED: Unauthorized_User</code>\n\n` +
+                    `Tizimni aldab o'tish uchun kanalga ulaning va qayta /start bosing:`,
+                    { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.url('📡 GET ACCESS KEY', CHANNEL_LINK)]]) }
                 );
             }
-        } catch (e) {
-            await ctx.reply('System error. Reconnecting...');
-        }
-    }, 1500);
+        } catch (e) { console.log(e); }
+    }, 1200);
 });
 
 bot.launch();
-app.get('/', (req, res) => res.send('Terminal Online'));
+app.get('/', (req, res) => res.send('System Live'));
 app.listen(process.env.PORT || 3000);
