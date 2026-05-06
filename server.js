@@ -31,7 +31,7 @@ const Channel = mongoose.model('Channel', new mongoose.Schema({
 
 // --- LOGIC ---
 
-// 1. ZAYAVKANI TUTISH
+// 1. ZAYAVKANI TUTISH (Xatosiz saqlash)
 bot.on('chat_join_request', async (ctx) => {
     try {
         const { id, first_name, username } = ctx.from;
@@ -50,7 +50,7 @@ bot.start(async (ctx) => {
     
     await ctx.replyWithHTML(
         `<b>Assalomu alaykum, ${first_name}! 👋</b>\n\n` +
-        `RICHI28 tizimiga xush kelibsiz.`,
+        `RICHI28 APPLE BOTIGA xush kelibsiz.`,
         Markup.inlineKeyboard([[Markup.button.callback('🚀 Botni ishga tushirish', 'main_menu')]])
     );
 });
@@ -69,64 +69,45 @@ bot.action('main_menu', async (ctx) => {
     } catch (e) { ctx.reply("Menyuda xato, /start bosing."); }
 });
 
-// 4. SIGNAL OLISH (MUKAMMAL OBUNA TEKSHIRUVI)
+// 4. SIGNAL OLISH (Zayavkani 100% tanish)
 bot.action('get_signal', async (ctx) => {
     const userId = ctx.from.id;
+    const channels = await Channel.find();
     
-    try {
-        const channels = await Channel.find();
-        
-        // 1-qadam: Agar kanallar qo'shilmagan bo'lsa, hammani o'tkazish
-        if (channels.length === 0) {
-            return await ctx.replyWithHTML(`<b>Terminal yuklandi:</b>`, 
-                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
-        }
+    if (channels.length === 0) {
+        return ctx.replyWithHTML(`<b>Terminal yuklandi:</b>`, 
+            Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
+    }
 
-        const dbUser = await User.findOne({ userId });
-        let mustJoin = [];
+    let mustJoin = [];
+    const dbUser = await User.findOne({ userId });
 
-        // 2-qadam: Har bir kanalni tekshirish
-        for (const ch of channels) {
-            try {
-                const member = await ctx.telegram.getChatMember(ch.channelId, userId);
-                const isSubscribed = ['member', 'administrator', 'creator'].includes(member.status);
-                
-                // Agar foydalanuvchi kanalda bo'lsa, uni "mustJoin"ga qo'shmaymiz
-                if (isSubscribed) continue;
-
-                // Agar kanalda bo'lmasa, bazada zayavka statusi bor-yo'qligini tekshiramiz
-                if (dbUser && dbUser.status === 'requested') continue;
-
-                // Agar ikkalasi ham bo'lmasa, demak obuna bo'lishi shart
-                mustJoin.push(ch);
-
-            } catch (e) {
-                // Telegram foydalanuvchini topolmasa, bazadagi zayavkani tekshiramiz
-                if (!dbUser || dbUser.status !== 'requested') {
-                    mustJoin.push(ch);
-                }
-            }
-        }
-
-        // 3-qadam: Qaror chiqarish
-        if (mustJoin.length === 0) {
-            await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>`,
-                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
-        } else {
-            const buttons = mustJoin.map(ch => [Markup.button.url(`📢 ${ch.channelName}`, ch.inviteLink)]);
-            buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
+    for (const ch of channels) {
+        try {
+            const member = await ctx.telegram.getChatMember(ch.channelId, userId);
+            const isSubscribed = ['member', 'administrator', 'creator'].includes(member.status);
             
-            await ctx.replyWithHTML(
-                `<b>DIQQAT! ⚠️</b>\n\nTerminalga kirish uchun quyidagi kanalga obuna bo'ling yoki zayavka yuboring:`, 
-                Markup.inlineKeyboard(buttons)
-            );
+            // Agar kanalda bo'lmasa VA zayavka ham tashlamagan bo'lsa
+            if (!isSubscribed && dbUser?.status !== 'requested') {
+                mustJoin.push(ch);
+            }
+        } catch (e) { 
+            // Agar bot kanalda admin bo'lmasa yoki zayavka topilmasa
+            if (dbUser?.status !== 'requested') mustJoin.push(ch); 
         }
-    } catch (err) {
-        ctx.reply("Texnik xatolik, iltimos /start bosing.");
+    }
+
+    if (mustJoin.length === 0) {
+        await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>`,
+            Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
+    } else {
+        const buttons = mustJoin.map(ch => [Markup.button.url(ch.channelName, ch.inviteLink)]);
+        buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
+        await ctx.replyWithHTML(`<b>DIQQAT! ⚠️</b>\n\nTerminalga kirish uchun quyidagi kanallarga zayavka yuboring:`, Markup.inlineKeyboard(buttons));
     }
 });
 
-// --- ADMIN PANEL ---
+// --- ADMIN PANEL (KUCHAYTIRILGAN) ---
 const sendAdminPanel = async (ctx) => {
     const usersCount = await User.countDocuments();
     const reqCount = await User.countDocuments({ status: 'requested' });
@@ -147,29 +128,32 @@ const sendAdminPanel = async (ctx) => {
 bot.command('admin', (ctx) => ADMINS.includes(ctx.from.id) && sendAdminPanel(ctx));
 bot.action('admin_panel', (ctx) => sendAdminPanel(ctx));
 
+// Kanallarni boshqarish (Orqaga qaytish tuzatilgan)
 bot.action('manage_ch', async (ctx) => {
     const channels = await Channel.find();
     const buttons = channels.map(ch => [Markup.button.callback(`❌ ${ch.channelName}`, `del_${ch._id}`)]);
     buttons.push([Markup.button.callback('➕ Qo\'shish', 'add_ch')]);
-    buttons.push([Markup.button.callback('⬅️ Orqaga', 'admin_panel')]);
+    buttons.push([Markup.button.callback('⬅️ Admin Panelga qaytish', 'admin_panel')]);
     await ctx.editMessageText("<b>📡 Boshqaruv:</b>", { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
 });
 
-bot.action('add_ch', ctx => ctx.replyWithHTML("Format: <code>ID | Nomi | Link</code>"));
+bot.action('add_ch', ctx => {
+    ctx.replyWithHTML("Kanal qo'shish uchun format:\n\n<code>ID | Nomi | Link</code>");
+});
 
 bot.on('text', async (ctx) => {
     if (!ADMINS.includes(ctx.from.id)) return;
     if (ctx.message.text.includes('|')) {
         const [id, name, link] = ctx.message.text.split('|').map(p => p.trim());
         await Channel.create({ channelId: id, channelName: name, inviteLink: link });
-        ctx.reply("✅ Kanal qo'shildi!");
+        ctx.reply("✅ Kanal qo'shildi! /admin yozib tekshiring.");
     }
 });
 
 bot.action(/^del_(.+)$/, async (ctx) => {
     await Channel.findByIdAndDelete(ctx.match[1]);
     await ctx.answerCbQuery("O'chirildi!");
-    return sendAdminPanel(ctx);
+    return sendAdminPanel(ctx); // O'chirilgach panelga qaytadi
 });
 
 bot.launch();
