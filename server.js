@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Telegraf, Markup, session } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 const mongoose = require('mongoose');
 const express = require('express');
 const app = express();
@@ -7,47 +7,56 @@ const app = express();
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 // --- CONFIGURATION ---
-const ADMINS = [6137845806]; // O'zingizni ID raqamingizni kiriting
+const ADMINS = [6137845806]; // O'z ID raqamingizni tekshiring
 const CHANNEL_ID = '-1003900850005'; 
 const CHANNEL_LINK = 'https://t.me/+9av2s696xVczMjJi';
-const APPS_CHANNEL = 'https://t.me/your_apps_channel'; // Ilovalar kanali linki
-const TUTORIAL_VIDEO = 'https://t.me/richi28_bet/4'; // Video fayl ID yoki linki
+const APPS_CHANNEL = 'https://t.me/apple_ilovalar'; 
 const WEB_APP_URL = process.env.WEB_APP_URL;
 
 // --- DATABASE SCHEMA ---
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/richi_bot')
-    .then(() => console.log("DB Connected"))
-    .catch(err => console.log("DB Error:", err));
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("✅ DB Connected"))
+    .catch(e => console.log("❌ DB Error:", e));
 
 const UserSchema = new mongoose.Schema({
     userId: { type: Number, unique: true },
     firstName: String,
     username: String,
-    isJoined: { type: Boolean, default: false },
+    status: { type: String, default: 'none' }, // 'member', 'requested', 'none'
     joinedAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
 
-// --- MIDDLEWARES ---
-bot.use(session());
+// --- LOGIC ---
 
-// --- CORE LOGIC ---
+// 1. ZAYAVKANI TUTISH (Join Request Handler)
+bot.on('chat_join_request', async (ctx) => {
+    try {
+        const { id, first_name, username } = ctx.from;
+        await User.findOneAndUpdate(
+            { userId: id }, 
+            { firstName: first_name, username, status: 'requested' }, 
+            { upsert: true }
+        );
+        console.log(`✅ Zayavka keldi: ${id}`);
+    } catch (e) { console.log(e); }
+});
 
-// 1. START
+// 2. START BUYRUG'I
 bot.start(async (ctx) => {
     const { id, first_name, username } = ctx.from;
     await User.findOneAndUpdate({ userId: id }, { firstName: first_name, username }, { upsert: true });
     
     await ctx.replyWithHTML(
-        `<b>Assalomu alaykum, ${first_name}! 🍎</b>\n\n` +
-        `Ushbu bot Apple of Fortune o'yinida algoritmlarni tahlil qilishga yordam beradi.`,
+        `<b>Assalomu alaykum, ${first_name}! 👋</b>\n\n` +
+        `Tizimdan foydalanish uchun botni ishga tushirish tugmasini bosing:`,
         Markup.inlineKeyboard([
             [Markup.button.callback('🚀 Botni ishga tushirish', 'main_menu')]
         ])
     );
 });
 
-// 2. MAIN MENU
+// 3. ASOSIY MENYU
 bot.action('main_menu', async (ctx) => {
     await ctx.editMessageText(`<b>Asosiy menyu:</b>\n\nKerakli bo'limni tanlang 👇`, {
         parse_mode: 'HTML',
@@ -59,81 +68,79 @@ bot.action('main_menu', async (ctx) => {
     });
 });
 
-// 3. SIGNAL LOGIC (Subscription & Request Check)
+// 4. SIGNAL OLISH (Zayavka va Obunani tekshirish)
 bot.action('get_signal', async (ctx) => {
     const userId = ctx.from.id;
     try {
-        const member = await ctx.telegram.getChatMember(CHANNEL_ID, userId);
-        // member.status: 'member', 'administrator', 'creator', 'left', 'kicked', 'restricted'
-        // 'join_request' (zayavka) holati odatda API orqali 'left' qaytarishi mumkin, 
-        // lekin bot kanalda admin bo'lsa chat_join_request orqali tutib qolamiz.
+        // Avval bazadagi statusini tekshiramiz (zayavka tashlaganmi?)
+        const user = await User.findOne({ userId });
         
-        const hasAccess = ['member', 'administrator', 'creator'].includes(member.status);
+        // Telegram API orqali kanaldagi holatini tekshiramiz
+        const member = await ctx.telegram.getChatMember(CHANNEL_ID, userId).catch(() => ({ status: 'left' }));
+        const isMember = ['member', 'administrator', 'creator'].includes(member.status);
+        const hasRequested = user && user.status === 'requested';
 
-        if (hasAccess) {
+        if (isMember || hasRequested) {
             await ctx.replyWithHTML(
-                `<b>Kirish tasdiqlandi! ✅</b>\n\nTerminalni ishga tushirishingiz mumkin:`,
-                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ OPEN TERMINAL', WEB_APP_URL)]])
+                `<b>Ruxsat berildi! ✅</b>\n\nTerminal yuklandi:`,
+                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]])
             );
         } else {
             await ctx.replyWithHTML(
-                `<b>DIQQAT! ⚠️</b>\n\n` +
-                `Siz hali kanalga a'zo emassiz yoki zayavka yubormagansiz.\n` +
-                `Signallarni ko'rish uchun kanalga obuna bo'lishingiz shart:`,
+                `<b>DIQQAT! ⚠️</b>\n\nSiz hali kanalga obuna bo'lmagansiz yoki zayavka yubormagansiz.\n\n` +
+                `Iltimos, pastdagi kanalga zayavka yuboring va qayta tekshiring:`,
                 Markup.inlineKeyboard([
-                    [Markup.button.url('📢 KANALGA ULANISH', CHANNEL_LINK)],
+                    [Markup.button.url('📢 ZAYAVKA YUBORISH', CHANNEL_LINK)],
                     [Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]
                 ])
             );
         }
     } catch (e) {
-        // Zayavka yuborganlar ba'zan xato berishi mumkin, ularni force-allow qilamiz
-        ctx.replyWithHTML(`<b>Tizimga ulanish...</b>`, 
-            Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
+        console.log(e);
+        ctx.reply("Texnik xatolik, qaytadan urinib ko'ring.");
     }
 });
 
-// 4. TUTORIAL
+// 5. VIDEO QO'LLANMA
 bot.action('get_tutorial', async (ctx) => {
-    await ctx.replyWithVideo(TUTORIAL_VIDEO, {
-        caption: `<b>📹 Video qo'llanma</b>\n\nBotdan qanday foydalanish haqida to'liq ma'lumot.`
-    });
+    await ctx.reply("📹 Video qo'llanma yuklanmoqda... (File ID qo'shilishi kerak)");
 });
 
 // --- ADMIN PANEL ---
 bot.command('admin', async (ctx) => {
     if (!ADMINS.includes(ctx.from.id)) return;
-    
     const count = await User.countDocuments();
+    const requests = await User.countDocuments({ status: 'requested' });
+
     await ctx.replyWithHTML(
         `<b>📊 ADMIN PANEL</b>\n\n` +
-        `Umumiy obunachilar: <code>${count}</code>`,
+        `👤 Jami foydalanuvchilar: <b>${count}</b>\n` +
+        `📩 Zayavka tashlaganlar: <b>${requests}</b>`,
         Markup.inlineKeyboard([
-            [Markup.button.callback('📢 Xabar yuborish', 'broadcast')],
-            [Markup.button.callback('⚙️ Kanallar', 'manage_channels')],
-            [Markup.button.callback('📈 Statistika', 'stats')]
+            [Markup.button.callback('📢 Xabar yuborish', 'start_broadcast')],
+            [Markup.button.callback('📈 Batafsil statistika', 'stats')]
         ])
     );
 });
 
-// Xabar yuborish (Soddalashtirilgan)
-bot.action('broadcast', async (ctx) => {
-    await ctx.reply("Barcha foydalanuvchilarga yubormoqchi bo'lgan xabaringizni yuboring (Text, Photo yoki Video):");
+// Xabar yuborish logikasi
+bot.action('start_broadcast', async (ctx) => {
+    await ctx.reply("Yubormoqchi bo'lgan xabaringizni (matn, rasm yoki video) menga yuboring:");
     bot.on('message', async (newCtx) => {
         if (!ADMINS.includes(newCtx.from.id)) return;
         const users = await User.find();
-        let success = 0;
+        let count = 0;
         for (let u of users) {
             try {
                 await newCtx.copyMessage(u.userId);
-                success++;
+                count++;
             } catch (e) {}
         }
-        await newCtx.reply(`Xabar ${success} kishiga yuborildi! ✅`);
+        await newCtx.reply(`Xabar ${count} kishiga yuborildi! ✅`);
     });
 });
 
-// --- SERVER START ---
+// --- SERVER ---
 bot.launch();
-app.get('/', (req, res) => res.send('System Live'));
+app.get('/', (req, res) => res.send('Bot is Live!'));
 app.listen(process.env.PORT || 3000);
