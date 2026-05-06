@@ -31,7 +31,7 @@ const Channel = mongoose.model('Channel', new mongoose.Schema({
 
 // --- LOGIC ---
 
-// 1. ZAYAVKANI TUTISH (Xatosiz saqlash)
+// 1. ZAYAVKANI TUTISH
 bot.on('chat_join_request', async (ctx) => {
     try {
         const { id, first_name, username } = ctx.from;
@@ -40,7 +40,6 @@ bot.on('chat_join_request', async (ctx) => {
             { firstName: first_name, username, status: 'requested' }, 
             { upsert: true, new: true }
         );
-        console.log(`✅ Zayavka saqlandi: ${id}`);
     } catch (e) { console.log("Join Request Error:", e); }
 });
 
@@ -70,38 +69,46 @@ bot.action('main_menu', async (ctx) => {
     } catch (e) { ctx.reply("Menyuda xato, /start bosing."); }
 });
 
-// 4. SIGNAL OLISH (Zayavkani 100% tanish va o'tkazish)
+// 4. SIGNAL OLISH (MUKAMMAL OBUNA TEKSHIRUVI)
 bot.action('get_signal', async (ctx) => {
     const userId = ctx.from.id;
     
     try {
         const channels = await Channel.find();
         
+        // 1-qadam: Agar kanallar qo'shilmagan bo'lsa, hammani o'tkazish
         if (channels.length === 0) {
             return await ctx.replyWithHTML(`<b>Terminal yuklandi:</b>`, 
                 Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
         }
 
         const dbUser = await User.findOne({ userId });
-        
-        // AGAR FOYDALANUVCHI ZAYAVKA YUBORGAN BO'LSA - DARXOL O'TKAZISH
-        if (dbUser && dbUser.status === 'requested') {
-            return await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅ (Zayavka tasdiqlandi)</b>`,
-                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
-        }
-
         let mustJoin = [];
+
+        // 2-qadam: Har bir kanalni tekshirish
         for (const ch of channels) {
             try {
                 const member = await ctx.telegram.getChatMember(ch.channelId, userId);
-                const isSubscribed = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
+                const isSubscribed = ['member', 'administrator', 'creator'].includes(member.status);
                 
-                if (!isSubscribed) mustJoin.push(ch);
-            } catch (e) {
+                // Agar foydalanuvchi kanalda bo'lsa, uni "mustJoin"ga qo'shmaymiz
+                if (isSubscribed) continue;
+
+                // Agar kanalda bo'lmasa, bazada zayavka statusi bor-yo'qligini tekshiramiz
+                if (dbUser && dbUser.status === 'requested') continue;
+
+                // Agar ikkalasi ham bo'lmasa, demak obuna bo'lishi shart
                 mustJoin.push(ch);
+
+            } catch (e) {
+                // Telegram foydalanuvchini topolmasa, bazadagi zayavkani tekshiramiz
+                if (!dbUser || dbUser.status !== 'requested') {
+                    mustJoin.push(ch);
+                }
             }
         }
 
+        // 3-qadam: Qaror chiqarish
         if (mustJoin.length === 0) {
             await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>`,
                 Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', WEB_APP_URL)]]));
@@ -110,7 +117,7 @@ bot.action('get_signal', async (ctx) => {
             buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
             
             await ctx.replyWithHTML(
-                `<b>DIQQAT! ⚠️</b>\n\nTerminalga kirish uchun quyidagi kanalga zayavka yuboring:`, 
+                `<b>DIQQAT! ⚠️</b>\n\nTerminalga kirish uchun quyidagi kanalga obuna bo'ling yoki zayavka yuboring:`, 
                 Markup.inlineKeyboard(buttons)
             );
         }
@@ -130,13 +137,11 @@ const sendAdminPanel = async (ctx) => {
     ]);
     const text = `<b>🏦 ADMIN PANEL</b>\n\n👤 Jami: <b>${usersCount}</b>\n📩 Zayavkalar: <b>${reqCount}</b>`;
     
-    try {
-        if (ctx.callbackQuery) {
-            await ctx.editMessageText(text, { parse_mode: 'HTML', ...adminMenu });
-        } else {
-            await ctx.replyWithHTML(text, adminMenu);
-        }
-    } catch (e) { console.log(e); }
+    if (ctx.callbackQuery) {
+        await ctx.editMessageText(text, { parse_mode: 'HTML', ...adminMenu });
+    } else {
+        await ctx.replyWithHTML(text, adminMenu);
+    }
 };
 
 bot.command('admin', (ctx) => ADMINS.includes(ctx.from.id) && sendAdminPanel(ctx));
@@ -167,13 +172,6 @@ bot.action(/^del_(.+)$/, async (ctx) => {
     return sendAdminPanel(ctx);
 });
 
-// --- SERVER ---
 bot.launch();
 app.get('/', (req, res) => res.send('Bot is Live!'));
 app.listen(process.env.PORT || 3000);
-
-
-
-
-
-
