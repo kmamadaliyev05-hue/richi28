@@ -3,67 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 APPLE</title>
+    <title>RICHI28 MULTI-SIGNALS</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --gold: #FFD700; --neon: #00FFAA; --black: #050505; }
-        body { background: var(--black); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; }
-        .screen { display: none; width: 100%; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-        .active { display: flex; }
-        h1 { color: var(--gold); text-shadow: 0 0 15px rgba(255,215,0,0.5); }
-        .main-btn { background: linear-gradient(45deg, var(--gold), #b8860b); border: none; padding: 15px 35px; border-radius: 30px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 20px; }
-        .main-btn:disabled { opacity: 0.3; }
-        #signal-container { flex-grow: 1; width: 100%; display: flex; flex-direction: column-reverse; align-items: center; padding-bottom: 80px; overflow-y: hidden; }
-        .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 5px 0; transition: 0.3s; opacity: 0.2; transform: scale(0.9); }
-        .row.active-row { opacity: 1; transform: scale(1.1); }
-        .cell { width: 45px; height: 45px; background: #111; border: 1px solid #333; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .cell.win { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); background: rgba(0,255,170,0.1); }
+        body { background: #050505; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 15px; }
+        .header { font-size: 22px; font-weight: 800; color: #ff0000; text-shadow: 0 0 10px rgba(255,0,0,0.5); margin-bottom: 10px; }
+        
+        /* Ilovalar ro'yxati */
+        .app-selector { display: flex; overflow-x: auto; gap: 10px; padding: 10px 0; margin-bottom: 15px; scrollbar-width: none; }
+        .app-card { min-width: 100px; background: #111; border: 1px solid #333; padding: 10px; border-radius: 12px; font-size: 12px; transition: 0.3s; }
+        .app-card.active { border-color: #ff0000; background: rgba(255,0,0,0.1); }
+
+        .promo-box { background: rgba(255, 255, 255, 0.05); border: 1px dashed #ff0000; padding: 12px; border-radius: 10px; margin: 10px 0; cursor: pointer; }
+        
+        .game-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-width: 280px; margin: 15px auto; background: #111; padding: 12px; border-radius: 15px; border: 2px solid #222; }
+        .cell { width: 100%; aspect-ratio: 1; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 1px solid #333; }
+        
+        .btn { background: linear-gradient(135deg, #ff0000, #990000); color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 25px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-reg { background: linear-gradient(135deg, #222, #444); font-size: 14px; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div id="scr-1" class="screen active">
-        <h1>RICHI28 APPLE 🍎</h1>
-        <div style="background:#111; padding:20px; border-radius:15px; font-size:0.8rem; margin:10px;">
-            <p>1. WINWIN ilovasida ro'yxatdan o'ting</p>
-            <p>2. Promo kod: <b>RICHI28</b></p>
-            <p>3. Depozit: min. 95,000 UZS</p>
-        </div>
-        <label><input type="checkbox" id="check"> Shartlarga roziman</label>
-        <button id="start" class="main-btn" disabled>🚀 SIGNALNI BOSHLASH</button>
+    <div class="header">RICHI28 PREMIUM</div>
+
+    <!-- Ilovalarni tanlash -->
+    <div class="app-selector" id="appSelector">
+        <div class="app-card active" onclick="selectApp(this, '1XBET')">1XBET</div>
+        <div class="app-card" onclick="selectApp(this, 'LINEBET')">LINEBET</div>
+        <div class="app-card" onclick="selectApp(this, 'WINWIN')">WINWIN</div>
+        <div class="app-card" onclick="selectApp(this, '888STARZ')">888STARZ</div>
     </div>
 
-    <div id="scr-2" class="screen">
-        <div id="signal-container"></div>
-        <button id="next" class="main-btn" style="position:fixed; bottom:20px;">👉 KEYINGISI</button>
+    <div class="promo-box" onclick="copyPromo()">
+        <small style="color: #888;">Bonus uchun promo-kod (nusxalash):</small><br>
+        <strong id="promo" style="font-size: 20px;">RICHI28</strong>
     </div>
+
+    <div class="game-grid" id="grid"></div>
+    
+    <button class="btn" onclick="generateSignal()">🍎 SIGNAL OLISH</button>
+    <button class="btn btn-reg" onclick="openReg()">📱 RO'YXATDAN O'TISH</button>
 
     <script>
-        const tg = window.Telegram.WebApp; tg.expand();
-        const start = document.getElementById('start');
-        const check = document.getElementById('check');
-
-        check.onchange = () => start.disabled = !check.checked;
-        start.onclick = () => {
-            document.getElementById('scr-1').classList.remove('active');
-            document.getElementById('scr-2').classList.add('active');
-            add();
-        };
-
-        document.getElementById('next').onclick = add;
-
-        function add() {
-            document.querySelectorAll('.row').forEach(r => r.classList.remove('active-row'));
-            const row = document.createElement('div');
-            row.className = 'row active-row';
-            const winIdx = Math.floor(Math.random() * 5);
-            for(let i=0; i<5; i++) {
-                const c = document.createElement('div');
-                c.className = i === winIdx ? 'cell win' : 'cell';
-                c.innerHTML = i === winIdx ? '🍎' : '';
-                row.appendChild(c);
-            }
-            document.getElementById('signal-container').appendChild(row);
+        let currentApp = '1XBET';
+        const grid = document.getElementById('grid');
+        for (let i = 0; i < 25; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            grid.appendChild(cell);
         }
+
+        function selectApp(el, app) {
+            document.querySelectorAll('.app-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            currentApp = app;
+        }
+
+        function copyPromo() {
+            navigator.clipboard.writeText("RICHI28");
+            alert("RICHI28 nusxalandi! ✅");
+        }
+
+        function openReg() {
+            // Bu yerga o'z hamkorlik linkingizni qo'yishingiz mumkin
+            alert(currentApp + " uchun RICHI28 promo-kodi bilan ro'yxatdan o'ting!");
+            window.open('https://google.com', '_blank'); 
+        }
+
+        function generateSignal() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(c => c.innerHTML = '');
+            for (let row = 0; row < 3; row++) {
+                const randomCol = Math.floor(Math.random() * 5);
+                const index = (row * 5) + randomCol;
+                setTimeout(() => {
+                    cells[index].innerHTML = '🍎';
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                }, row * 150);
+            }
+        }
+        window.Telegram.WebApp.expand();
     </script>
 </body>
 </html>
