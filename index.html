@@ -3,83 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 CONSOLE</title>
+    <title>RICHI28 EXPLOIT</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; padding: 15px; overflow-x: hidden; }
-        .console-header { border-bottom: 1px solid #0f0; padding-bottom: 10px; margin-bottom: 15px; font-size: 14px; }
-        
-        /* Ilovalar tanlovi */
-        .platform-bar { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; }
-        .platform-item { border: 1px solid #050; padding: 5px 12px; border-radius: 4px; font-size: 11px; color: #050; white-space: nowrap; }
-        .platform-item.active { color: #0f0; border-color: #0f0; box-shadow: 0 0 10px rgba(0,255,0,0.3); }
-
-        /* O'yin maydoni */
-        .matrix-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 300px; margin: 0 auto; background: rgba(0,255,0,0.02); padding: 10px; border: 1px solid #050; }
-        .node { aspect-ratio: 1; border: 1px solid #111; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #020; transition: 0.3s; }
-        .node.active { color: #0f0; border-color: #0f0; background: rgba(0,255,0,0.1); text-shadow: 0 0 8px #0f0; }
-
-        /* Loglar oynasi */
-        .log-stream { background: #050505; border: 1px solid #050; height: 50px; margin: 15px 0; padding: 8px; font-size: 9px; overflow: hidden; line-height: 1.4; }
-        
-        .promo-code { display: block; border: 1px dashed #fff; color: #fff; padding: 10px; margin: 10px 0; font-size: 16px; cursor: pointer; }
-        
-        .action-btn { background: #0f0; color: #000; border: none; padding: 16px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 0 20px #0f0; }
-        .reg-link { margin-top: 15px; display: block; color: #888; font-size: 12px; text-decoration: underline; }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; padding: 15px; }
+        .hdr { border-bottom: 1px solid #0f0; padding-bottom: 8px; margin-bottom: 15px; font-size: 13px; letter-spacing: 1px; }
+        .tabs { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 15px; }
+        .tab { border: 1px solid #050; padding: 4px 10px; font-size: 10px; color: #050; border-radius: 2px; }
+        .tab.active { color: #0f0; border-color: #0f0; box-shadow: 0 0 5px #0f0; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; max-width: 280px; margin: 0 auto; background: #050505; padding: 10px; border: 1px solid #0f0; }
+        .n { aspect-ratio: 1; border: 1px solid #111; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #020; }
+        .n.on { color: #0f0; border-color: #0f0; background: rgba(0,255,0,0.15); box-shadow: 0 0 10px #0f0; }
+        .logs { background: #000; border: 1px solid #050; height: 40px; margin: 15px 0; padding: 5px; font-size: 8px; overflow: hidden; }
+        .promo { display: block; border: 1px dashed #555; color: #fff; padding: 8px; margin: 10px 0; font-size: 14px; text-align: center; }
+        .exec { background: #0f0; color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px #0f0; }
     </style>
 </head>
 <body>
-    <div class="console-header">> RICHI28_EXPLOIT_V3.0_STABLE</div>
-
-    <div class="platform-bar">
-        <div class="platform-item active" onclick="sel(this)">1XBET</div>
-        <div class="platform-item" onclick="sel(this)">LINEBET</div>
-        <div class="platform-item" onclick="sel(this)">WINWIN</div>
-        <div class="platform-item" onclick="sel(this)">888STARZ</div>
+    <div class="hdr">>> RICHI28_EXPLOIT_V3.0</div>
+    <div class="tabs">
+        <div class="tab active" onclick="s(this)">1XBET</div>
+        <div class="tab" onclick="s(this)">LINEBET</div>
+        <div class="tab" onclick="s(this)">WINWIN</div>
+        <div class="tab" onclick="s(this)">888STARZ</div>
     </div>
-
-    <div class="log-stream" id="logs">
-        [INFO]: STANDBY_MODE<br>[INFO]: READY_FOR_INJECTION...
-    </div>
-
-    <div class="matrix-grid" id="grid"></div>
-
-    <div class="promo-code" onclick="copy()">CODE: RICHI28 (CLICK TO COPY)</div>
-
-    <button class="action-btn" onclick="runExploit()">INJECT SCRIPT</button>
-    <a href="https://google.com" class="reg-link">REGISTER SECURE ACCOUNT</a>
-
+    <div class="logs" id="l">[SYS]: IDLE_MODE...</div>
+    <div class="grid" id="g"></div>
+    <div class="promo" onclick="c()">CODE: RICHI28</div>
+    <button class="exec" onclick="run()">INJECT_PAYLOAD</button>
     <script>
-        const grid = document.getElementById('grid');
-        for(let i=0; i<25; i++) grid.innerHTML += '<div class="node">0x0</div>';
-
-        function sel(el) {
-            document.querySelectorAll('.platform-item').forEach(p => p.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('logs').innerHTML = `[SYS]: TARGET_SWITCHED_TO_${el.innerText}`;
-        }
-
-        function copy() {
-            navigator.clipboard.writeText('RICHI28');
-            alert('HASH_COPIED_TO_CLIPBOARD');
-        }
-
-        function runExploit() {
-            const nodes = document.querySelectorAll('.node');
-            const logs = document.getElementById('logs');
-            nodes.forEach(n => { n.innerHTML = '0x0'; n.classList.remove('active'); });
-            
-            logs.innerHTML = '[SYS]: BYPASSING_SECURITY...<br>[SYS]: DECODING_ALGORITHM...';
-
-            for(let r=0; r<3; r++) {
-                const target = (r * 5) + Math.floor(Math.random() * 5);
-                setTimeout(() => {
-                    nodes[target].innerHTML = '0x1';
-                    nodes[target].classList.add('active');
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
-                }, r * 400);
+        const g = document.getElementById('g');
+        for(let i=0; i<25; i++) g.innerHTML += '<div class="n">0x0</div>';
+        function s(e){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));e.classList.add('active');}
+        function c(){navigator.clipboard.writeText('RICHI28');alert('HASH_COPIED');}
+        function run(){
+            const ns = document.querySelectorAll('.n');
+            const l = document.getElementById('l');
+            ns.forEach(x=>{x.innerHTML='0x0';x.classList.remove('on');});
+            l.innerHTML = '[SYS]: DECODING_DATA...';
+            for(let r=0; r<3; r++){
+                const idx = (r*5)+Math.floor(Math.random()*5);
+                setTimeout(()=>{
+                    ns[idx].innerHTML='0x1';ns[idx].classList.add('on');
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                }, r*350);
             }
-            setTimeout(() => { logs.innerHTML = '[SYS]: VULNERABILITY_FOUND<br>[SYS]: SIGNAL_DECODED_SUCCESSFULLY'; }, 1300);
+            setTimeout(()=>{l.innerHTML='[SYS]: SUCCESS. PAYLOAD_DELIVERED.';},1200);
         }
         window.Telegram.WebApp.expand();
     </script>
