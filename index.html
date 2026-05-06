@@ -3,84 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 MULTI-SIGNALS</title>
+    <title>RICHI28 CONSOLE</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #050505; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 15px; }
-        .header { font-size: 22px; font-weight: 800; color: #ff0000; text-shadow: 0 0 10px rgba(255,0,0,0.5); margin-bottom: 10px; }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; margin: 0; padding: 15px; overflow-x: hidden; }
+        .console-header { border-bottom: 1px solid #0f0; padding-bottom: 10px; margin-bottom: 15px; font-size: 14px; }
         
-        /* Ilovalar ro'yxati */
-        .app-selector { display: flex; overflow-x: auto; gap: 10px; padding: 10px 0; margin-bottom: 15px; scrollbar-width: none; }
-        .app-card { min-width: 100px; background: #111; border: 1px solid #333; padding: 10px; border-radius: 12px; font-size: 12px; transition: 0.3s; }
-        .app-card.active { border-color: #ff0000; background: rgba(255,0,0,0.1); }
+        /* Ilovalar tanlovi */
+        .platform-bar { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; }
+        .platform-item { border: 1px solid #050; padding: 5px 12px; border-radius: 4px; font-size: 11px; color: #050; white-space: nowrap; }
+        .platform-item.active { color: #0f0; border-color: #0f0; box-shadow: 0 0 10px rgba(0,255,0,0.3); }
 
-        .promo-box { background: rgba(255, 255, 255, 0.05); border: 1px dashed #ff0000; padding: 12px; border-radius: 10px; margin: 10px 0; cursor: pointer; }
+        /* O'yin maydoni */
+        .matrix-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 300px; margin: 0 auto; background: rgba(0,255,0,0.02); padding: 10px; border: 1px solid #050; }
+        .node { aspect-ratio: 1; border: 1px solid #111; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #020; transition: 0.3s; }
+        .node.active { color: #0f0; border-color: #0f0; background: rgba(0,255,0,0.1); text-shadow: 0 0 8px #0f0; }
+
+        /* Loglar oynasi */
+        .log-stream { background: #050505; border: 1px solid #050; height: 50px; margin: 15px 0; padding: 8px; font-size: 9px; overflow: hidden; line-height: 1.4; }
         
-        .game-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-width: 280px; margin: 15px auto; background: #111; padding: 12px; border-radius: 15px; border: 2px solid #222; }
-        .cell { width: 100%; aspect-ratio: 1; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 1px solid #333; }
+        .promo-code { display: block; border: 1px dashed #fff; color: #fff; padding: 10px; margin: 10px 0; font-size: 16px; cursor: pointer; }
         
-        .btn { background: linear-gradient(135deg, #ff0000, #990000); color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 25px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-reg { background: linear-gradient(135deg, #222, #444); font-size: 14px; margin-top: 5px; }
+        .action-btn { background: #0f0; color: #000; border: none; padding: 16px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 0 20px #0f0; }
+        .reg-link { margin-top: 15px; display: block; color: #888; font-size: 12px; text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="header">RICHI28 PREMIUM</div>
+    <div class="console-header">> RICHI28_EXPLOIT_V3.0_STABLE</div>
 
-    <!-- Ilovalarni tanlash -->
-    <div class="app-selector" id="appSelector">
-        <div class="app-card active" onclick="selectApp(this, '1XBET')">1XBET</div>
-        <div class="app-card" onclick="selectApp(this, 'LINEBET')">LINEBET</div>
-        <div class="app-card" onclick="selectApp(this, 'WINWIN')">WINWIN</div>
-        <div class="app-card" onclick="selectApp(this, '888STARZ')">888STARZ</div>
+    <div class="platform-bar">
+        <div class="platform-item active" onclick="sel(this)">1XBET</div>
+        <div class="platform-item" onclick="sel(this)">LINEBET</div>
+        <div class="platform-item" onclick="sel(this)">WINWIN</div>
+        <div class="platform-item" onclick="sel(this)">888STARZ</div>
     </div>
 
-    <div class="promo-box" onclick="copyPromo()">
-        <small style="color: #888;">Bonus uchun promo-kod (nusxalash):</small><br>
-        <strong id="promo" style="font-size: 20px;">RICHI28</strong>
+    <div class="log-stream" id="logs">
+        [INFO]: STANDBY_MODE<br>[INFO]: READY_FOR_INJECTION...
     </div>
 
-    <div class="game-grid" id="grid"></div>
-    
-    <button class="btn" onclick="generateSignal()">🍎 SIGNAL OLISH</button>
-    <button class="btn btn-reg" onclick="openReg()">📱 RO'YXATDAN O'TISH</button>
+    <div class="matrix-grid" id="grid"></div>
+
+    <div class="promo-code" onclick="copy()">CODE: RICHI28 (CLICK TO COPY)</div>
+
+    <button class="action-btn" onclick="runExploit()">INJECT SCRIPT</button>
+    <a href="https://google.com" class="reg-link">REGISTER SECURE ACCOUNT</a>
 
     <script>
-        let currentApp = '1XBET';
         const grid = document.getElementById('grid');
-        for (let i = 0; i < 25; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            grid.appendChild(cell);
-        }
+        for(let i=0; i<25; i++) grid.innerHTML += '<div class="node">0x0</div>';
 
-        function selectApp(el, app) {
-            document.querySelectorAll('.app-card').forEach(c => c.classList.remove('active'));
+        function sel(el) {
+            document.querySelectorAll('.platform-item').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
-            currentApp = app;
+            document.getElementById('logs').innerHTML = `[SYS]: TARGET_SWITCHED_TO_${el.innerText}`;
         }
 
-        function copyPromo() {
-            navigator.clipboard.writeText("RICHI28");
-            alert("RICHI28 nusxalandi! ✅");
+        function copy() {
+            navigator.clipboard.writeText('RICHI28');
+            alert('HASH_COPIED_TO_CLIPBOARD');
         }
 
-        function openReg() {
-            // Bu yerga o'z hamkorlik linkingizni qo'yishingiz mumkin
-            alert(currentApp + " uchun RICHI28 promo-kodi bilan ro'yxatdan o'ting!");
-            window.open('https://google.com', '_blank'); 
-        }
+        function runExploit() {
+            const nodes = document.querySelectorAll('.node');
+            const logs = document.getElementById('logs');
+            nodes.forEach(n => { n.innerHTML = '0x0'; n.classList.remove('active'); });
+            
+            logs.innerHTML = '[SYS]: BYPASSING_SECURITY...<br>[SYS]: DECODING_ALGORITHM...';
 
-        function generateSignal() {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(c => c.innerHTML = '');
-            for (let row = 0; row < 3; row++) {
-                const randomCol = Math.floor(Math.random() * 5);
-                const index = (row * 5) + randomCol;
+            for(let r=0; r<3; r++) {
+                const target = (r * 5) + Math.floor(Math.random() * 5);
                 setTimeout(() => {
-                    cells[index].innerHTML = '🍎';
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-                }, row * 150);
+                    nodes[target].innerHTML = '0x1';
+                    nodes[target].classList.add('active');
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+                }, r * 400);
             }
+            setTimeout(() => { logs.innerHTML = '[SYS]: VULNERABILITY_FOUND<br>[SYS]: SIGNAL_DECODED_SUCCESSFULLY'; }, 1300);
         }
         window.Telegram.WebApp.expand();
     </script>
