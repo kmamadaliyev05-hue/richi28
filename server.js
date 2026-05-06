@@ -6,7 +6,7 @@ const app = express();
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// Adminlar ro'yxati va Terminal havolasi
+// Sizning admin ID raqamingiz va Web App havolasi
 const ADMINS = [6137845806]; 
 const WEB_APP_URL = process.env.WEB_APP_URL;
 
@@ -19,8 +19,15 @@ const User = mongoose.model('User', new mongoose.Schema({
     userId: { type: Number, unique: true },
     firstName: String,
     username: String,
-    status: { type: String, default: 'none' }, // 'requested' bo'lsa terminal ochiladi
+    status: { type: String, default: 'none' }, // Zayavka tashlaganlarni aniqlash uchun
     joinedAt: { type: Date, default: Date.now }
+}));
+
+// Kanallar jadvali (Admin panel orqali boshqariladi)
+const Channel = mongoose.model('Channel', new mongoose.Schema({
+    channelId: String,
+    channelName: String,
+    inviteLink: String
 }));
 
 // Kanallar jadvali
@@ -30,7 +37,7 @@ const Channel = mongoose.model('Channel', new mongoose.Schema({
     inviteLink: String
 }));
 
-// Zayavka yuborilganda avtomatik saqlash
+// Kanalga zayavka tashlaganlarni avtomatik bazaga saqlash
 bot.on('chat_join_request', async (ctx) => {
     try {
         const { id, first_name, username } = ctx.from;
@@ -39,16 +46,19 @@ bot.on('chat_join_request', async (ctx) => {
             { firstName: first_name, username, status: 'requested' }, 
             { upsert: true, new: true }
         );
-    } catch (e) { console.log("Join error:", e); }
+        console.log(`✅ Yangi zayavka saqlandi: ${id}`);
+    } catch (e) { console.log("Join Request Error:", e); }
 });
 
-// Start buyrug'i
+// Start buyrug'i bosilganda
 bot.start(async (ctx) => {
     const { id, first_name, username } = ctx.from;
+    // Foydalanuvchini bazada yangilash yoki qo'shish
     await User.findOneAndUpdate({ userId: id }, { firstName: first_name, username }, { upsert: true });
     
     await ctx.replyWithHTML(
-        `<b>Assalomu alaykum, ${first_name}! 👋</b>\n\nRICHI28 tizimiga xush kelibsiz.`,
+        `<b>Assalomu alaykum, ${first_name}! 👋</b>\n\n` +
+        `RICHI28 tahlil botiga xush kelibsiz.`,
         Markup.inlineKeyboard([[Markup.button.callback('🚀 Botni ishga tushirish', 'main_menu')]])
     );
 });
