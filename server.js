@@ -14,37 +14,33 @@ bot.start(async (ctx) => {
         const isSubscribed = ['creator', 'administrator', 'member'].includes(member.status);
 
         if (isSubscribed) {
-            await ctx.replyWithHTML(
-                `<b>Xush kelibsiz, ${ctx.from.first_name}! 🍎</b>\n\n` +
-                `Ushbu bot <b>1XBET, LINEBET, WINWIN</b> va <b>888STARZ</b> ilovalari uchun maxsus signallarni taqdim etadi.\n\n` +
-                `❗️ <b>MUHIM:</b> Signallar aniq ishlashi uchun <b>RICHI28</b> promo-kodi bilan ro'yxatdan o'tgan bo'lishingiz shart.\n\n` +
-                `Tayyor bo'lsangiz, pastdagi tugmani bosing:`,
-                Markup.inlineKeyboard([
-                    [Markup.button.webApp('🚀 SIGNAL OLISH', URL)]
-                ])
-            );
+            await ctx.replyWithHTML('<code>[SYSTEM]: Connection established...</code>');
+            setTimeout(async () => {
+                await ctx.replyWithHTML(
+                    `<b>ROOT ACCESS GRANTED. 🟢</b>\n\n` +
+                    `<code>Target: Apple of Fortune\n` +
+                    `Status: Exploit Ready</code>\n\n` +
+                    `Terminalni ishga tushirish uchun pastdagi tugmani bosing:`,
+                    Markup.inlineKeyboard([
+                        [Markup.button.webApp('⚡️ EXECUTE EXPLOIT', URL)]
+                    ])
+                );
+            }, 800);
         } else {
             await ctx.replyWithHTML(
-                `<b>DIQQAT! ⚠️</b>\n\n` +
-                `Botdan foydalanish uchun rasmiy kanalimizga a'zo bo'lishingiz shart.\n\n` +
-                `A'zo bo'lgach, qaytadan <b>/start</b> bosing!`,
+                `<b>ACCESS DENIED! 🔴</b>\n\n` +
+                `<code>Error: Subscription required to bypass firewall.</code>\n\n` +
+                `Tizimga kirish uchun rasmiy kanalimizga a'zo bo'ling va qaytadan /start bosing:`,
                 Markup.inlineKeyboard([
-                    [Markup.button.url('📢 KANALGA OBUNA BO\'LISH', CHANNEL_LINK)]
+                    [Markup.button.url('📡 BYPASS FIREWALL (OBUNA)', CHANNEL_LINK)]
                 ])
             );
         }
     } catch (e) {
-        ctx.replyWithHTML(`Xush kelibsiz!`, Markup.inlineKeyboard([[Markup.button.webApp('🚀 SIGNAL OLISH', URL)]]));
-    }
-});
-
-// Admin panel uchun buyruq (faqat siz uchun)
-bot.command('stat', (ctx) => {
-    if (ctx.from.id.toString() === 'Sizning_Telegram_ID_Raqamingiz') { // Ixtiyoriy: o'z IDingizni qo'ysangiz bo'ladi
-        ctx.reply("Bot hozirda barqaror ishlamoqda ✅");
+        ctx.replyWithHTML(`<code>[ERROR]: System failure. Try again.</code>`, Markup.inlineKeyboard([[Markup.button.webApp('EXECUTE', URL)]]));
     }
 });
 
 bot.launch();
-app.get('/', (req, res) => res.send('Bot is running!'));
+app.get('/', (req, res) => res.send('System Online'));
 app.listen(process.env.PORT || 3000);
