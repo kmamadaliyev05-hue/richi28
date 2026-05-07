@@ -62,42 +62,63 @@ bot.action('get_signal', async (ctx) => {
     const userId = ctx.from.id;
     try {
         await ctx.answerCbQuery();
+        
+        // 1. Foydalanuvchini bazadan qidiramiz
         const dbUser = await User.findOne({ userId }).lean();
         const channels = await Channel.find().lean();
         let mustJoin = [];
 
-        // 1. Qat'iy Obuna Tekshiruvi
+        // 2. Kanallarni qat'iy tekshiramiz
         for (const ch of channels) {
             try {
                 const member = await ctx.telegram.getChatMember(ch.channelId, userId);
                 
-                // Telegram statuslari: 'left' (chiqib ketgan), 'kicked' (haydalgan)
+                // Telegram statuslari
                 const isMember = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
-                const isLeft = member.status === 'left' || member.status === 'kicked';
+                
+                // MUHIM: Agar foydalanuvchi kanalda bo'lmasa VA bazada hali 'requested' bo'lmasa, uni to'xtatamiz
+                // statusni kichik harflarda 'requested' ekanligini aniq tekshiramiz
+                if (!isMember && String(dbUser?.status).toLowerCase() !== 'requested') {
+                    mustJoin.push(ch);
+                }
+            } catch (e) {
+                // Agar foydalanuvchi kanalda topilmasa, lekin zayavka yuborgan bo'lsa - o'tkazamiz
+                if (String(dbUser?.status).toLowerCase() !== 'requested') {
+                    mustJoin.push(ch);
+                }
+            }
+        }
 
-                // AGAR chiqib ketgan bo'lsa (isLeft) yoki umuman a'zo bo'lmasa VA zayavka yubormagan bo'lsa
-                // 79-qatordan boshlab almashtiring:
-        if (isLeft || (!isMember && dbUser?.status !== 'requested')) {
-            mustJoin.push(ch);
-        }
-    } catch (e) {
-        // Agar foydalanuvchi kanalda topilmasa, lekin zayavka yuborgan bo'lsa - o'tkazamiz
-        if (dbUser?.status !== 'requested') {
-            mustJoin.push(ch);
-        }
-    }
-        }
-
-        // Obuna bo'lmagan bo'lsa to'xtatish
+        // 3. Agar hali obuna bo'lmagan va zayavka ham yubormagan bo'lsa
         if (mustJoin.length > 0) {
-            const buttons = mustJoin.map(ch => [Markup.button.url(`📢 ${ch.channelName}`, ch.inviteLink)]);
+            const buttons = mustJoin.map(ch => [Markup.button.url(`📢 OBUNA BO'LISH`, ch.inviteLink)]);
             buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
             return ctx.replyWithHTML(
-                `<b>⚠️ DIQQAT!</b>\n\nTerminalga kirish uchun quyidagi kanallarga obuna bo'ling. ` +
-                `Agar kanaldan chiqib ketsangiz, signal berilmaydi!`, 
+                `<b>⚠️ DIQQAT!</b>\n\nTerminalga kirish uchun quyidagi kanallarga obuna bo'ling. Agar kanaldan chiqib ketsangiz, signal berilmaydi!`, 
                 Markup.inlineKeyboard(buttons)
             );
         }
+
+        // 4. Agar obunadan o'tgan bo'lsa, verifikatsiyani tekshirish
+        if (!dbUser?.isVerified) {
+            return ctx.replyWithHTML(
+                `<b>DIQQAT! ⚠️</b>\n\nSignallar faqat bizning promokodimiz bilan ro'yxatdan o'tganlar uchun.\n\n` +
+                `1️⃣ <b>RICHI28</b> promokodi bilan ro'yxatdan o'ting.\n` +
+                `2️⃣ Kamida 60,000 so'm depozit qiling.\n` +
+                `3️⃣ O'yin ID raqamingizni botga yozib yuboring.`,
+                Markup.inlineKeyboard([[Markup.button.url('🌐 Ro\'yxatdan o\'tish', 'https://t.me/apple_ilovalar')]])
+            );
+        }
+
+        // 5. Hamma narsa OK bo'lsa Terminalni ochamiz
+        await ctx.replyWithHTML(`<b>Terminal tayyor! 🍎</b>`, 
+            Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINALNI OCHISH', process.env.WEB_APP_URL)]])
+        );
+
+    } catch (err) { 
+        console.error("Signal Error:", err);
+    }
+});
 
         // 2. Verifikatsiya Tekshiruvi (Promokod va Depozit)
         if (!dbUser?.isVerified) {
