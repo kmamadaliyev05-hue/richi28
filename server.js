@@ -54,32 +54,44 @@ bot.action('get_signal', async (ctx) => {
         const channels = await Channel.find();
         let mustJoin = [];
 
+        // 1. Zayavka yuborganlarga darhol ruxsat
+        if (dbUser && dbUser.status === 'requested') {
+            return await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>\n\nZayavka holatingiz tasdiqlangan. Signalni oling:`,
+                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', process.env.WEB_APP_URL)]])
+            );
+        }
+
+        // 2. Obunani tekshirish
         for (const ch of channels) {
             try {
-                // Agar foydalanuvchi allaqachon zayavka tashlagan bo'lsa, uni o'tkazib yuboramiz
-                if (dbUser && dbUser.status === 'requested') continue;
-
                 const member = await ctx.telegram.getChatMember(ch.channelId, userId);
-                const isOk = ['member', 'administrator', 'creator'].includes(member.status);
+                const isOk = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
                 
-                if (!isOk) mustJoin.push(ch);
+                if (!isOk) {
+                    mustJoin.push(ch);
+                }
             } catch (e) {
-                // Agar bot kanalda admin bo'lmasa yoki kanal ID xato bo'lsa
-                console.error(`Check error for ${ch.channelName}:`, e.message);
-                if (dbUser?.status !== 'requested') mustJoin.push(ch);
+                // Bot admin bo'lmasa yoki kanal topilmasa
+                mustJoin.push(ch);
             }
         }
 
+        // 3. Yakuniy natija
         if (mustJoin.length === 0) {
-            await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>\n\nTerminalga kirish uchun pastdagi tugmani bosing:`,
-                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', process.env.WEB_APP_URL)]])
+            await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>\n\nSignal olish uchun pastdagi tugmani bosing:`,
+                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ SIGNAL OLISH', process.env.WEB_APP_URL)]])
             );
         } else {
             const buttons = mustJoin.map(ch => [Markup.button.url(`📢 ${ch.channelName}`, ch.inviteLink)]);
             buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
-            await ctx.replyWithHTML(`<b>⚠️ DIQQAT!</b>\n\nTerminalga kirish uchun quyidagi kanallarga obuna bo'ling:`, Markup.inlineKeyboard(buttons));
+            
+            await ctx.replyWithHTML(`<b>⚠️ DIQQAT!</b>\n\nSignal olish uchun quyidagi kanallarga obuna bo'ling:`, 
+                Markup.inlineKeyboard(buttons)
+            );
         }
-    } catch (err) { console.error("Signal Error:", err); }
+    } catch (err) { 
+        console.error("Signal Error:", err);
+    }
 });
 
 // --- KANALLARNI BOSHQARISH ---
