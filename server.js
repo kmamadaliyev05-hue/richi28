@@ -29,10 +29,33 @@ bot.command('admin', async (ctx) => {
     ctx.replyWithHTML(`<b>🏦 ADMIN PANEL</b>\n\n👤 Jami a'zolar: ${total}\n⏳ Tasdiqlash kutayotganlar: ${reqs}`, getAdminKeyboard());
 });
 
+// --- MUHIM: BOTNI ISHGA TUSHIRISH TUGMASI (main_menu) ---
+bot.action('main_menu', async (ctx) => {
+    try {
+        await ctx.answerCbQuery();
+        const text = `<b>Asosiy menyu:</b>\n\nQuyidagi tugmalardan birini tanlang:`;
+        const keyboard = Markup.inlineKeyboard([
+            [Markup.button.callback('🍎 Signal olish', 'get_signal')],
+            [Markup.button.url('📱 Ilovalar', 'https://t.me/apple_ilovalar')]
+        ]);
+        
+        // Agar xabar start xabari bo'lsa, uni tahrirlaymiz
+        await ctx.editMessageText(text, { parse_mode: 'HTML', ...keyboard });
+    } catch (e) {
+        // Agar tahrirlash iloji bo'lmasa (masalan rasm bo'lsa), yangi xabar yuboramiz
+        const keyboard = Markup.inlineKeyboard([
+            [Markup.button.callback('🍎 Signal olish', 'get_signal')],
+            [Markup.button.url('📱 Ilovalar', 'https://t.me/apple_ilovalar')]
+        ]);
+        ctx.replyWithHTML(`<b>Asosiy menyu:</b>`, keyboard);
+    }
+});
+
 // --- SIGNAL OLISH (PROMOKOD TEKSHIRUVI BILAN) ---
 bot.action('get_signal', async (ctx) => {
     const userId = ctx.from.id;
     try {
+        await ctx.answerCbQuery();
         const dbUser = await User.findOne({ userId }).lean();
         const channels = await Channel.find().lean();
         let mustJoin = [];
@@ -42,8 +65,8 @@ bot.action('get_signal', async (ctx) => {
             try {
                 const member = await ctx.telegram.getChatMember(ch.channelId, userId);
                 const isOk = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
-                if (!isOk && dbUser?.status !== 'requested') mustJoin.push(ch);
-            } catch (e) { if (dbUser?.status !== 'requested') mustJoin.push(ch); }
+                if (!isOk) mustJoin.push(ch);
+            } catch (e) { mustJoin.push(ch); }
         }
 
         if (mustJoin.length > 0) {
@@ -72,7 +95,7 @@ bot.action('get_signal', async (ctx) => {
     } catch (err) { console.error("Signal Error:", err); }
 });
 
-// --- ADMIN TASDIQLASH (ACTION) ---
+// --- ADMIN TASDIQLASH ---
 bot.action(/^verify_(.+)$/, async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     const targetId = ctx.match[1];
@@ -90,12 +113,11 @@ bot.action(/^reject_(.+)$/, async (ctx) => {
     await ctx.editMessageText(ctx.callbackQuery.message.text + "\n\n❌ <b>RAD ETILDI</b>", { parse_mode: 'HTML' });
 });
 
-// --- TEXT ISHLOVCHISI (ID QABUL QILISH VA REKLAMA) ---
+// --- TEXT ISHLOVCHISI ---
 bot.on('text', async (ctx) => {
     const userId = ctx.from.id;
     const text = ctx.message.text;
 
-    // Admin uchun reklama yoki kanal qo'shish
     if (userId === ADMIN_ID) {
         if (text === '/cancel') { adminState[userId] = null; return ctx.reply("Bekor qilindi."); }
         if (adminState[userId] === 'awaiting_ad') {
@@ -112,9 +134,8 @@ bot.on('text', async (ctx) => {
         }
     }
 
-    // Foydalanuvchi ID yuborganida
     if (!isNaN(text) && text.length >= 7) {
-        await User.findOneAndUpdate({ userId }, { gameId: text });
+        await User.findOneAndUpdate({ userId }, { gameId: text }, { upsert: true });
         await ctx.telegram.sendMessage(ADMIN_ID, 
             `<b>🔔 YANGI ID TASDIQLASH</b>\n\n👤 Foydalanuvchi: ${ctx.from.first_name}\n🆔 ID: <code>${text}</code>`,
             Markup.inlineKeyboard([
@@ -126,7 +147,6 @@ bot.on('text', async (ctx) => {
     }
 });
 
-// --- QOLGAN ACTIONLAR ---
 bot.action('admin_panel', async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     const total = await User.countDocuments();
@@ -142,6 +162,12 @@ bot.action('manage_ch', async (ctx) => {
 });
 
 bot.action('broadcast', (ctx) => { adminState[ctx.from.id] = 'awaiting_ad'; ctx.reply("Reklama xabarini yuboring:"); });
+
+bot.action(/^del_(.+)$/, async (ctx) => {
+    await Channel.findByIdAndDelete(ctx.match[1]);
+    await ctx.answerCbQuery("O'chirildi!");
+    ctx.reply("Kanal o'chirildi.");
+});
 
 bot.launch();
 app.get('/', (req, res) => res.send('System Live!'));
