@@ -46,7 +46,7 @@ bot.use((ctx, next) => {
     return next();
 });
 
-// --- TOG'RILANGAN PROFESSIONAL TEKSHIRUV ---
+// --- ENG MUKAMMAL AQLLI TEKSHIRUV (REAL-TIME) ---
 async function canAccess(ctx) {
     const uid = ctx.from.id;
     if (uid === ADMIN_ID) return true;
@@ -54,31 +54,37 @@ async function canAccess(ctx) {
     const channels = await Config.find({ key: 'channel' });
     if (channels.length === 0) return true;
 
-    // Eng yangi ma'lumotni bazadan qidirish
     const user = await User.findOne({ userId: uid });
-    
-    // 1-QADAM: Agar bazada foydalanuvchi zayavka yuborgan deb belgilangan bo'lsa, o'tkazish
-    if (user && user.status === 'requested') return true;
+    let isSubscribed = false;
 
-    // 2-QADAM: Kanallarda bor-yo'qligini real-time tekshirish
-    let allSubscribed = true;
+    // Har bir kanalni real-time Telegramdan tekshiramiz
     for (const ch of channels) {
         try {
             const member = await ctx.telegram.getChatMember(ch.chatId, uid);
-            const status = member.status;
-            // Agar foydalanuvchi kanalda bo'lmasa
-            if (!['member', 'administrator', 'creator'].includes(status)) {
-                allSubscribed = false;
-                break;
+            if (['member', 'administrator', 'creator'].includes(member.status)) {
+                isSubscribed = true;
+                break; // Bitta kanalda bo'lsa ham yo'l ochiladi
             }
         } catch (e) {
-            // Agar bot kanal admini bo'lmasa yoki kanal topilmasa, bazadagi statusga ishonamiz
-            if (user && user.status === 'requested') return true;
-            allSubscribed = false;
+            // Agar bot kanal admini bo'lmasa yoki xato bo'lsa, bazaga qaraymiz
+            continue;
         }
     }
 
-    return allSubscribed;
+    // Agar Telegramdan obuna topilmasa, bazadagi zayavka statusini tekshiramiz
+    if (!isSubscribed) {
+        if (user && user.status === 'requested') {
+            // Bu yerda zayavka borligini taxmin qilamiz
+            return true;
+        }
+        // Agar na obuna, na zayavka bo'lmasa - statusni yangilaymiz
+        if (user && user.status !== 'new') {
+            await User.findOneAndUpdate({ userId: uid }, { status: 'new' });
+        }
+        return false;
+    }
+
+    return true;
 }
 
 const getMainMenu = (isAdmin, isVerified) => {
@@ -112,7 +118,7 @@ bot.start(async (ctx) => {
 
     const access = await canAccess(ctx);
     if (!access) {
-        return ctx.replyWithHTML(`Assalomu alaykum <b>${first_name}</b>! Botdan foydalanish uchun kanallarga a'zo bo'ling yoki so'rov yuboring:`, await getJoinMenu());
+        return ctx.replyWithHTML(`Assalomu alaykum <b>${first_name}</b>! Botdan foydalanish uchun kanallarga a'zo bo'ling yoki so'rov (zayavka) yuboring:`, await getJoinMenu());
     }
 
     ctx.replyWithHTML(
@@ -125,9 +131,9 @@ bot.action('check_sub', async (ctx) => {
     const access = await canAccess(ctx);
     if (access) {
         const user = await User.findOne({ userId: ctx.from.id });
-        return ctx.editMessageText("✅ Tasdiqlandi! Asosiy menyu:", getMainMenu(ctx.from.id === ADMIN_ID, user.isVerified));
+        return ctx.editMessageText("✅ Tasdiqlandi!", getMainMenu(ctx.from.id === ADMIN_ID, user.isVerified));
     }
-    await ctx.answerCbQuery("❌ Siz hali obuna bo'lmagansiz yoki so'rov yubormagansiz!", { show_alert: true });
+    await ctx.answerCbQuery("❌ Obuna yoki so'rov topilmadi!", { show_alert: true });
 });
 
 // 4. SIGNAL & REFERRAL
@@ -181,7 +187,7 @@ bot.action('a_app_manage', async (ctx) => {
     const apps = await Config.find({ key: 'app' });
     const btns = apps.map(app => [Markup.button.callback(`❌ ${app.name}`, `del_cfg_${app._id}`)]);
     btns.push([Markup.button.callback('➕ Qo\'shish', 'add_app'), Markup.button.callback('🔙 Orqaga', 'admin_main')]);
-    ctx.editMessageText("📱 Ilovalar:", Markup.inlineKeyboard(btns));
+    ctx.editMessageText("📱 Ilovalarni boshqarish:", Markup.inlineKeyboard(btns));
 });
 
 bot.action('add_app', (ctx) => { ctx.session.step = 'app_name'; ctx.reply("Ilova nomi:"); });
@@ -202,7 +208,7 @@ bot.action('add_ch', (ctx) => { ctx.session.step = 'ch_name'; ctx.reply("Kanal n
 
 bot.action(/^confirm_(\d+)$/, async (ctx) => {
     await User.findOneAndUpdate({ userId: ctx.match[1] }, { isVerified: true });
-    bot.telegram.sendMessage(ctx.match[1], "✅ Tasdiqlandi!", getMainMenu(false, true));
+    bot.telegram.sendMessage(ctx.match[1], "✅ Tasdiqlandi! VIP signallar ochildi.", getMainMenu(false, true));
     ctx.editMessageText("✅ Tasdiqlandi!");
 });
 
@@ -224,9 +230,15 @@ bot.on(['text', 'photo', 'video', 'animation', 'document'], async (ctx) => {
         if (!/^\d+$/.test(ctx.message.text)) return ctx.reply("Faqat raqam!");
         await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: ctx.message.text, bookmaker: ctx.session.selectedApp });
         ctx.session = {};
-        ctx.reply("⏳ Qabul qilindi.");
+        ctx.reply("⏳ Qabul qilindi, admin tasdiqlashini kuting.");
+        
         const userLink = `<a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a>`;
-        bot.telegram.sendMessage(ADMIN_ID, `🆔 ID: <code>${ctx.message.text}</code>\n👤: ${userLink}`, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('✅ Tasdiqlash', `confirm_${ctx.from.id}`), Markup.button.callback('❌ Rad etish', `reject_${ctx.from.id}`)]]) });
+        const username = ctx.from.username ? ` (@${ctx.from.username})` : '';
+        
+        bot.telegram.sendMessage(ADMIN_ID, 
+            `🆔 ID: <code>${ctx.message.text}</code>\n📱 Platforma: ${ctx.session.selectedApp}\n👤: ${userLink}${username}`, 
+            { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('✅ Tasdiqlash', `confirm_${ctx.from.id}`), Markup.button.callback('❌ Rad etish', `reject_${ctx.from.id}`)]]) }
+        );
         return;
     }
 
@@ -235,11 +247,12 @@ bot.on(['text', 'photo', 'video', 'animation', 'document'], async (ctx) => {
     if (step === 'bc_media') {
         const users = await User.find();
         let count = 0;
+        ctx.reply("⏳ Tarqatish boshlandi...");
         for (let u of users) {
             try { await ctx.copyMessage(u.userId); count++; } catch (e) {}
         }
         ctx.session = {};
-        return ctx.reply(`✅ ${count} ta foydalanuvchiga yetkazildi!`);
+        return ctx.reply(`✅ Reklama ${count} ta foydalanuvchiga yetkazildi!`);
     }
 
     if (step === 'app_name') {
