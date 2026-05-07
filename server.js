@@ -18,6 +18,7 @@ const User = mongoose.model('User', new mongoose.Schema({
     joinedAt: { type: Date, default: Date.now }
 }));
 
+// --- TO'G'RILANGAN MODEL (Unique olib tashlandi) ---
 const Config = mongoose.model('Config', new mongoose.Schema({
     key: String, 
     name: String,
@@ -64,7 +65,7 @@ const getMainMenu = (isAdmin, isVerified) => {
 // 3. ASOSIY MANTIQ (START) - ISM VA ID QO'SHILDI
 bot.start(async (ctx) => {
     const { id, first_name } = ctx.from;
-    ctx.session = {}; // Sessiyani startda tozalash xatolarni oldini oladi
+    ctx.session = {}; 
     const refId = ctx.startPayload ? parseInt(ctx.startPayload) : null;
 
     let user = await User.findOneAndUpdate(
