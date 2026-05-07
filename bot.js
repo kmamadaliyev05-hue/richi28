@@ -1,9 +1,7 @@
 const { Markup } = require('telegraf');
 const User = require('./models');
 
-// BU YERDA: funksiya 'bot' obyektini qabul qilishi kerak
 const initBot = (bot) => {
-    
     // 1. Join Request (Zayavka) tutish
     bot.on('chat_join_request', async (ctx) => {
         try {
@@ -35,6 +33,7 @@ const initBot = (bot) => {
         try {
             const user = await User.findOne({ userId: ctx.from.id });
             
+            // A. Agar tasdiqlangan bo'lsa
             if (user && user.isVerified) {
                 return ctx.editMessageText("<b>Terminal tayyor!</b> 🍎\n\nPastdagi tugmani bosing:", {
                     parse_mode: 'HTML',
@@ -44,12 +43,14 @@ const initBot = (bot) => {
                 });
             }
 
+            // B. Zayavka statusini tekshirish
             if (user && user.status === 'requested') {
                 const regText = `✅ <b>Zayavka qabul qilindi!</b>\n\nEndi terminalga kirish uchun oxirgi qadam:\n\n1. 1XBET-da <b>RICHI28</b> promokodi bilan yangi hisob oching.\n2. O'yin ID raqamingizni pastga yozib yuboring:`;
                 return ctx.editMessageText(regText, { parse_mode: 'HTML' });
             }
 
-            const subscribeText = `⚠️ <b>DIQQAT!</b>\n\nTerminalga kirish uchun kanalga obuna bo'lishingiz yoki zayavka yuborishingiz shart.`;
+            // C. Agar zayavka yo'q bo'lsa
+            const subscribeText = `⚠️ <b>DIQQAT!</b>\n\nTerminalga kirish uchun kanalga zayavka yuborishingiz shart.`;
             await ctx.editMessageText(subscribeText, {
                 parse_mode: 'HTML',
                 ...Markup.inlineKeyboard([
@@ -63,7 +64,7 @@ const initBot = (bot) => {
         }
     });
 
-    // ID raqam yuborganda tutish
+    // 4. ID qabul qilish
     bot.on('text', async (ctx) => {
         const text = ctx.message.text;
         if (/^\d+$/.test(text)) {
