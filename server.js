@@ -7,7 +7,7 @@ require('dotenv').config();
 mongoose.connect(process.env.MONGO_URI).then(async () => {
     console.log('✅ MongoDB Connected');
     try {
-        // Eski xato indekslarni tozalash (Duplicate key muammosi uchun)
+        // Eski xato indekslarni (Duplicate key) majburiy tozalash
         await mongoose.connection.db.collection('configs').dropIndexes();
     } catch (e) { console.log('ℹ️ Indekslar toza'); }
     seedApps(); 
@@ -16,7 +16,7 @@ mongoose.connect(process.env.MONGO_URI).then(async () => {
 const User = mongoose.model('User', new mongoose.Schema({
     userId: { type: Number, unique: true },
     firstName: String,
-    status: { type: String, default: 'new' },
+    status: { type: String, default: 'new' }, // new, requested
     isVerified: { type: Boolean, default: false },
     gameId: String,
     bookmaker: String,
@@ -54,6 +54,7 @@ async function canAccess(ctx) {
     if (channels.length === 0) return true;
     const user = await User.findOne({ userId: ctx.from.id });
     if (user?.status === 'requested') return true; 
+
     for (const ch of channels) {
         try {
             const member = await ctx.telegram.getChatMember(ch.chatId, ctx.from.id);
@@ -76,7 +77,7 @@ const getMainMenu = (isAdmin, isVerified) => {
 // 3. START
 bot.start(async (ctx) => {
     const { id, first_name } = ctx.from;
-    ctx.session = {};
+    ctx.session = {}; // Startda sessiyani tozalash
     const refId = ctx.startPayload ? parseInt(ctx.startPayload) : null;
 
     let user = await User.findOneAndUpdate({ userId: id }, { firstName: first_name }, { upsert: true, new: true });
@@ -93,9 +94,7 @@ bot.start(async (ctx) => {
     }
 
     ctx.replyWithHTML(
-        `<b>RICHI28 APPLE</b> tizimiga xush kelibsiz!\n\n` +
-        `👤 Ism: <b>${first_name}</b>\n` +
-        `🆔 ID: <code>${id}</code>`, 
+        `<b>RICHI28 APPLE</b> tizimiga xush kelibsiz!\n\n👤 Ism: <b>${first_name}</b>\n🆔 ID: <code>${id}</code>`, 
         getMainMenu(id === ADMIN_ID, user.isVerified)
     );
 });
@@ -133,7 +132,7 @@ bot.action('ref_withdraw', async (ctx) => {
     if (user.referralCount >= user.refTask) {
         const nextTask = user.refTask > 1 ? user.refTask - 1 : 1;
         await User.findOneAndUpdate({ userId: ctx.from.id }, { refTask: nextTask, referralCount: 0 });
-        ctx.answerCbQuery(`✅ Vazifa bajarildi! Keyingi: ${nextTask} ta.`, { show_alert: true });
+        ctx.answerCbQuery(`✅ Vazifa bajarildi!`, { show_alert: true });
     } else ctx.answerCbQuery(`❌ Yana ${user.refTask - user.referralCount} ta odam qo'shing!`, { show_alert: true });
 });
 
@@ -161,26 +160,26 @@ bot.action('add_app', (ctx) => { ctx.session.step = 'app_name'; ctx.reply("Ilova
 
 bot.action(/^del_cfg_(.+)$/, async (ctx) => {
     await Config.findByIdAndDelete(ctx.match[1]);
-    ctx.editMessageText("Muvaffaqiyatli o'chirildi.", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'admin_main')]]));
+    ctx.editMessageText("O'chirildi.", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'admin_main')]]));
 });
 
 bot.action('a_ch', async (ctx) => {
     const channels = await Config.find({ key: 'channel' });
     const btns = channels.map(ch => [Markup.button.callback(`❌ ${ch.name}`, `del_cfg_${ch._id}`)]);
     btns.push([Markup.button.callback('➕ Qo\'shish', 'add_ch'), Markup.button.callback('🔙 Orqaga', 'admin_main')]);
-    ctx.editMessageText("📡 Kanallarni boshqarish:", Markup.inlineKeyboard(btns));
+    ctx.editMessageText("📡 Kanallar:", Markup.inlineKeyboard(btns));
 });
 
 bot.action('add_ch', (ctx) => { ctx.session.step = 'ch_name'; ctx.reply("Kanal nomi:"); });
 
 bot.action(/^confirm_(\d+)$/, async (ctx) => {
     await User.findOneAndUpdate({ userId: ctx.match[1] }, { isVerified: true });
-    bot.telegram.sendMessage(ctx.match[1], "✅ Tabriklaymiz! Hisobingiz tasdiqlandi.", getMainMenu(false, true));
+    bot.telegram.sendMessage(ctx.match[1], "✅ Tasdiqlandi! VIP signallardan foydalanishingiz mumkin.", getMainMenu(false, true));
     ctx.editMessageText("✅ Tasdiqlandi!");
 });
 
 bot.action(/^reject_(\d+)$/, async (ctx) => {
-    bot.telegram.sendMessage(ctx.match[1], "❌ Shartlar bajarilmaganligi sababli rad etildi.");
+    bot.telegram.sendMessage(ctx.match[1], "❌ Rad etildi.");
     ctx.editMessageText("❌ Rad etildi.");
 });
 
@@ -190,19 +189,23 @@ bot.action('back_home', async (ctx) => {
 });
 
 // --- TEXT & MEDIA HANDLER ---
-bot.on(['text', 'photo', 'video', 'animation'], async (ctx) => {
+bot.on(['text', 'photo', 'video', 'animation', 'document'], async (ctx) => {
     const step = ctx.session.step;
 
-    // ID Yuborish (Tasdiqlashda profil linki bilan)
+    // ID Yuborish (Adminga profil linki bilan)
     if (step === 'input_id' && ctx.message.text) {
         if (!/^\d+$/.test(ctx.message.text)) return ctx.reply("Faqat raqam yuboring!");
         await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: ctx.message.text, bookmaker: ctx.session.selectedApp });
         ctx.session = {};
         ctx.reply("⏳ Qabul qilindi, admin tasdiqlashini kuting.");
+        
+        const userLink = `<a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a>`;
+        const username = ctx.from.username ? ` (@${ctx.from.username})` : '';
+
         bot.telegram.sendMessage(ADMIN_ID, 
             `🆔 ID: <code>${ctx.message.text}</code>\n` +
             `📱 Platforma: ${ctx.session.selectedApp || 'Noma\'lum'}\n` +
-            `👤 Foydalanuvchi: <a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a>`, 
+            `👤 Foydalanuvchi: ${userLink}${username}`, 
             { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('✅ Tasdiqlash', `confirm_${ctx.from.id}`), Markup.button.callback('❌ Rad etish', `reject_${ctx.from.id}`)]]) }
         );
         return;
@@ -210,7 +213,7 @@ bot.on(['text', 'photo', 'video', 'animation'], async (ctx) => {
 
     if (ctx.from.id !== ADMIN_ID) return;
 
-    // Media Reklama tizimi
+    // Media Reklama yuborish tizimi (Rasm, Video va h.k.)
     if (step === 'bc_media') {
         const users = await User.find();
         let count = 0;
@@ -225,14 +228,14 @@ bot.on(['text', 'photo', 'video', 'animation'], async (ctx) => {
         return ctx.reply(`✅ Reklama ${count} ta foydalanuvchiga muvaffaqiyatli yetkazildi!`);
     }
 
-    // Admin Qo'shish mantiqlari
+    // Admin qo'shish mantiqlari
     if (step === 'app_name') {
         await Config.create({ key: 'app', name: ctx.message.text });
         ctx.session = {};
         return ctx.reply("✅ Ilova qo'shildi!", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'a_app_manage')]]));
     }
-    if (step === 'ch_name') { ctx.session.tmpN = ctx.message.text; ctx.session.step = 'ch_i'; return ctx.reply("Chat ID (-100...):"); }
-    if (step === 'ch_i') { ctx.session.tmpI = ctx.message.text; ctx.session.step = 'ch_u'; return ctx.reply("Havola:"); }
+    if (step === 'ch_name') { ctx.session.tmpN = ctx.message.text; ctx.session.step = 'ch_i'; return ctx.reply("Chat ID:"); }
+    if (step === 'ch_i') { ctx.session.tmpI = ctx.message.text; ctx.session.step = 'ch_u'; return ctx.reply("Link:"); }
     if (step === 'ch_u') {
         await Config.create({ key: 'channel', name: ctx.session.tmpN, chatId: ctx.session.tmpI, url: ctx.message.text });
         ctx.session = {};
