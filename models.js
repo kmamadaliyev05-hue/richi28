@@ -1,19 +1,23 @@
 const mongoose = require('mongoose');
 
-// Foydalanuvchi sxemasi
 const UserSchema = new mongoose.Schema({
-  userId: { type: Number, unique: true, required: true },
-  firstName: String,
-  username: String,
-  status: { type: String, enum: ['none', 'requested', 'member'], default: 'none' },
-  createdAt: { type: Date, default: Date.now }
+    userId: { type: Number, unique: true, required: true },
+    firstName: String,
+    username: String,
+    status: { type: String, default: 'none' }, // 'requested', 'member'
+    
+    // Verifikatsiya uchun yangi qismlar:
+    gameId: { type: String, default: null }, 
+    isVerified: { type: Boolean, default: false }, 
+    platform: { type: String, default: 'none' }, 
+    
+    joinedAt: { type: Date, default: Date.now }
 });
 
-// Majburiy obuna kanallari sxemasi
 const ChannelSchema = new mongoose.Schema({
-  channelId: { type: String, required: true },
-  channelName: { type: String, required: true },
-  inviteLink: { type: String, required: true }
+    channelId: String,
+    channelName: String,
+    inviteLink: String
 });
 
 const User = mongoose.model('User', UserSchema);
