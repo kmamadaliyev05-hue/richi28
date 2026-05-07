@@ -35,8 +35,11 @@ bot.use((ctx, next) => {
     return next();
 });
 
-// --- YORDAMCHI FUNKSIYALAR ---
+// --- TOG'RILANGAN YORDAMCHI FUNKSIYA ---
 async function canAccess(ctx) {
+    // ADMIN UCHUN MAXSUS RUXSAT: Admin bo'lsa tekshirmasdan o'tkazadi
+    if (ctx.from.id === ADMIN_ID) return true;
+
     const channels = await Config.find({ key: 'channel' });
     if (channels.length === 0) return true;
     
@@ -144,7 +147,7 @@ bot.action('ref_withdraw', async (ctx) => {
     }
 });
 
-// 6. ADMIN PANEL VA BOSHQARUV
+// 6. ADMIN PANEL
 bot.action('admin_main', (ctx) => {
     ctx.editMessageText("🛠 <b>ADMIN PANEL</b>", Markup.inlineKeyboard([
         [Markup.button.callback('📊 Statistika', 'a_stats'), Markup.button.callback('✉️ Reklama', 'a_bc')],
@@ -211,14 +214,14 @@ bot.action('back_home', async (ctx) => {
     ctx.editMessageText("<b>Asosiy menyu:</b>", { parse_mode: 'HTML', ...getMainMenu(ctx.from.id === ADMIN_ID, user.isVerified) });
 });
 
-// --- TO'G'RILANGAN TEXT HANDLER ---
+// TEXT HANDLER (INPUTS)
 bot.on('text', async (ctx, next) => {
     const step = ctx.session.step;
 
     if (step === 'input_id') {
         if (!/^\d+$/.test(ctx.message.text)) return ctx.reply("❌ Xato! Faqat raqam yuboring.");
         await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: ctx.message.text, bookmaker: ctx.session.selectedApp });
-        ctx.session = {}; // Tozalash
+        ctx.session = {}; 
         ctx.reply("⏳ <b>ID qabul qilindi!</b>\nTasdiqlash kutilmoqda.");
         bot.telegram.sendMessage(ADMIN_ID, `🔔 <b>YANGI SO'ROV:</b>\n\n👤: ${ctx.from.first_name}\n🆔: <code>${ctx.message.text}</code>`, Markup.inlineKeyboard([
             [Markup.button.callback('✅ Tasdiqlash', `confirm_${ctx.from.id}`), Markup.button.callback('❌ Rad etish', `reject_${ctx.from.id}`)]
@@ -240,13 +243,13 @@ bot.on('text', async (ctx, next) => {
     }
     if (step === 'ch_url') {
         await Config.create({ key: 'channel', name: ctx.session.tmpName, chatId: ctx.session.tmpId, url: ctx.message.text });
-        ctx.session = {}; // Sessiyani to'liq tozalash!
+        ctx.session = {}; 
         return ctx.reply("✅ Kanal qo'shildi!", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'a_ch')]]));
     }
 
     if (step === 'app_name') {
         await Config.create({ key: 'app', name: ctx.message.text });
-        ctx.session = {}; // Sessiyani to'liq tozalash!
+        ctx.session = {}; 
         return ctx.reply("✅ Ilova qo'shildi!", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'a_app_manage')]]));
     }
 
@@ -262,6 +265,7 @@ bot.on('chat_join_request', async (ctx) => {
     await User.findOneAndUpdate({ userId: ctx.chatJoinRequest.from.id }, { status: 'requested' }, { upsert: true });
 });
 
+// START
 bot.launch().then(() => console.log('🚀 RICHI28 BOT LIVE'));
 
 const app = express();
