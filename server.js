@@ -53,27 +53,37 @@ bot.action('main_menu', async (ctx) => {
 
 // --- SIGNAL OLISH (PROMOKOD TEKSHIRUVI BILAN) ---
 bot.action('get_signal', async (ctx) => {
-    const userId = ctx.from.id;
-    try {
-        await ctx.answerCbQuery();
-        const dbUser = await User.findOne({ userId }).lean();
-        const channels = await Channel.find().lean();
-        let mustJoin = [];
+const userId = ctx.from.id;
+        try {
+            await ctx.answerCbQuery();
+            const dbUser = await User.findOne({ userId }).lean();
+            const channels = await Channel.find().lean();
+            let mustJoin = [];
 
-        // 1. Obunani tekshirish
-        for (const ch of channels) {
-            try {
-                const member = await ctx.telegram.getChatMember(ch.channelId, userId);
-                const isOk = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
-                if (!isOk) mustJoin.push(ch);
-            } catch (e) { mustJoin.push(ch); }
-        }
+            // --- YANGI TEKSHIRUV MANTIQI ---
+            for (const ch of channels) {
+                try {
+                    const member = await ctx.telegram.getChatMember(ch.channelId, userId);
+                    const isOk = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
+                    
+                    // Agar a'zo bo'lmasa VA bazada zayavka (requested) yuborgani yozilmagan bo'lsa
+                    if (!isOk && dbUser?.status !== 'requested') {
+                        mustJoin.push(ch);
+                    }
+                } catch (e) {
+                    // Agar chat topilmasa (foydalanuvchi kanalga umuman kirmagan bo'lsa)
+                    // lekin bazada 'requested' bo'lsa, o'tkazib yuboramiz
+                    if (dbUser?.status !== 'requested') {
+                        mustJoin.push(ch);
+                    }
+                }
+            }
 
-        if (mustJoin.length > 0) {
-            const buttons = mustJoin.map(ch => [Markup.button.url(`📢 ${ch.channelName}`, ch.inviteLink)]);
-            buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
-            return ctx.replyWithHTML(`<b>⚠️ DIQQAT!</b>\n\nTerminalga kirish uchun quyidagi kanallarga obuna bo'ling:`, Markup.inlineKeyboard(buttons));
-        }
+            if (mustJoin.length > 0) {
+                const buttons = mustJoin.map(ch => [Markup.button.url(`📢 ${ch.channelName}`, ch.inviteLink)]);
+                buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
+                return ctx.replyWithHTML(`<b>⚠️ DIQQAT!</b>\n\nTerminalga kirish uchun quyidagi kanallarga obuna bo'ling:`, Markup.inlineKeyboard(buttons));
+            }
 
         // 2. Promokod va Depozit tekshiruvi (isVerified)
         if (!dbUser?.isVerified) {
