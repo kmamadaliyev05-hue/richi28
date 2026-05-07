@@ -8,19 +8,16 @@ const userSchema = new mongoose.Schema({
     userId: { type: Number, unique: true },
     firstName: String,
     username: String,
-    status: { type: String, default: 'new' }, // new, requested, id_submitted, verified
+    status: { type: String, default: 'new' }, 
     isVerified: { type: Boolean, default: false },
     referralCount: { type: Number, default: 0 },
-    refTask: { type: Number, default: 5 },
     joinedAt: { type: Date, default: Date.now }
 });
-
 const configSchema = new mongoose.Schema({
     key: { type: String, unique: true },
     value: String, 
     chatId: String 
 });
-
 const User = mongoose.model('User', userSchema);
 const Config = mongoose.model('Config', configSchema);
 
@@ -36,8 +33,8 @@ bot.use((ctx, next) => {
 
 mongoose.connect(process.env.MONGO_URI).then(() => console.log('✅ DB Connected'));
 
-// --- YORDAMCHI FUNKSIYALAR ---
-const isAdmin = (ctx) => ctx.from.id === ADMIN_ID;
+// --- HELPERS ---
+const isAdmin = (ctx) => ctx.from && ctx.from.id === ADMIN_ID;
 
 async function checkSub(ctx) {
     const channels = await Config.find({ key: 'force_channel' });
@@ -84,73 +81,75 @@ bot.start(async (ctx) => {
     await ctx.replyWithHTML(`<b>RICHI28 APPLE</b> tizimiga xush kelibsiz!`, getMainMenu(ctx, user.isVerified));
 });
 
-// SIGNAL OLISH TUGMASI VA OBUNA TEKSHIRUVI
+// SIGNAL OLISH VA OBUNA TEKSHIRUVI (XATO TUZATILDI)
 bot.action('get_signal', async (ctx) => {
-    const isSub = await checkSub(ctx);
-    if (!isSub) {
-        const channels = await Config.find({ key: 'force_channel' });
-        const buttons = channels.map(ch => [Markup.button.url(`📢 ${ch.value}`, ch.url)]);
-        buttons.push([Markup.button.callback('✅ Tekshirish', 'get_signal')]);
-        
-        return ctx.editMessageText("⚠️ <b>DIQQAT!</b>\n\nSignal olish uchun kanalimizga a'zo bo'ling yoki zayavka yuboring:", {
+    try {
+        const isSub = await checkSub(ctx);
+        if (!isSub) {
+            const channels = await Config.find({ key: 'force_channel' });
+            
+            // Xatolik shu yerda edi: Har bir tugmada URL bo'lishi shart!
+            const buttons = channels.map(ch => [Markup.button.url(`📢 ${ch.value}`, ch.value.startsWith('http') ? ch.value : `https://t.me/${ch.value.replace('@','')}`)]);
+            
+            buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
+            
+            return ctx.editMessageText("⚠️ <b>DIQQAT!</b>\n\nSignal olish uchun kanalimizga a'zo bo'ling yoki zayavka yuboring:", {
+                parse_mode: 'HTML',
+                ...Markup.inlineKeyboard(buttons)
+            });
+        }
+
+        // Agar obuna bo'lgan bo'lsa - Bukmekerlar
+        await ctx.editMessageText("🎯 <b>Platformani tanlang:</b>", {
             parse_mode: 'HTML',
-            ...Markup.inlineKeyboard(buttons)
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('1XBET', 'book_1'), Markup.button.callback('LINEBET', 'book_2')],
+                [Markup.button.callback('WINWIN', 'book_3'), Markup.button.callback('888STARZ', 'book_4')],
+                [Markup.button.callback('🔙 Orqaga', 'back_to_main')]
+            ])
         });
-    }
-
-    await ctx.editMessageText("🎯 <b>Platformani tanlang:</b>", {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([
-            [Markup.button.callback('1XBET', 'book_1'), Markup.button.callback('LINEBET', 'book_2')],
-            [Markup.button.callback('WINWIN', 'book_3'), Markup.button.callback('888STARZ', 'book_4')],
-            [Markup.button.callback('🔙 Orqaga', 'back_to_main')]
-        ])
-    });
+    } catch (e) { console.error("Signal Action Error:", e); }
 });
 
-// REFERAL SILKA TUGMASI
 bot.action('referral_menu', async (ctx) => {
-    const user = await User.findOne({ userId: ctx.from.id });
-    const link = `https://t.me/${bot.botInfo.username}?start=${ctx.from.id}`;
-    await ctx.editMessageText(
-        `🔗 <b>Sizning referal silkangiz:</b>\n<code>${link}</code>\n\n👥 Taklif qilinganlar: ${user.referralCount} ta\n💰 5 ta odam uchun 5,000 so'm.`,
-        { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'back_to_main')]]) }
-    );
+    try {
+        const user = await User.findOne({ userId: ctx.from.id });
+        const link = `https://t.me/${bot.botInfo.username}?start=${ctx.from.id}`;
+        await ctx.editMessageText(
+            `🔗 <b>Sizning referal silkangiz:</b>\n<code>${link}</code>\n\n👥 Taklif qilinganlar: ${user.referralCount} ta\n💰 5 ta odam uchun 5,000 so'm.`,
+            { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'back_to_main')]]) }
+        );
+    } catch (e) { console.error(e); }
 });
 
-// ORQAGA TUGMASI
 bot.action('back_to_main', async (ctx) => {
-    const user = await User.findOne({ userId: ctx.from.id });
-    await ctx.editMessageText(`<b>Asosiy menyu:</b>`, { parse_mode: 'HTML', ...getMainMenu(ctx, user.isVerified) });
+    try {
+        const user = await User.findOne({ userId: ctx.from.id });
+        await ctx.editMessageText(`<b>Asosiy menyu:</b>`, { parse_mode: 'HTML', ...getMainMenu(ctx, user.isVerified) });
+    } catch (e) { console.error(e); }
 });
 
-// --- ADMIN PANEL ---
 bot.action('admin_main', async (ctx) => {
     if (!isAdmin(ctx)) return;
-    await ctx.editMessageText("🛠 <b>Admin Boshqaruv Paneli:</b>", {
+    await ctx.editMessageText("🛠 <b>Admin Panel:</b>", {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
-            [Markup.button.callback('📢 XABAR YUBORISH', 'admin_broadcast')],
-            [Markup.button.callback('📡 KANALLARNI BOSHQARISH', 'manage_channels')],
+            [Markup.button.callback('📢 REKLAMA', 'admin_broadcast')],
+            [Markup.button.callback('📡 KANALLAR', 'manage_channels')],
             [Markup.button.callback('📊 STATISTIKA', 'admin_stats')],
             [Markup.button.callback('🔙 ORQAGA', 'back_to_main')]
         ])
     });
 });
 
-bot.action('admin_stats', async (ctx) => {
-    if (!isAdmin(ctx)) return;
-    const total = await User.countDocuments();
-    const vip = await User.countDocuments({ isVerified: true });
-    await ctx.reply(`📊 Jami: ${total}\n✅ VIP: ${vip}`);
-});
-
 bot.on('chat_join_request', async (ctx) => {
-    await User.findOneAndUpdate({ userId: ctx.chatJoinRequest.from.id }, { status: 'requested' }, { upsert: true });
+    try {
+        await User.findOneAndUpdate({ userId: ctx.chatJoinRequest.from.id }, { status: 'requested' }, { upsert: true });
+    } catch (e) { console.error(e); }
 });
 
 // Server Launch
-bot.launch().then(() => console.log('🚀 BOT IS WORKING'));
+bot.launch().then(() => console.log('🚀 BOT ONLINE'));
 const app = express();
 app.get('/', (req, res) => res.send('Bot Active'));
 app.listen(process.env.PORT || 3000);
