@@ -76,15 +76,16 @@ bot.action('get_signal', async (ctx) => {
                 const isLeft = member.status === 'left' || member.status === 'kicked';
 
                 // AGAR chiqib ketgan bo'lsa (isLeft) yoki umuman a'zo bo'lmasa VA zayavka yubormagan bo'lsa
-                if (isLeft || (!isMember && dbUser?.status !== 'requested')) {
-                    mustJoin.push(ch);
-                }
-            } catch (e) {
-                // Agar bot kanaldan topolmasa (hatto zayavka ham yo'q bo'lsa)
-                if (dbUser?.status !== 'requested') {
-                    mustJoin.push(ch);
-                }
-            }
+                // 79-qatordan boshlab almashtiring:
+        if (isLeft || (!isMember && dbUser?.status !== 'requested')) {
+            mustJoin.push(ch);
+        }
+    } catch (e) {
+        // Agar foydalanuvchi kanalda topilmasa, lekin zayavka yuborgan bo'lsa - o'tkazamiz
+        if (dbUser?.status !== 'requested') {
+            mustJoin.push(ch);
+        }
+    }
         }
 
         // Obuna bo'lmagan bo'lsa to'xtatish
