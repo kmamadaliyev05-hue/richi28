@@ -7,7 +7,7 @@ require('dotenv').config();
 mongoose.connect(process.env.MONGO_URI).then(async () => {
     console.log('✅ MongoDB Connected');
     try {
-        // Eski xato indekslarni tozalash (Duplicate key muammosi uchun)
+        // Eski xato indekslarni tozalash
         await mongoose.connection.db.collection('configs').dropIndexes();
     } catch (e) { console.log('ℹ️ Indekslar toza'); }
     seedApps(); 
@@ -47,26 +47,26 @@ bot.use((ctx, next) => {
     return next();
 });
 
-// --- AQLLI TEKSHIRUV FUNKSIYASI (CHIQQANLARNI TO'SISH) ---
+// --- AQLLI TEKSHIRUV (OBUNA YOKI ZAYAVKA) ---
 async function canAccess(ctx) {
     if (ctx.from.id === ADMIN_ID) return true;
     const channels = await Config.find({ key: 'channel' });
     if (channels.length === 0) return true;
     
     const user = await User.findOne({ userId: ctx.from.id });
-    let subscribedCount = 0;
+    
+    // Agar foydalanuvchi bazada 'requested' bo'lsa - yo'l ochiladi
+    if (user?.status === 'requested') return true;
 
     for (const ch of channels) {
         try {
             const member = await ctx.telegram.getChatMember(ch.chatId, ctx.from.id);
             if (['member', 'administrator', 'creator'].includes(member.status)) {
-                subscribedCount++;
+                return true;
             }
-        } catch (e) { 
-            if (user?.status === 'requested') return true;
-        }
+        } catch (e) { continue; }
     }
-    return subscribedCount === channels.length || (user?.status === 'requested' && subscribedCount > 0);
+    return false;
 }
 
 const getMainMenu = (isAdmin, isVerified) => {
@@ -99,7 +99,7 @@ bot.start(async (ctx) => {
     }
 
     if (!(await canAccess(ctx))) {
-        return ctx.replyWithHTML(`Assalomu alaykum <b>${first_name}</b>! Botdan foydalanish uchun kanallarga a'zo bo'ling:`, await getJoinMenu());
+        return ctx.replyWithHTML(`Assalomu alaykum <b>${first_name}</b>! Botdan foydalanish uchun kanallarga a'zo bo'ling yoki so'rov (zayavka) yuboring:`, await getJoinMenu());
     }
 
     ctx.replyWithHTML(
@@ -113,14 +113,14 @@ bot.action('check_sub', async (ctx) => {
         const user = await User.findOne({ userId: ctx.from.id });
         return ctx.editMessageText("✅ Tasdiqlandi!", getMainMenu(ctx.from.id === ADMIN_ID, user.isVerified));
     }
-    await ctx.answerCbQuery("❌ Obuna topilmadi!", { show_alert: true });
+    await ctx.answerCbQuery("❌ Obuna yoki so'rov topilmadi!", { show_alert: true });
 });
 
 // 4. SIGNAL & REFERRAL
 bot.action('get_signal', async (ctx) => {
     if (!(await canAccess(ctx))) {
-        await ctx.answerCbQuery("❌ Siz kanaldan chiqib ketibsiz!", { show_alert: true });
-        return ctx.editMessageText("Davom etish uchun yana obuna bo'ling:", await getJoinMenu());
+        await ctx.answerCbQuery("❌ Siz kanalda yo'qsiz!", { show_alert: true });
+        return ctx.editMessageText("Davom etish uchun a'zo bo'ling:", await getJoinMenu());
     }
     const apps = await Config.find({ key: 'app' });
     if (apps.length === 0) return ctx.answerCbQuery("Hozircha ilovalar yo'q.");
@@ -188,7 +188,7 @@ bot.action('add_ch', (ctx) => { ctx.session.step = 'ch_name'; ctx.reply("Kanal n
 
 bot.action(/^confirm_(\d+)$/, async (ctx) => {
     await User.findOneAndUpdate({ userId: ctx.match[1] }, { isVerified: true });
-    bot.telegram.sendMessage(ctx.match[1], "✅ Tasdiqlandi! VIP signallar ochildi.", getMainMenu(false, true));
+    bot.telegram.sendMessage(ctx.match[1], "✅ Tasdiqlandi! VIP signallardan foydalanishingiz mumkin.", getMainMenu(false, true));
     ctx.editMessageText("✅ Tasdiqlandi!");
 });
 
@@ -227,7 +227,6 @@ bot.on(['text', 'photo', 'video', 'animation', 'document'], async (ctx) => {
     if (step === 'bc_media') {
         const users = await User.find();
         let count = 0;
-        ctx.reply("⏳ Tarqatish boshlandi...");
         for (let u of users) {
             try { await ctx.copyMessage(u.userId); count++; } catch (e) {}
         }
@@ -249,6 +248,7 @@ bot.on(['text', 'photo', 'video', 'animation', 'document'], async (ctx) => {
     }
 });
 
+// ZAYAVKA YUBORGANDA BAZADA 'requested' QILIB BELGILASH
 bot.on('chat_join_request', async (ctx) => {
     await User.findOneAndUpdate({ userId: ctx.chatJoinRequest.from.id }, { status: 'requested' }, { upsert: true });
 });
