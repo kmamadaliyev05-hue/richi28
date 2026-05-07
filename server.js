@@ -9,27 +9,35 @@ const app = express();
 const bot = initBot(process.env.BOT_TOKEN);
 const ADMIN_ID = 6137845806; 
 
+// Admin holatlarini saqlash uchun
 let adminState = {};
 
+// --- MONGODB ULANISHI ---
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch(err => console.error('❌ DB Error:', err));
+    .then(() => console.log('✅ MongoDB muvaffaqiyatli ulandi'))
+    .catch(err => console.error('❌ MongoDB ulanishida xato:', err));
 
-// --- ADMIN PANEL KEYBOARD ---
+// --- ADMIN KLAVIATURASI ---
 const getAdminKeyboard = () => Markup.inlineKeyboard([
     [Markup.button.callback('📡 Kanallarni boshqarish', 'manage_ch')],
     [Markup.button.callback('📢 Reklama yuborish', 'broadcast')],
     [Markup.button.callback('🔄 Yangilash', 'admin_panel')]
 ]);
 
+// --- ADMIN COMMAND ---
 bot.command('admin', async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     const total = await User.countDocuments();
     const reqs = await User.countDocuments({ isVerified: false, gameId: { $ne: null } });
-    ctx.replyWithHTML(`<b>🏦 ADMIN PANEL</b>\n\n👤 Jami a'zolar: ${total}\n⏳ Tasdiqlash kutayotganlar: ${reqs}`, getAdminKeyboard());
+    ctx.replyWithHTML(
+        `<b>🏦 ADMIN PANEL</b>\n\n` +
+        `👤 Jami a'zolar: ${total}\n` +
+        `⏳ Tasdiqlash kutayotganlar: ${reqs}`, 
+        getAdminKeyboard()
+    );
 });
 
-// --- MUHIM: BOTNI ISHGA TUSHIRISH TUGMASI (main_menu) ---
+// --- ASOSIY MENYU (MAIN MENU) ---
 bot.action('main_menu', async (ctx) => {
     try {
         await ctx.answerCbQuery();
@@ -39,10 +47,8 @@ bot.action('main_menu', async (ctx) => {
             [Markup.button.url('📱 Ilovalar', 'https://t.me/apple_ilovalar')]
         ]);
         
-        // Agar xabar start xabari bo'lsa, uni tahrirlaymiz
         await ctx.editMessageText(text, { parse_mode: 'HTML', ...keyboard });
     } catch (e) {
-        // Agar tahrirlash iloji bo'lmasa (masalan rasm bo'lsa), yangi xabar yuboramiz
         const keyboard = Markup.inlineKeyboard([
             [Markup.button.callback('🍎 Signal olish', 'get_signal')],
             [Markup.button.url('📱 Ilovalar', 'https://t.me/apple_ilovalar')]
@@ -51,112 +57,148 @@ bot.action('main_menu', async (ctx) => {
     }
 });
 
-// --- SIGNAL OLISH (PROMOKOD TEKSHIRUVI BILAN) ---
+// --- SIGNAL OLISH VA OBUNA TEKSHIRUVI ---
 bot.action('get_signal', async (ctx) => {
-const userId = ctx.from.id;
-        try {
-            await ctx.answerCbQuery();
-            const dbUser = await User.findOne({ userId }).lean();
-            const channels = await Channel.find().lean();
-            let mustJoin = [];
+    const userId = ctx.from.id;
+    try {
+        await ctx.answerCbQuery();
+        const dbUser = await User.findOne({ userId }).lean();
+        const channels = await Channel.find().lean();
+        let mustJoin = [];
 
-            // --- YANGI TEKSHIRUV MANTIQI ---
-            for (const ch of channels) {
-                try {
-                    const member = await ctx.telegram.getChatMember(ch.channelId, userId);
-                    const isOk = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
-                    
-                    // Agar a'zo bo'lmasa VA bazada zayavka (requested) yuborgani yozilmagan bo'lsa
-                    if (!isOk && dbUser?.status !== 'requested') {
-                        mustJoin.push(ch);
-                    }
-                } catch (e) {
-                    // Agar chat topilmasa (foydalanuvchi kanalga umuman kirmagan bo'lsa)
-                    // lekin bazada 'requested' bo'lsa, o'tkazib yuboramiz
-                    if (dbUser?.status !== 'requested') {
-                        mustJoin.push(ch);
-                    }
+        // 1. Qat'iy Obuna Tekshiruvi
+        for (const ch of channels) {
+            try {
+                const member = await ctx.telegram.getChatMember(ch.channelId, userId);
+                
+                // Telegram statuslari: 'left' (chiqib ketgan), 'kicked' (haydalgan)
+                const isMember = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
+                const isLeft = member.status === 'left' || member.status === 'kicked';
+
+                // AGAR chiqib ketgan bo'lsa (isLeft) yoki umuman a'zo bo'lmasa VA zayavka yubormagan bo'lsa
+                if (isLeft || (!isMember && dbUser?.status !== 'requested')) {
+                    mustJoin.push(ch);
+                }
+            } catch (e) {
+                // Agar bot kanaldan topolmasa (hatto zayavka ham yo'q bo'lsa)
+                if (dbUser?.status !== 'requested') {
+                    mustJoin.push(ch);
                 }
             }
+        }
 
-            if (mustJoin.length > 0) {
-                const buttons = mustJoin.map(ch => [Markup.button.url(`📢 ${ch.channelName}`, ch.inviteLink)]);
-                buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
-                return ctx.replyWithHTML(`<b>⚠️ DIQQAT!</b>\n\nTerminalga kirish uchun quyidagi kanallarga obuna bo'ling:`, Markup.inlineKeyboard(buttons));
-            }
+        // Obuna bo'lmagan bo'lsa to'xtatish
+        if (mustJoin.length > 0) {
+            const buttons = mustJoin.map(ch => [Markup.button.url(`📢 ${ch.channelName}`, ch.inviteLink)]);
+            buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
+            return ctx.replyWithHTML(
+                `<b>⚠️ DIQQAT!</b>\n\nTerminalga kirish uchun quyidagi kanallarga obuna bo'ling. ` +
+                `Agar kanaldan chiqib ketsangiz, signal berilmaydi!`, 
+                Markup.inlineKeyboard(buttons)
+            );
+        }
 
-        // 2. Promokod va Depozit tekshiruvi (isVerified)
+        // 2. Verifikatsiya Tekshiruvi (Promokod va Depozit)
         if (!dbUser?.isVerified) {
             return ctx.replyWithHTML(
                 `<b>DIQQAT! ⚠️</b>\n\nSignallar faqat bizning promokodimiz bilan ro'yxatdan o'tganlar uchun.\n\n` +
-                `1️⃣ <b>1xBet, Linebet, WinWin</b> yoki <b>888Starz</b> dan birini tanlang.\n` +
-                `2️⃣ <b>RICHI28</b> promokodi bilan ro'yxatdan o'ting.\n` +
-                `3️⃣ 60,000 so'm depozit qiling.\n` +
-                `4️⃣ O'yin ID raqamingizni (8-10 ta raqam) shu yerga yozib yuboring.`,
+                `1️⃣ <b>1xBet, Linebet, WinWin</b> yoki <b>888Starz</b> ilovasini oching.\n` +
+                `2️⃣ <b>RICHI28</b> promokodi bilan yangi akkaunt oching.\n` +
+                `3️⃣ Kamida 60,000 so'm depozit qiling.\n` +
+                `4️⃣ O'yin ID raqamingizni (8-10 ta raqam) botga yozib yuboring.`,
                 Markup.inlineKeyboard([[Markup.button.url('🌐 Ro\'yxatdan o\'tish', 'https://t.me/apple_ilovalar')]])
             );
         }
 
-        // 3. Hamma narsa OK bo'lsa
-        await ctx.replyWithHTML(`<b>Terminal tayyor! 🍎</b>`, 
+        // 3. Hamma narsa OK bo'lsa Web App ni ochish
+        await ctx.replyWithHTML(`<b>Terminal tayyor! 🍎</b>\n\nPastdagi tugmani bosing va o'yinni boshlang.`, 
             Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINALNI OCHISH', process.env.WEB_APP_URL)]])
         );
 
-    } catch (err) { console.error("Signal Error:", err); }
+    } catch (err) { 
+        console.error("Signal Error:", err); 
+        ctx.reply("Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.");
+    }
 });
 
-// --- ADMIN TASDIQLASH ---
+// --- ADMIN TASDIQLASH (INLINE TUGMA BILAN JAVOB) ---
 bot.action(/^verify_(.+)$/, async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     const targetId = ctx.match[1];
-    await User.findOneAndUpdate({ userId: targetId }, { isVerified: true });
-    await ctx.telegram.sendMessage(targetId, "<b>Tabriklaymiz! 🎉</b>\n\nID raqamingiz tasdiqlandi. Endi Web App orqali signallarni olishingiz mumkin!", { parse_mode: 'HTML' });
-    await ctx.answerCbQuery("Tasdiqlandi!");
-    await ctx.editMessageText(ctx.callbackQuery.message.text + "\n\n✅ <b>TASDIQLANDI</b>", { parse_mode: 'HTML' });
+
+    try {
+        await User.findOneAndUpdate({ userId: targetId }, { isVerified: true });
+        
+        // FOYDALANUVCHIGA SIGNAL TUGMASI BILAN XABAR YUBORISH
+        await ctx.telegram.sendMessage(targetId, 
+            "<b>Tabriklaymiz! 🎉</b>\n\n" +
+            "Sizning ID raqamingiz muvaffaqiyatli tasdiqlandi. Endi sizda signallar uchun to'liq ruxsat bor!", 
+            { 
+                parse_mode: 'HTML',
+                ...Markup.inlineKeyboard([
+                    [Markup.button.callback('🍎 Signal olish', 'get_signal')]
+                ])
+            }
+        );
+
+        await ctx.answerCbQuery("Tasdiqlandi!");
+        await ctx.editMessageText(ctx.callbackQuery.message.text + "\n\n✅ <b>TASDIQLANDI</b>", { parse_mode: 'HTML' });
+    } catch (e) {
+        console.error("Verify Error:", e);
+    }
 });
 
 bot.action(/^reject_(.+)$/, async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     const targetId = ctx.match[1];
-    await ctx.telegram.sendMessage(targetId, "<b>Rad etildi! ❌</b>\n\nID raqamingiz topilmadi yoki depozit qilinmagan. Iltimos qayta tekshirib yuboring.");
+    
+    await ctx.telegram.sendMessage(targetId, "<b>Rad etildi! ❌</b>\n\nID raqamingiz tizimda topilmadi yoki depozit qilinmagan. Iltimos, qaytadan tekshirib ko'ring.");
     await ctx.answerCbQuery("Rad etildi!");
     await ctx.editMessageText(ctx.callbackQuery.message.text + "\n\n❌ <b>RAD ETILDI</b>", { parse_mode: 'HTML' });
 });
 
-// --- TEXT ISHLOVCHISI ---
+// --- TEXT MESSAGES (ID QABUL QILISH) ---
 bot.on('text', async (ctx) => {
     const userId = ctx.from.id;
     const text = ctx.message.text;
 
+    // Admin reklama yoki kanal qo'shish
     if (userId === ADMIN_ID) {
-        if (text === '/cancel') { adminState[userId] = null; return ctx.reply("Bekor qilindi."); }
+        if (text === '/cancel') { adminState[userId] = null; return ctx.reply("Amal bekor qilindi."); }
+        
         if (adminState[userId] === 'awaiting_ad') {
             const users = await User.find();
-            ctx.reply(`📢 Reklama tarqatilmoqda...`);
+            ctx.reply(`📢 Reklama ${users.length} ta foydalanuvchiga yuborilmoqda...`);
             for (const u of users) { try { await ctx.copyMessage(u.userId); } catch (e) {} }
             adminState[userId] = null;
-            return ctx.reply("✅ Tayyor.");
+            return ctx.reply("✅ Reklama tarqatildi.");
         }
+        
         if (text.includes('|')) {
             const [id, name, link] = text.split('|').map(p => p.trim());
             await Channel.create({ channelId: id, channelName: name, inviteLink: link });
-            return ctx.reply("✅ Kanal qo'shildi!");
+            return ctx.reply("✅ Kanal tizimga qo'shildi!");
         }
     }
 
+    // Foydalanuvchi ID yuborsa
     if (!isNaN(text) && text.length >= 7) {
         await User.findOneAndUpdate({ userId }, { gameId: text }, { upsert: true });
+        
         await ctx.telegram.sendMessage(ADMIN_ID, 
-            `<b>🔔 YANGI ID TASDIQLASH</b>\n\n👤 Foydalanuvchi: ${ctx.from.first_name}\n🆔 ID: <code>${text}</code>`,
+            `<b>🔔 YANGI ID TASDIQLASH</b>\n\n` +
+            `👤 Foydalanuvchi: ${ctx.from.first_name}\n` +
+            `🆔 ID: <code>${text}</code>`,
             Markup.inlineKeyboard([
                 [Markup.button.callback('✅ Tasdiqlash', `verify_${userId}`)],
                 [Markup.button.callback('❌ Rad etish', `reject_${userId}`)]
             ])
         );
-        return ctx.reply("📩 ID qabul qilindi! Admin tekshirib 5-15 daqiqada tasdiqlaydi. Iltimos kuting...");
+        return ctx.reply("📩 ID raqamingiz adminga yuborildi. Tekshiruvdan so'ng sizga xabar beramiz.");
     }
 });
 
+// --- ADMIN PANELI ACTIONLAR ---
 bot.action('admin_panel', async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     const total = await User.countDocuments();
@@ -168,17 +210,23 @@ bot.action('manage_ch', async (ctx) => {
     const channels = await Channel.find();
     const buttons = channels.map(ch => [Markup.button.callback(`❌ ${ch.channelName}`, `del_${ch._id}`)]);
     buttons.push([Markup.button.callback('➕ Qo\'shish', 'add_ch')], [Markup.button.callback('⬅️ Orqaga', 'admin_panel')]);
-    await ctx.editMessageText("<b>📡 Kanallar:</b>", { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
+    await ctx.editMessageText("<b>📡 Kanallar boshqaruvi:</b>", { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
 });
 
-bot.action('broadcast', (ctx) => { adminState[ctx.from.id] = 'awaiting_ad'; ctx.reply("Reklama xabarini yuboring:"); });
+bot.action('broadcast', (ctx) => { 
+    adminState[ctx.from.id] = 'awaiting_ad'; 
+    ctx.reply("Reklama xabarini yuboring (rasm, matn, video bo'lishi mumkin) yoki bekor qilish uchun /cancel yozing:"); 
+});
 
 bot.action(/^del_(.+)$/, async (ctx) => {
     await Channel.findByIdAndDelete(ctx.match[1]);
     await ctx.answerCbQuery("O'chirildi!");
-    ctx.reply("Kanal o'chirildi.");
+    ctx.reply("Kanal muvaffaqiyatli o'chirildi.");
 });
 
+// --- SERVERNI ISHGA TUSHIRISH ---
 bot.launch();
-app.get('/', (req, res) => res.send('System Live!'));
-app.listen(process.env.PORT || 3000);
+app.get('/', (req, res) => res.send('Richi28 Apple Bot is running!'));
+app.listen(process.env.PORT || 3000, () => {
+    console.log(`🚀 Server ${process.env.PORT || 3000}-portda ishga tushdi`);
+});
