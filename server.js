@@ -9,18 +9,29 @@ const userSchema = new mongoose.Schema({
     firstName: String,
     username: String,
     status: { type: String, default: 'new' },
-    gameId: String,
     isVerified: { type: Boolean, default: false },
-    referredBy: { type: Number, default: null },
     referralCount: { type: Number, default: 0 },
     joinedAt: { type: Date, default: Date.now }
 });
+
+const channelSchema = new mongoose.Schema({
+    name: String,
+    url: String
+});
+
 const User = mongoose.model('User', userSchema);
+const Channel = mongoose.model('Channel', channelSchema);
 
 // 2. INITIALIZATION
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const ADMIN_ID = 6137845806;
+
+// Sessiyani to'g'ri ishga tushirish
 bot.use(session());
+bot.use((ctx, next) => {
+    if (!ctx.session) ctx.session = {};
+    return next();
+});
 
 mongoose.connect(process.env.MONGO_URI).then(() => console.log('✅ DB Connected'));
 
@@ -32,48 +43,29 @@ const userKeyboard = (isVerified) => {
         [Markup.button.callback('👥 REFERAL SILKA OLISH', 'get_referral')]
     ];
     if (isVerified) {
-        buttons[0] = [Markup.button.webApp('⚡️ SIGNAL OLISH (VIP)', process.env.WEB_APP_URL || 'https://google.com')];
+        buttons[0] = [Markup.button.webApp('⚡️ SIGNAL OLISH (VIP)', process.env.WEB_APP_URL)];
     }
     return Markup.inlineKeyboard(buttons);
 };
 
 const adminKeyboard = Markup.inlineKeyboard([
-    [Markup.button.callback('📢 REKLAMA YUBORISH', 'admin_broadcast')],
-    [Markup.button.callback('📊 STATISTIKA', 'admin_stats')]
+    [Markup.button.callback('📢 REKLAMA TARQATISH', 'admin_broadcast')],
+    [Markup.button.callback('📊 STATISTIKA', 'admin_stats')],
+    [Markup.button.callback('📡 KANALLARNI BOSHQARISH', 'manage_channels')]
 ]);
 
 // 4. MAIN LOGIC
 bot.start(async (ctx) => {
     const { id, first_name, username } = ctx.from;
-    const refId = ctx.startPayload ? parseInt(ctx.startPayload) : null;
+    let user = await User.findOneAndUpdate({ userId: id }, { firstName: first_name, username }, { upsert: true, new: true });
 
-    let user = await User.findOne({ userId: id });
-    if (!user) {
-        user = await User.create({ userId: id, firstName: first_name, username, referredBy: refId });
-        if (refId && refId !== id) {
-            await User.findOneAndUpdate({ userId: refId }, { $inc: { referralCount: 1 } });
-            try { await bot.telegram.sendMessage(refId, `🔔 Sizda yangi referal!`); } catch(e){}
-        }
-    }
-
-    await ctx.replyWithHTML(
-        `<b>Assalomu alaykum, ${first_name}!</b> 👋\n\nRICHI28 APPLE professional tizimiga xush kelibsiz.`,
-        userKeyboard(user.isVerified)
-    );
-
-    if (id === ADMIN_ID) {
-        await ctx.reply("🛠 <b>Admin menyu:</b>", adminKeyboard);
-    }
+    await ctx.replyWithHTML(`<b>Assalomu alaykum, ${first_name}!</b> 👋\n\nRICHI28 APPLE professional tizimiga xush kelibsiz.`, userKeyboard(user.isVerified));
+    if (id === ADMIN_ID) await ctx.reply("🛠 <b>Admin Panel:</b>", adminKeyboard);
 });
 
-// Signal olish shartlari
+// SIGNAL OLISH SHARTLARI
 bot.action('get_signal', async (ctx) => {
-    const text = `⚠️ <b>RO'YXATDAN O'TISH SHARTLARI:</b>\n\n` +
-                 `Signallarni ochish uchun quyidagi ilovalardan birida <b>RICHI28</b> promokodi bilan ro'yxatdan o'ting:\n` +
-                 `🔹 1XBET | LINEBET | WINWIN | 888STARZ\n\n` +
-                 `📌 <b>DIQQAT:</b> Hisobni minimal 60,000 SO'M (5$ / 400₽) to'ldiring.\n` +
-                 `<i>Aks holda tizim sizni tasdiqlamaydi!</i>`;
-
+    const text = `⚠️ <b>RO'YXATDAN O'TISH SHARTLARI:</b>\n\nSignallarni ochish uchun <b>RICHI28</b> promokodi bilan ro'yxatdan o'ting.\n\n📌 <b>DIQQAT:</b> Hisobni minimal 60,000 SO'M (5$ / 400₽) to'ldiring.`;
     await ctx.editMessageText(text, {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
@@ -83,60 +75,18 @@ bot.action('get_signal', async (ctx) => {
     });
 });
 
-// ID yuborish
-bot.action('submit_id', async (ctx) => {
+bot.action('submit_id', (ctx) => {
     ctx.session.step = 'await_id';
-    await ctx.editMessageText("🆔 <b>O'yin ID raqamingizni yuboring:</b>", { parse_mode: 'HTML' });
+    ctx.reply("🆔 <b>O'yin ID raqamingizni yuboring:</b>", { parse_mode: 'HTML' });
 });
 
-bot.on('text', async (ctx, next) => {
-    if (ctx.from.id === ADMIN_ID && ctx.session?.step === 'broadcasting') {
-        const users = await User.find();
-        let count = 0;
-        for (const u of users) {
-            try { await ctx.copyMessage(u.userId); count++; } catch(e){}
-        }
-        ctx.session.step = null;
-        return ctx.reply(`✅ Xabar ${count} kishiga yuborildi.`);
-    }
-
-    if (ctx.session?.step === 'await_id') {
-        const idText = ctx.message.text;
-        if (!/^\d+$/.test(idText)) return ctx.reply("❌ Faqat raqam yuboring!");
-        
-        await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: idText, status: 'id_submitted' });
-        ctx.session.step = null;
-        
-        await ctx.reply("⏳ <b>ID yuborildi!</b>\nTasdiqlash 15-30 daqiqa oladi. Iltimos kuting.");
-
-        await bot.telegram.sendMessage(ADMIN_ID, 
-            `🔔 <b>ID TASDIQLASH:</b>\nUser: ${ctx.from.first_name}\nID: <code>${idText}</code>`,
-            Markup.inlineKeyboard([
-                [Markup.button.callback('✅ TASDIQLASH', `verify_${ctx.from.id}`)],
-                [Markup.button.callback('❌ RAD ETISH', `reject_${ctx.from.id}`)]
-            ])
-        );
-        return;
-    }
-    return next();
-});
-
-// Referal
+// REFERAL
 bot.action('get_referral', async (ctx) => {
-    const user = await User.findOne({ userId: ctx.from.id });
     const link = `https://t.me/${bot.botInfo.username}?start=${ctx.from.id}`;
-    await ctx.replyWithHTML(
-        `🔗 <b>Sizning referal silkangiz:</b>\n<code>${link}</code>\n\n` +
-        `👥 Taklif qilinganlar: ${user.referralCount} ta\n` +
-        `💰 5 ta odam uchun 5,000 so'm.`
-    );
+    await ctx.replyWithHTML(`🔗 <b>Sizning referal silkangiz:</b>\n<code>${link}</code>\n\n💰 5 ta odam uchun 5,000 so'm.`);
 });
 
-// Admin
-bot.action('admin_broadcast', async (ctx) => {
-    ctx.session.step = 'broadcasting';
-    await ctx.reply("📢 Reklama xabarini yuboring:");
-});
+// --- ADMIN ACTIONS ---
 
 bot.action('admin_stats', async (ctx) => {
     const total = await User.countDocuments();
@@ -144,20 +94,71 @@ bot.action('admin_stats', async (ctx) => {
     await ctx.reply(`📊 Jami: ${total}\n✅ VIP: ${vip}`);
 });
 
+bot.action('admin_broadcast', (ctx) => {
+    ctx.session.step = 'broadcasting';
+    ctx.reply("📢 Reklama xabarini yuboring (Matn, rasm, video yoki silka):");
+});
+
+bot.action('manage_channels', async (ctx) => {
+    const channels = await Channel.find();
+    let text = "📡 <b>Kanallar ro'yxati:</b>\n\n";
+    const buttons = channels.map(ch => [Markup.button.callback(`❌ ${ch.name}`, `del_${ch._id}`)]);
+    buttons.push([Markup.button.callback('➕ KANAL QO\'SHISH', 'add_channel')]);
+    await ctx.replyWithHTML(text, Markup.inlineKeyboard(buttons));
+});
+
+bot.action('add_channel', (ctx) => {
+    ctx.session.step = 'add_ch_name';
+    ctx.reply("Kanal nomini yuboring:");
+});
+
+// --- MESSAGE HANDLER ---
+bot.on('message', async (ctx) => {
+    if (ctx.from.id !== ADMIN_ID && ctx.session.step === 'await_id') {
+        await bot.telegram.sendMessage(ADMIN_ID, `🔔 <b>YANGI ID:</b> <code>${ctx.message.text}</code>`, Markup.inlineKeyboard([
+            [Markup.button.callback('✅ TASDIQLASH', `verify_${ctx.from.id}`)],
+            [Markup.button.callback('❌ RAD ETISH', `reject_${ctx.from.id}`)]
+        ]));
+        ctx.session.step = null;
+        return ctx.reply("⏳ ID yuborildi, kuting.");
+    }
+
+    if (ctx.from.id === ADMIN_ID) {
+        if (ctx.session.step === 'broadcasting') {
+            const users = await User.find();
+            let count = 0;
+            for (const u of users) {
+                try { await ctx.copyMessage(u.userId); count++; } catch (e) {}
+            }
+            ctx.session.step = null;
+            return ctx.reply(`✅ Xabar ${count} kishiga yuborildi.`);
+        }
+        if (ctx.session.step === 'add_ch_name') {
+            ctx.session.tempName = ctx.message.text;
+            ctx.session.step = 'add_ch_url';
+            return ctx.reply("Endi kanal linkini yuboring (https://t.me/...):");
+        }
+        if (ctx.session.step === 'add_ch_url') {
+            await Channel.create({ name: ctx.session.tempName, url: ctx.message.text });
+            ctx.session.step = null;
+            return ctx.reply("✅ Kanal qo'shildi!");
+        }
+    }
+});
+
+bot.action(/^del_(.+)$/, async (ctx) => {
+    await Channel.findByIdAndDelete(ctx.match[1]);
+    await ctx.reply("✅ Kanal o'chirildi.");
+});
+
 bot.action(/^verify_(\d+)$/, async (ctx) => {
-    const uId = ctx.match[1];
-    await User.findOneAndUpdate({ userId: uId }, { isVerified: true });
-    await ctx.editMessageText(`✅ User ${uId} tasdiqlandi.`);
-    bot.telegram.sendMessage(uId, "🎉 <b>VIP signallar ochildi!</b> /start bosing.");
+    await User.findOneAndUpdate({ userId: ctx.match[1] }, { isVerified: true });
+    bot.telegram.sendMessage(ctx.match[1], "🎉 VIP ruxsat berildi! /start bosing.");
+    ctx.editMessageText("✅ Tasdiqlandi.");
 });
 
-bot.action(/^reject_(\d+)$/, async (ctx) => {
-    const uId = ctx.match[1];
-    await ctx.editMessageText(`❌ User ${uId} rad etildi.`);
-    bot.telegram.sendMessage(uId, "⚠️ <b>Rad etildi!</b> Shartlarni qayta bajaring.");
-});
-
-bot.launch().then(() => console.log('🚀 RICHI28 BOT LIVE'));
+// SERVER LAUNCH
+bot.launch();
 const app = express();
 app.get('/', (req, res) => res.send('Bot Active'));
 app.listen(process.env.PORT || 3000);
