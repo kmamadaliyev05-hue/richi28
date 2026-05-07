@@ -35,17 +35,13 @@ bot.use((ctx, next) => {
     return next();
 });
 
-// --- TOG'RILANGAN YORDAMCHI FUNKSIYA ---
+// --- YORDAMCHI FUNKSIYALAR ---
 async function canAccess(ctx) {
-    // ADMIN UCHUN MAXSUS RUXSAT: Admin bo'lsa tekshirmasdan o'tkazadi
     if (ctx.from.id === ADMIN_ID) return true;
-
     const channels = await Config.find({ key: 'channel' });
     if (channels.length === 0) return true;
-    
     const user = await User.findOne({ userId: ctx.from.id });
     if (user?.status === 'requested') return true; 
-
     for (const ch of channels) {
         try {
             const member = await ctx.telegram.getChatMember(ch.chatId, ctx.from.id);
@@ -65,9 +61,10 @@ const getMainMenu = (isAdmin, isVerified) => {
     return Markup.inlineKeyboard(btns);
 };
 
-// 3. ASOSIY MANTIQ (START)
+// 3. ASOSIY MANTIQ (START) - ISM VA ID QO'SHILDI
 bot.start(async (ctx) => {
     const { id, first_name } = ctx.from;
+    ctx.session = {}; // Sessiyani startda tozalash xatolarni oldini oladi
     const refId = ctx.startPayload ? parseInt(ctx.startPayload) : null;
 
     let user = await User.findOneAndUpdate(
@@ -87,7 +84,13 @@ bot.start(async (ctx) => {
         return ctx.replyWithHTML(`Assalomu alaykum <b>${first_name}</b>! Botdan foydalanish uchun kanallarga a'zo bo'ling yoki so'rov yuboring.`, Markup.inlineKeyboard(btns));
     }
 
-    ctx.replyWithHTML(`<b>RICHI28 APPLE</b> tizimiga xush kelibsiz!`, getMainMenu(id === ADMIN_ID, user.isVerified));
+    // ISM VA ID SHU YERDA CHIQADI
+    ctx.replyWithHTML(
+        `<b>RICHI28 APPLE</b> tizimiga xush kelibsiz!\n\n` +
+        `👤 Ism: <b>${first_name}</b>\n` +
+        `🆔 ID: <code>${id}</code>`, 
+        getMainMenu(id === ADMIN_ID, user.isVerified)
+    );
 });
 
 bot.action('check_sub', async (ctx) => {
@@ -102,7 +105,6 @@ bot.action('check_sub', async (ctx) => {
 bot.action('get_signal', async (ctx) => {
     const apps = await Config.find({ key: 'app' });
     if (apps.length === 0) return ctx.answerCbQuery("Hozircha ilovalar yo'q.");
-    
     const btns = apps.map(a => [Markup.button.callback(a.name, `select_app_${a.name}`)]);
     btns.push([Markup.button.callback('🔙 Orqaga', 'back_home')]);
     ctx.editMessageText("🎯 <b>Platformani tanlang:</b>", { parse_mode: 'HTML', ...Markup.inlineKeyboard(btns) });
@@ -214,8 +216,9 @@ bot.action('back_home', async (ctx) => {
     ctx.editMessageText("<b>Asosiy menyu:</b>", { parse_mode: 'HTML', ...getMainMenu(ctx.from.id === ADMIN_ID, user.isVerified) });
 });
 
-// TEXT HANDLER (INPUTS)
+// --- TO'G'RILANGAN TEXT HANDLER ---
 bot.on('text', async (ctx, next) => {
+    if (!ctx.session) ctx.session = {};
     const step = ctx.session.step;
 
     if (step === 'input_id') {
@@ -230,6 +233,13 @@ bot.on('text', async (ctx, next) => {
     }
 
     if (ctx.from.id !== ADMIN_ID) return next();
+
+    // ILOVA QO'SHISH MANTIQI TO'G'RILANDI
+    if (step === 'app_name') {
+        await Config.create({ key: 'app', name: ctx.message.text });
+        ctx.session = {}; 
+        return ctx.reply("✅ Ilova qo'shildi!", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'a_app_manage')]]));
+    }
 
     if (step === 'ch_name') {
         ctx.session.tmpName = ctx.message.text;
@@ -247,12 +257,6 @@ bot.on('text', async (ctx, next) => {
         return ctx.reply("✅ Kanal qo'shildi!", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'a_ch')]]));
     }
 
-    if (step === 'app_name') {
-        await Config.create({ key: 'app', name: ctx.message.text });
-        ctx.session = {}; 
-        return ctx.reply("✅ Ilova qo'shildi!", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'a_app_manage')]]));
-    }
-
     if (step === 'bc') {
         const users = await User.find();
         for (let u of users) { try { await ctx.copyMessage(u.userId); } catch (e) {} }
@@ -265,7 +269,6 @@ bot.on('chat_join_request', async (ctx) => {
     await User.findOneAndUpdate({ userId: ctx.chatJoinRequest.from.id }, { status: 'requested' }, { upsert: true });
 });
 
-// START
 bot.launch().then(() => console.log('🚀 RICHI28 BOT LIVE'));
 
 const app = express();
