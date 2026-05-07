@@ -1,14 +1,19 @@
 {
-  "name": "telegram-gatekeeper",
+  "name": "richi28-apple-bot",
   "version": "1.0.0",
-  "description": "Instagram va Telegram trafiklari uchun zayavka va majburiy obuna boti",
-  "main": "bot.js",
+  "description": "Premium Apple of Fortune Signal Bot with WebApp Integration",
+  "main": "server.js",
   "scripts": {
-    "start": "node bot.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "mongoose": "^8.3.2",
+    "express": "^4.19.2",
+    "mongoose": "^8.3.4",
     "telegraf": "^4.16.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
