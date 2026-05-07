@@ -50,47 +50,52 @@ bot.action('broadcast', async (ctx) => {
 bot.action('get_signal', async (ctx) => {
     const userId = ctx.from.id;
     try {
-        const dbUser = await User.findOne({ userId });
-        const channels = await Channel.find();
+        // 1. Eng yangi ma'lumotni bazadan qayta o'qiymiz (Video dagi xato shu yerda edi)
+        const dbUser = await User.findOne({ userId }).lean(); 
+        const channels = await Channel.find().lean();
         let mustJoin = [];
 
-        // 1. Zayavka yuborganlarga darhol ruxsat
-        if (dbUser && dbUser.status === 'requested') {
-            return await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>\n\nZayavka holatingiz tasdiqlangan. Signalni oling:`,
+        // 2. Birinchi navbatda Zayavkani tekshiramiz
+        if (dbUser && (dbUser.status === 'requested' || dbUser.status === 'member')) {
+            return await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>\n\nSizning so'rovingiz tasdiqlangan. Terminalga kiring:`,
                 Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', process.env.WEB_APP_URL)]])
             );
         }
 
-        // 2. Obunani tekshirish
+        // 3. Kanallarni real vaqtda tekshirish
         for (const ch of channels) {
             try {
                 const member = await ctx.telegram.getChatMember(ch.channelId, userId);
-                const isOk = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
+                const isSubscribed = ['member', 'administrator', 'creator', 'restricted'].includes(member.status);
                 
-                if (!isOk) {
+                if (!isSubscribed) {
                     mustJoin.push(ch);
                 }
             } catch (e) {
-                // Bot admin bo'lmasa yoki kanal topilmasa
+                // Agar bot admin bo'lmasa yoki kanal topilmasa, zayavka bo'lmagan holda majburiy obuna deb hisoblaymiz
                 mustJoin.push(ch);
             }
         }
 
-        // 3. Yakuniy natija
+        // 4. Yakuniy mantiq
         if (mustJoin.length === 0) {
-            await ctx.replyWithHTML(`<b>Ruxsat berildi! ✅</b>\n\nSignal olish uchun pastdagi tugmani bosing:`,
-                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ SIGNAL OLISH', process.env.WEB_APP_URL)]])
+            // Agar massiv bo'sh bo'lsa - demak hamma joyga a'zo
+            await ctx.replyWithHTML(`<b>Xush kelibsiz! ✅</b>\n\nTerminalga kirish uchun pastdagi tugmani bosing:`,
+                Markup.inlineKeyboard([[Markup.button.webApp('⚡️ TERMINAL', process.env.WEB_APP_URL)]])
             );
         } else {
+            // Hali a'zo bo'lmagan kanallar bo'lsa
             const buttons = mustJoin.map(ch => [Markup.button.url(`📢 ${ch.channelName}`, ch.inviteLink)]);
             buttons.push([Markup.button.callback('🔄 TEKSHIRISH', 'get_signal')]);
             
-            await ctx.replyWithHTML(`<b>⚠️ DIQQAT!</b>\n\nSignal olish uchun quyidagi kanallarga obuna bo'ling:`, 
+            // Videoda ko'ringan takrorlanishni yo'qotish uchun eski xabarni o'chirib yangisini yuboramiz
+            await ctx.replyWithHTML(`<b>⚠️ DIQQAT!</b>\n\nTerminalga kirish uchun quyidagi kanallarga obuna bo'ling:`, 
                 Markup.inlineKeyboard(buttons)
             );
         }
     } catch (err) { 
-        console.error("Signal Error:", err);
+        console.error("Signal Logic Error:", err);
+        ctx.reply("Texnik uzilish. Birozdan so'ng urinib ko'ring.");
     }
 });
 
