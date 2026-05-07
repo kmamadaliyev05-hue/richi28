@@ -4,8 +4,17 @@ const express = require('express');
 require('dotenv').config();
 
 // 1. MA'LUMOTLAR BAZASI ULANISHI
-mongoose.connect(process.env.MONGO_URI).then(() => {
+mongoose.connect(process.env.MONGO_URI).then(async () => {
     console.log('✅ MongoDB Connected');
+    
+    // MUHIM: Eski xato beruvchi indekslarni majburiy o'chirish
+    try {
+        await mongoose.connection.db.collection('configs').dropIndexes();
+        console.log('🗑 Eski indekslar tozalandi');
+    } catch (e) {
+        console.log('ℹ️ Indekslar allaqachon toza');
+    }
+    
     seedApps(); 
 });
 
@@ -26,9 +35,9 @@ const Config = mongoose.model('Config', new mongoose.Schema({
     name: String,
     chatId: String,
     url: String
-}, { validateBeforeSave: false, timestamps: true, versionKey: false }));
+}, { autoIndex: false, validateBeforeSave: false, timestamps: true }));
 
-// --- AVTOMATIK ILOVALARNI QO'SHISH (Seed) ---
+// --- AVTOMATIK ILOVALAR ---
 async function seedApps() {
     try {
         const defaultApps = ['1XBET', 'LINEBET', 'WINWIN', '888STARZ'];
@@ -79,7 +88,7 @@ const getMainMenu = (isAdmin, isVerified) => {
     return Markup.inlineKeyboard(btns);
 };
 
-// 3. START VA ASOSIY MANTIQ
+// 3. START
 bot.start(async (ctx) => {
     const { id, first_name } = ctx.from;
     ctx.session = {}; 
@@ -91,15 +100,11 @@ bot.start(async (ctx) => {
         { upsert: true, new: true }
     );
 
-    if (user.joinedAt.getTime() === user.lastActive?.getTime() && refId && refId !== id) {
-        await User.findOneAndUpdate({ userId: refId }, { $inc: { referralCount: 1 } });
-    }
-
     if (!(await canAccess(ctx))) {
         const channels = await Config.find({ key: 'channel' });
         const btns = channels.map(ch => [Markup.button.url(`📢 ${ch.name}`, ch.url)]);
         btns.push([Markup.button.callback('✅ Tekshirish', 'check_sub')]);
-        return ctx.replyWithHTML(`Assalomu alaykum <b>${first_name}</b>! Botdan foydalanish uchun kanallarga a'zo bo'ling yoki so'rov yuboring.`, Markup.inlineKeyboard(btns));
+        return ctx.replyWithHTML(`Assalomu alaykum <b>${first_name}</b>! Botdan foydalanish uchun kanallarga a'zo bo'ling:`, Markup.inlineKeyboard(btns));
     }
 
     ctx.replyWithHTML(
@@ -113,12 +118,12 @@ bot.start(async (ctx) => {
 bot.action('check_sub', async (ctx) => {
     if (await canAccess(ctx)) {
         const user = await User.findOne({ userId: ctx.from.id });
-        return ctx.editMessageText("✅ Tasdiqlandi! Asosiy menyu:", getMainMenu(ctx.from.id === ADMIN_ID, user.isVerified));
+        return ctx.editMessageText("✅ Tasdiqlandi!", getMainMenu(ctx.from.id === ADMIN_ID, user.isVerified));
     }
     await ctx.answerCbQuery("❌ Obuna topilmadi!", { show_alert: true });
 });
 
-// 4. SIGNAL BO'LIMI
+// 4. SIGNAL
 bot.action('get_signal', async (ctx) => {
     const apps = await Config.find({ key: 'app' });
     if (apps.length === 0) return ctx.answerCbQuery("Hozircha ilovalar yo'q.");
@@ -133,7 +138,7 @@ bot.action(/^select_app_(.+)$/, (ctx) => {
     ctx.editMessageText(`🎯 <b>PLATFORMA: ${ctx.session.selectedApp}</b>\n\n🆔 <b>ID yuboring:</b>`, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'get_signal')]]) });
 });
 
-// 5. REFERAL TIZIMI (5-4-3-2-1)
+// 5. REFERAL
 bot.action('ref_menu', async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
     const link = `https://t.me/${bot.botInfo.username}?start=${ctx.from.id}`;
@@ -149,7 +154,7 @@ bot.action('ref_withdraw', async (ctx) => {
     } else ctx.answerCbQuery(`❌ Yana ${user.refTask - user.referralCount} ta odam qo'shing!`, { show_alert: true });
 });
 
-// 6. ADMIN PANEL
+// 6. ADMIN
 bot.action('admin_main', (ctx) => {
     ctx.editMessageText("🛠 <b>ADMIN PANEL</b>", Markup.inlineKeyboard([[Markup.button.callback('📊 Statistika', 'a_stats'), Markup.button.callback('✉️ Reklama', 'a_bc')], [Markup.button.callback('🔗 Kanallar', 'a_ch'), Markup.button.callback('📱 Ilovalar', 'a_app_manage')], [Markup.button.callback('🔙 Chiqish', 'back_home')]]));
 });
@@ -173,7 +178,7 @@ bot.action('a_ch', async (ctx) => {
     const channels = await Config.find({ key: 'channel' });
     const btns = channels.map(ch => [Markup.button.callback(`❌ ${ch.name}`, `del_cfg_${ch._id}`)]);
     btns.push([Markup.button.callback('➕ Kanal qo\'shish', 'add_ch'), Markup.button.callback('🔙 Orqaga', 'admin_main')]);
-    ctx.editMessageText("📡 <b>Majburiy obuna kanallari:</b>", Markup.inlineKeyboard(btns));
+    ctx.editMessageText("📡 <b>Kanallar:</b>", Markup.inlineKeyboard(btns));
 });
 
 bot.action('add_ch', (ctx) => { ctx.session.step = 'ch_name'; ctx.reply("Kanal nomi:"); });
@@ -202,28 +207,23 @@ bot.action('back_home', async (ctx) => {
     ctx.editMessageText("Asosiy menyu:", { parse_mode: 'HTML', ...getMainMenu(ctx.from.id === ADMIN_ID, user.isVerified) });
 });
 
-// --- TEXT HANDLER ---
 bot.on('text', async (ctx, next) => {
-    if (!ctx.session) ctx.session = {};
     const step = ctx.session.step;
-
     if (step === 'input_id') {
-        if (!/^\d+$/.test(ctx.message.text)) return ctx.reply("Faqat raqam yuboring!");
+        if (!/^\d+$/.test(ctx.message.text)) return ctx.reply("Faqat raqam!");
         await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: ctx.message.text, bookmaker: ctx.session.selectedApp });
         ctx.session = {};
         ctx.reply("⏳ Qabul qilindi!");
         bot.telegram.sendMessage(ADMIN_ID, `🆔 ID: <code>${ctx.message.text}</code>\n👤: ${ctx.from.first_name}`, Markup.inlineKeyboard([[Markup.button.callback('✅ Tasdiqlash', `confirm_${ctx.from.id}`), Markup.button.callback('❌ Rad etish', `reject_${ctx.from.id}`)]]));
         return;
     }
-
     if (ctx.from.id !== ADMIN_ID) return next();
-
     if (step === 'app_name') {
         await Config.create({ key: 'app', name: ctx.message.text });
         ctx.session = {};
         return ctx.reply("✅ Qo'shildi!", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'a_app_manage')]]));
     }
-    if (step === 'ch_name') { ctx.session.tmpN = ctx.message.text; ctx.session.step = 'ch_i'; return ctx.reply("Chat ID (-100...):"); }
+    if (step === 'ch_name') { ctx.session.tmpN = ctx.message.text; ctx.session.step = 'ch_i'; return ctx.reply("Chat ID:"); }
     if (step === 'ch_i') { ctx.session.tmpI = ctx.message.text; ctx.session.step = 'ch_u'; return ctx.reply("Link:"); }
     if (step === 'ch_u') {
         await Config.create({ key: 'channel', name: ctx.session.tmpN, chatId: ctx.session.tmpI, url: ctx.message.text });
@@ -234,7 +234,7 @@ bot.on('text', async (ctx, next) => {
         const users = await User.find();
         for (let u of users) { try { await ctx.copyMessage(u.userId); } catch (e) {} }
         ctx.session = {};
-        return ctx.reply("✅ Reklama yuborildi!");
+        return ctx.reply("✅ Yuborildi!");
     }
 });
 
