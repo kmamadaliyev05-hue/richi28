@@ -1,15 +1,19 @@
 const mongoose = require('mongoose');
 
+// Foydalanuvchi sxemasi
 const UserSchema = new mongoose.Schema({
-  telegramId: { type: Number, required: true, unique: true },
-  status: { type: String, enum: ['pending', 'requested', 'member'], default: 'pending' },
-  joinedAt: { type: Date, default: Date.now }
+  userId: { type: Number, unique: true, required: true },
+  firstName: String,
+  username: String,
+  status: { type: String, enum: ['none', 'requested', 'member'], default: 'none' },
+  createdAt: { type: Date, default: Date.now }
 });
 
+// Majburiy obuna kanallari sxemasi
 const ChannelSchema = new mongoose.Schema({
   channelId: { type: String, required: true },
-  name: { type: String, required: true },
-  link: { type: String, required: true }
+  channelName: { type: String, required: true },
+  inviteLink: { type: String, required: true }
 });
 
 const User = mongoose.model('User', UserSchema);
