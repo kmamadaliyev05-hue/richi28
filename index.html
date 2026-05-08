@@ -3,276 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 MULTI-HACK</title>
+    <title>RICHI28 HACK PORTAL</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-
+        
         :root {
-            --hacker-green: #00ff41;
-            --dark-bg: #050505;
-            --border-glow: 0 0 15px rgba(0, 255, 65, 0.4);
+            --neon-green: #00ff41;
+            --neon-blue: #00f3ff;
+            --dark: #050505;
         }
 
         body {
-            background-color: var(--dark-bg);
-            color: var(--hacker-green);
+            background-color: var(--dark);
+            color: var(--neon-green);
             font-family: 'JetBrains Mono', monospace;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
             overflow: hidden;
-            text-transform: uppercase;
+            user-select: none;
         }
 
-        /* Matrix Background */
-        canvas {
-            position: fixed;
-            top: 0; left: 0;
-            z-index: -1;
-            opacity: 0.2;
+        .neon-border {
+            border: 1px solid var(--neon-green);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
         }
 
-        /* O'yinlar ro'yxati (Asosiy sahifa) */
-        #menu-screen {
-            width: 90%;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 30px;
-            z-index: 10;
+        .glitch-text {
+            text-shadow: 2px 0 var(--neon-blue), -2px 0 #ff00c1;
+            animation: glitch 2s infinite;
         }
 
-        .menu-title {
-            text-align: center;
-            font-size: 18px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--hacker-green);
-            padding-bottom: 10px;
-            box-shadow: 0 5px 10px -5px var(--hacker-green);
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
         }
+
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.2; }
 
         .game-card {
-            background: rgba(0, 40, 0, 0.1);
-            border: 1px solid var(--hacker-green);
-            padding: 15px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            box-shadow: var(--border-glow);
-            transition: 0.3s;
+            background: rgba(0, 255, 65, 0.05);
+            transition: all 0.3s;
         }
 
         .game-card:active {
-            transform: scale(0.95);
-            background: var(--hacker-green);
+            background: var(--neon-green);
             color: black;
-        }
-
-        /* O'yin ekrani (Signal qismi) */
-        #game-screen {
-            display: none;
-            width: 100%;
-            flex-direction: column;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .back-btn {
-            margin-top: 15px;
-            font-size: 12px;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        .terminal-header {
-            width: 90%;
-            margin-top: 10px;
-            border: 1px solid var(--hacker-green);
-            padding: 8px;
-            font-size: 10px;
-            background: rgba(0, 0, 0, 0.8);
-        }
-
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            padding: 15px;
-            margin-top: 15px;
-            border: 2px solid var(--hacker-green);
-            background: rgba(0, 40, 0, 0.2);
-            position: relative;
+            transform: scale(0.95);
         }
 
         .cell {
-            width: 50px;
-            height: 50px;
-            border: 1px solid #003300;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            aspect-ratio: 1/1;
         }
 
-        .cell.hack-active {
-            border-color: var(--hacker-green);
-            box-shadow: inset 0 0 10px var(--hacker-green);
-            background: rgba(0, 255, 65, 0.2);
+        .cell.active {
+            background: var(--neon-green);
+            box-shadow: 0 0 15px var(--neon-green);
+            animation: pulse 1s infinite;
         }
 
-        .cell img {
-            width: 30px;
-            filter: sepia(100%) hue-rotate(70deg) brightness(1.5);
-            display: none;
-        }
-
-        .hack-btn {
-            background: black;
-            color: var(--hacker-green);
-            border: 2px solid var(--hacker-green);
-            padding: 15px;
-            width: 90%;
-            margin-top: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: bold;
-            box-shadow: var(--border-glow);
-        }
-
-        .scanner {
-            position: absolute;
-            width: 100%; height: 2px;
-            background: var(--hacker-green);
-            box-shadow: 0 0 20px var(--hacker-green);
-            display: none;
-            top: 0;
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
         }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center">
 
-    <canvas id="matrix"></canvas>
+    <canvas id="binary-canvas"></canvas>
 
-    <div id="menu-screen">
-        <div class="menu-title">SELECT VULNERABILITY</div>
-        
-        <div class="game-card" onclick="openGame('APPLE OF FORTUNE')">
-            <span>APPLE OF FORTUNE</span>
-            <span>[v2.1]</span>
+    <div id="loading-screen" class="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6">
+        <h1 class="text-3xl font-bold glitch-text mb-8">RICHI28 HACK</h1>
+        <div class="w-full max-w-xs bg-gray-900 h-2 neon-border overflow-hidden">
+            <div id="progress-bar" class="h-full bg-[#00ff41] w-0 transition-all duration-100"></div>
         </div>
-
-        <div class="game-card" onclick="openGame('MINES')">
-            <span>MINES</span>
-            <span>[v1.0]</span>
-        </div>
-
-        <div class="game-card" onclick="openGame('CRASH')">
-            <span>CRASH (AVIA)</span>
-            <span>[v4.5]</span>
-        </div>
-
-        <div class="game-card" onclick="openGame('SUPER MARIO')">
-            <span>SUPER MARIO</span>
-            <span>[v0.8]</span>
+        <div id="terminal-status" class="mt-4 text-[10px] text-left w-full max-w-xs h-20 overflow-hidden opacity-70">
+            > Initializing protocols...<br>
         </div>
     </div>
 
-    <div id="game-screen">
-        <div class="back-btn" onclick="showMenu()">< BACK TO LIST</div>
-        <h2 id="current-game-title">APPLE OF FORTUNE</h2>
+    <div id="main-menu" class="hidden w-full p-4 z-10 flex flex-col items-center">
+        <div class="terminal-header w-full p-3 neon-border bg-black/80 mb-6 text-sm">
+            > USER_AUTH: SUCCESS<br>
+            > SESSION: <span id="user-name">GUEST</span>
+        </div>
         
-        <div class="terminal-header" id="terminal-info">
-            TARGET: SERVER_BYPASS<br>
-            STATUS: WAITING_INJECTION
+        <div class="grid grid-cols-2 gap-4 w-full">
+            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('APPLE OF FORTUNE', 5, 10)">🍎 APPLE OF FORTUNE</div>
+            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('EASTERN NIGHTS', 5, 5)">🌙 EASTERN NIGHTS</div>
+            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('WILD WEST GOLD', 5, 4)">🤠 WILD WEST</div>
+            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('DRAGON GOLD', 5, 5)">🐉 DRAGON GOLD</div>
+            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('SWAMP LAND', 5, 5)">🐊 SWAMP LAND</div>
+            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('KAMIKAZE', 5, 10)">🛩 KAMIKAZE</div>
         </div>
+    </div>
 
-        <div class="game-grid" id="grid">
-            <div class="scanner" id="scanner"></div>
-            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div id="game-interface" class="hidden w-full p-4 z-10 flex flex-col items-center">
+        <div class="flex justify-between w-full mb-4 text-xs underline cursor-pointer" onclick="backToMenu()">
+            < BACK_TO_DATABASE
         </div>
+        <h2 id="game-title" class="text-xl mb-4 text-blue-400">GAME_TITLE</h2>
+        
+        <div id="game-grid" class="grid gap-1 w-full max-w-[300px] border-2 border-[#00ff41] p-2 bg-black/50">
+            </div>
 
-        <button class="hack-btn" onclick="runHack()">GET PREDICTION</button>
+        <button id="signal-btn" class="mt-8 w-full max-w-[300px] py-4 bg-black border-2 border-[#00ff41] font-bold hover:bg-[#00ff41] hover:text-black transition-all" onclick="getPrediction()">
+            GET PREDICTION
+        </button>
+        <div id="cooldown-timer" class="mt-4 text-xs text-red-500 hidden text-center">ANTI-BAN DELAY: <span id="seconds">20</span>s</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        const lang = new URLSearchParams(window.location.search).get('lang') || 'uz';
 
-        // Matrix Effect
-        const canvas = document.getElementById('matrix');
+        // 1. BINARY RAIN
+        const canvas = document.getElementById('binary-canvas');
         const ctx = canvas.getContext('2d');
-        canvas.height = window.innerHeight; canvas.width = window.innerWidth;
-        const chars = "01";
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const alphabet = "01ABCDEF7X";
         const fontSize = 12;
-        const columns = canvas.width/fontSize;
-        const drops = Array(Math.floor(columns)).fill(1);
+        const columns = canvas.width / fontSize;
+        const rainDrops = Array.from({length: columns}).fill(1);
 
-        function drawMatrix() {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#0F0";
-            ctx.font = fontSize + "px monospace";
-            drops.forEach((y, i) => {
-                const text = chars.charAt(Math.floor(Math.random()*chars.length));
-                ctx.fillText(text, i*fontSize, y*fontSize);
-                if(y*fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
+        function drawRain() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#0F0"; ctx.font = fontSize + "px monospace";
+            rainDrops.forEach((y, i) => {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.alphabet));
+                ctx.fillText(text, i * fontSize, y * fontSize);
+                if (y * fontSize > canvas.height && Math.random() > 0.975) rainDrops[i] = 0;
+                rainDrops[i]++;
             });
         }
-        setInterval(drawMatrix, 40);
+        setInterval(drawRain, 30);
 
-        // Navigation
-        function openGame(name) {
-            document.getElementById('menu-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'flex';
-            document.getElementById('current-game-title').innerText = name;
-            tg.HapticFeedback.impactOccurred('medium');
-        }
+        // 2. LOADING SIMULATION
+        const progress = document.getElementById('progress-bar');
+        const status = document.getElementById('terminal-status');
+        const logs = ["> Bypassing firewall...", "> Extracting algorithms...", "> Connection: SECURE", "> Injecting script..."];
+        
+        let width = 0;
+        const interval = setInterval(() => {
+            width += 2;
+            progress.style.width = width + "%";
+            if (width % 25 === 0) status.innerHTML += logs[width/25 - 1] + "<br>";
+            if (width >= 100) {
+                clearInterval(interval);
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('main-menu').classList.remove('hidden');
+                document.getElementById('user-name').innerText = tg.initDataUnsafe.user?.first_name || "AGENT_X";
+            }
+        }, 40);
 
-        function showMenu() {
-            document.getElementById('game-screen').style.display = 'none';
-            document.getElementById('menu-screen').style.display = 'flex';
-            resetGrid();
-        }
-
-        function resetGrid() {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(c => { c.classList.remove('hack-active'); c.innerHTML = ''; });
-        }
-
-        // Hack Logic
-        function runHack() {
-            resetGrid();
-            const cells = document.querySelectorAll('.cell');
-            const scanner = document.getElementById('scanner');
-            const term = document.getElementById('terminal-info');
-
-            tg.HapticFeedback.impactOccurred('heavy');
-            term.innerHTML = "INJECTING EXPLOIT...<br>BYPASSING FIREWALL...";
+        // 3. GAME LOGIC
+        let currentCols = 0;
+        function openGame(name, cols, rows) {
+            currentCols = cols;
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('game-interface').classList.remove('hidden');
+            document.getElementById('game-title').innerText = name;
             
-            scanner.style.display = "block";
-            scanner.animate([{top: '0%'}, {top: '100%'}], {duration: 1000, iterations: 2});
+            const grid = document.getElementById('game-grid');
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            grid.innerHTML = '';
+            for (let i = 0; i < cols * rows; i++) {
+                grid.innerHTML += `<div class="cell flex items-center justify-center text-[8px] opacity-20">?</div>`;
+            }
+        }
+
+        function backToMenu() {
+            document.getElementById('game-interface').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+        }
+
+        function getPrediction() {
+            const btn = document.getElementById('signal-btn');
+            const timerDiv = document.getElementById('cooldown-timer');
+            const cells = document.querySelectorAll('.cell');
+            
+            btn.disabled = true;
+            btn.innerText = "CALCULATING...";
+            tg.HapticFeedback.impactOccurred('heavy');
 
             setTimeout(() => {
-                term.innerHTML = "SUCCESS: ACCESS_GRANTED<br>DATA_EXTRACTED";
-                
-                // 3 qatorga signal berish
-                for(let i=0; i<3; i++) {
-                    const rand = Math.floor(Math.random()*5) + (i*5);
+                const rows = cells.length / currentCols;
+                for (let r = rows - 1; r >= rows - 3; r--) { // Show 3 rows
+                    const rand = Math.floor(Math.random() * currentCols);
+                    const idx = (r * currentCols) + rand;
                     setTimeout(() => {
-                        cells[rand].classList.add('hack-active');
-                        cells[rand].innerHTML = '<img src="https://cdn-icons-png.flaticon.com/512/415/415733.png" style="display:block">';
+                        cells[idx].classList.add('active');
+                        cells[idx].innerHTML = "HACK";
                         tg.HapticFeedback.notificationOccurred('success');
-                    }, i*500);
+                    }, (rows - r) * 400);
                 }
-                
-                setTimeout(() => { scanner.style.display = "none"; }, 2000);
+
+                btn.classList.add('hidden');
+                timerDiv.classList.remove('hidden');
+                let sec = 20;
+                const cd = setInterval(() => {
+                    sec--;
+                    document.getElementById('seconds').innerText = sec;
+                    if (sec <= 0) {
+                        clearInterval(cd);
+                        btn.classList.remove('hidden');
+                        btn.disabled = false;
+                        btn.innerText = "GET PREDICTION";
+                        timerDiv.classList.add('hidden');
+                    }
+                }, 1000);
             }, 2000);
         }
     </script>
