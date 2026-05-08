@@ -3,134 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 HACKER PORTAL</title>
+    <title>RICHI28 HACKER HUB</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        :root { --neon: #00ff41; --bg: #050505; }
+        body { background-color: var(--bg); color: var(--neon); font-family: 'JetBrains Mono', monospace; overflow: hidden; user-select: none; }
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.15; }
         
-        :root {
-            --neon: #00ff41;
-            --danger: #ff003c;
-            --bg: #050505;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--neon);
-            font-family: 'JetBrains Mono', monospace;
-            overflow: hidden;
-            user-select: none;
-            touch-action: manipulation;
-        }
-
-        canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.2; }
-
-        .hacker-border {
-            border: 1px solid var(--neon);
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
-        }
-
-        .cell {
-            border: 1px solid rgba(0, 255, 65, 0.2);
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            background: rgba(0, 20, 0, 0.4);
-        }
-
-        /* Hacker Format Elements */
-        .cell.active-hack {
-            background: var(--neon);
-            color: black;
-            font-weight: bold;
-            box-shadow: 0 0 20px var(--neon);
-            animation: glitch-cell 0.2s infinite;
-        }
-
-        @keyframes glitch-cell {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); filter: hue-rotate(90deg); }
-            100% { transform: scale(1); }
-        }
-
-        .game-card {
-            background: rgba(0, 255, 65, 0.03);
-            border: 1px solid rgba(0, 255, 65, 0.3);
-            cursor: pointer;
+        .hacker-card { 
+            background: rgba(0, 255, 65, 0.05); 
+            border: 1px solid var(--neon); 
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
             transition: 0.3s;
         }
+        .hacker-card:active { background: var(--neon); color: black; }
 
-        .game-card:active {
-            background: var(--neon);
-            color: black;
-        }
-
-        .btn-glitch {
-            position: relative;
-            background: transparent;
-            border: 2px solid var(--neon);
-            overflow: hidden;
-            transition: 0.3s;
-        }
-
-        .btn-glitch:disabled { opacity: 0.3; border-color: gray; color: gray; }
-
-        #logs-box {
-            font-size: 9px;
-            color: #008f11;
+        /* Scroll & Grid Animation */
+        #grid-wrapper { 
+            max-height: 65vh; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column-reverse; 
+            padding: 20px 0;
             scrollbar-width: none;
         }
+        #grid-wrapper::-webkit-scrollbar { display: none; }
+        
+        .row-container { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 12px; 
+            margin-bottom: 12px; 
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            opacity: 0.4;
+        }
+        .row-container.active-row { opacity: 1; transform: scale(1.02); }
+        
+        .cell { 
+            width: 55px; 
+            height: 55px; 
+            border: 1px solid rgba(0, 255, 65, 0.3); 
+            background: rgba(0, 20, 0, 0.7); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 10px;
+            position: relative;
+        }
+        .cell.hack-active { 
+            background: var(--neon); 
+            color: black; 
+            box-shadow: 0 0 25px var(--neon); 
+            font-weight: bold;
+            border: none;
+            animation: pulse 0.4s infinite;
+        }
+        
+        .kf-badge { 
+            font-size: 11px; 
+            color: #fff; 
+            background: rgba(0, 0, 0, 0.8); 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            min-width: 50px; 
+            text-align: center; 
+            border: 1px solid var(--neon);
+            box-shadow: 0 0 5px var(--neon);
+        }
+
+        .hask-img { filter: drop-shadow(0 0 5px var(--neon)) brightness(1.2); width: 45px; }
+
+        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
     </style>
 </head>
 <body class="flex flex-col items-center">
 
-    <canvas id="matrix-rain"></canvas>
+    <canvas id="matrix"></canvas>
 
-    <div id="loader" class="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-8">
-        <h1 class="text-3xl font-bold tracking-[10px] mb-10 text-[#00ff41]" style="text-shadow: 0 0 15px #00ff41;">RICHI28</h1>
-        <div class="w-full max-w-xs h-1 bg-gray-900 overflow-hidden relative border border-[#00ff41]">
-            <div id="bar" class="h-full bg-[#00ff41] w-0 transition-all duration-100"></div>
+    <div id="loader" class="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6">
+        <h1 class="text-3xl font-bold mb-8 tracking-[10px] text-[#00ff41]">RICHI28</h1>
+        <div class="w-full max-w-xs h-1 bg-gray-900 border border-[#00ff41] overflow-hidden">
+            <div id="bar" class="h-full bg-[#00ff41] w-0 transition-all duration-75"></div>
         </div>
-        <div id="logs-box" class="mt-6 w-full max-w-xs h-32 overflow-hidden leading-relaxed">
-            > Initializing core_v4.0...<br>
+        <p class="mt-4 text-[10px] animate-pulse">> BYPASSING SECURITY...</p>
+    </div>
+
+    <div id="menu" class="hidden w-full p-5 flex flex-col items-center z-10 overflow-y-auto h-screen">
+        <div class="w-full p-3 border border-[#00ff41] bg-black/80 mb-6 text-[10px] leading-relaxed shadow-[0_0_15px_rgba(0,255,65,0.1)]">
+            > AUTH_STATUS: <span class="text-white">ENCRYPTED</span><br>
+            > EXPLOIT_V4: <span class="text-white">READY</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 w-full">
+            <div class="hacker-card p-4 flex items-center justify-between" onclick="initGame('APPLE OF FORTUNE', 5, 10, [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68], 'https://cdn-icons-png.flaticon.com/512/415/415733.png')">
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold">APPLE OF FORTUNE</span>
+                    <span class="text-[8px] opacity-60">TARGET: FRUIT_SERVER</span>
+                </div>
+                <img src="https://cdn-icons-png.flaticon.com/512/415/415733.png" class="hask-img w-8">
+            </div>
+            <div class="hacker-card p-4 flex items-center justify-between" onclick="initGame('KAMIKAZE', 5, 12, [1.2, 1.5, 2, 3, 5, 10, 20, 50, 100, 250, 500, 1000], 'https://cdn-icons-png.flaticon.com/512/579/579268.png')">
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold">KAMIKAZE</span>
+                    <span class="text-[8px] opacity-60">TARGET: PLANE_ENGINE</span>
+                </div>
+                <img src="https://cdn-icons-png.flaticon.com/512/579/579268.png" class="hask-img w-8">
+            </div>
+            <div class="hacker-card p-4 flex items-center justify-between" onclick="initGame('DRAGON GOLD', 5, 10, [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68], 'https://cdn-icons-png.flaticon.com/512/3063/3063822.png')">
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold">DRAGON'S GOLD</span>
+                    <span class="text-[8px] opacity-60">TARGET: GOLD_VAULT</span>
+                </div>
+                <img src="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" class="hask-img w-8">
+            </div>
         </div>
     </div>
 
-    <div id="menu" class="hidden w-full p-5 z-10 flex flex-col items-center">
-        <div class="w-full p-3 hacker-border bg-black/90 mb-8 text-[10px] leading-5">
-            > SYSTEM: <span class="text-white">ACTIVE</span><br>
-            > EXPLOIT: <span class="text-white">ACCESS_GRANTED</span><br>
-            > TARGET: <span class="text-white" id="user-name">LOADING...</span>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-4 w-full">
-            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('APPLE OF FORTUNE', 5, 10)">[ APPLE ]</div>
-            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('EASTERN NIGHTS', 5, 10)">[ EASTERN ]</div>
-            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('WILD WEST GOLD', 2, 10)">[ WILDWEST ]</div>
-            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('DRAGON\'S GOLD', 5, 10)">[ DRAGON ]</div>
-            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('SWAMP LAND', 5, 4)">[ SWAMP ]</div>
-            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('KAMIKAZE', 5, 12)">[ KAMIKAZE ]</div>
-        </div>
-    </div>
-
-    <div id="hack-ui" class="hidden w-full p-4 z-10 flex flex-col items-center">
-        <div class="w-full flex justify-between mb-5 items-center">
-            <span onclick="goBack()" class="text-[10px] border-b border-[#00ff41] cursor-pointer">< BACK_TO_HUB</span>
-            <span id="game-label" class="text-xs font-bold text-white"></span>
+    <div id="game-ui" class="hidden w-full p-4 flex flex-col items-center z-10">
+        <div class="w-full flex justify-between items-center mb-4">
+            <span onclick="location.reload()" class="text-[10px] underline cursor-pointer text-[#00f3ff]">< TERMINATE</span>
+            <span id="game-name" class="text-xs font-bold text-white tracking-widest"></span>
         </div>
 
-        <div id="grid-container" class="grid gap-1 border-2 border-[#00ff41] p-1 bg-black/80 shadow-[0_0_30px_rgba(0,255,65,0.1)]">
+        <div id="grid-wrapper" class="w-full">
             </div>
 
-        <button id="run-btn" class="mt-8 w-full py-4 btn-glitch font-bold text-sm tracking-[5px]" onclick="executeExploit()">
-            GET PREDICTION
+        <button id="hack-btn" class="mt-6 w-full py-5 bg-black border-2 border-[#00ff41] font-bold tracking-[5px] active:bg-[#00ff41] active:text-black shadow-[0_0_20px_rgba(0,255,65,0.2)]" onclick="stepHack()">
+            GET SIGNAL
         </button>
-
-        <div id="cooldown" class="mt-4 text-[10px] text-red-500 hidden animate-pulse">
-            SECURITY_DELAY: <span id="sec">20</span>s
+        
+        <div id="cooldown" class="mt-4 text-[10px] text-red-500 hidden italic animate-pulse">
+            OVERHEAT_PROTECTION: <span id="sec">15</span>s
         </div>
     </div>
 
@@ -138,112 +144,99 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Matrix Background
-        const canvas = document.getElementById('matrix-rain');
+        // Matrix Rain
+        const canvas = document.getElementById('matrix');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const chars = "010101ABCDEF";
-        const drops = Array.from({length: Math.floor(window.innerWidth/14)}).fill(1);
-        function matrix() {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#0F0"; ctx.font = "14px monospace";
+        const drops = Array.from({length: 40}).fill(1);
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = "#0F0"; ctx.font = "12px monospace";
             drops.forEach((y, i) => {
-                const txt = chars[Math.floor(Math.random()*chars.length)];
-                ctx.fillText(txt, i*14, y*14);
-                if(y*14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                ctx.fillText(Math.random() > 0.5 ? "1" : "0", i*12, y*12);
+                if(y*12 > canvas.height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
             });
         }
-        setInterval(matrix, 35);
+        setInterval(drawMatrix, 40);
 
-        // Loading simulation
-        let progress = 0;
-        const logEntries = ["> Bypassing server...", "> Injecting payload...", "> Decrypting grid...", "> STABLE CONNECTION"];
-        const loadInt = setInterval(() => {
-            progress += 1.5;
-            document.getElementById('bar').style.width = progress + "%";
-            if(Math.floor(progress) % 25 === 0) {
-                document.getElementById('logs-box').innerHTML += logEntries[Math.floor(progress/25)-1] + "<br>";
-            }
-            if(progress >= 100) {
-                clearInterval(loadInt);
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('menu').style.display = 'flex';
-                document.getElementById('user-name').innerText = (tg.initDataUnsafe.user?.first_name || "AGENT_X").toUpperCase();
-            }
-        }, 30);
+        // Loader
+        let p = 0;
+        const itv = setInterval(() => {
+            p += 2.5; document.getElementById('bar').style.width = p+"%";
+            if(p>=100){ clearInterval(itv); document.getElementById('loader').style.display='none'; document.getElementById('menu').style.display='flex'; }
+        }, 40);
 
-        // Game Engine
-        let activeGame = { c: 0, r: 0 };
-        function selectGame(name, c, r) {
-            activeGame = { c, r };
+        // Game Logic
+        let state = { c: 0, r: 0, kfs: [], current: 0 };
+
+        function initGame(name, c, r, kfs, img) {
+            state = { c, r, kfs, current: 0 };
             document.getElementById('menu').style.display = 'none';
-            document.getElementById('hack-ui').style.display = 'flex';
-            document.getElementById('game-label').innerText = name;
+            document.getElementById('game-ui').style.display = 'flex';
+            document.getElementById('game-name').innerText = name;
             
-            const g = document.getElementById('grid-container');
-            g.style.gridTemplateColumns = `repeat(${c}, 1fr)`;
-            g.innerHTML = '';
-            for(let i=0; i < c*r; i++) {
-                g.innerHTML += `<div class="cell h-10 w-10">0x${Math.floor(Math.random()*16).toString(16)}</div>`;
+            const wrapper = document.getElementById('grid-wrapper');
+            wrapper.innerHTML = '';
+
+            for (let i = 0; i < r; i++) {
+                const row = document.createElement('div');
+                row.className = 'row-container';
+                row.id = `r-${i}`;
+                
+                let cells = '';
+                for (let j = 0; j < c; j++) {
+                    cells += `<div class="cell" id="c-${i}-${j}">0x${Math.floor(Math.random()*16).toString(16).toUpperCase()}</div>`;
+                }
+                
+                row.innerHTML = cells + `<div class="kf-badge">x${kfs[i]}</div>`;
+                wrapper.appendChild(row);
             }
-            tg.HapticFeedback.impactOccurred('medium');
         }
 
-        function goBack() {
-            document.getElementById('hack-ui').style.display = 'none';
-            document.getElementById('menu').style.display = 'flex';
-        }
+        function stepHack() {
+            if (state.current >= state.r) return;
 
-        function executeExploit() {
-            const btn = document.getElementById('run-btn');
-            const timer = document.getElementById('cooldown');
-            const cells = document.querySelectorAll('.cell');
+            const btn = document.getElementById('hack-btn');
+            const cooldown = document.getElementById('cooldown');
             
             btn.disabled = true;
             btn.innerText = "INJECTING...";
             tg.HapticFeedback.impactOccurred('heavy');
 
-            // Reset cells
-            cells.forEach(c => { 
-                c.classList.remove('active-hack'); 
-                c.innerHTML = `0x${Math.floor(Math.random()*16).toString(16)}`;
-                c.style.opacity = "0.3";
-            });
-
             setTimeout(() => {
-                // Prediction logic: TZ bo'yicha pastdan tepaga 3 ta qator
-                const stepCount = activeGame.r > 5 ? 3 : activeGame.r;
+                const rowIdx = state.current;
+                const randCol = Math.floor(Math.random() * state.c);
                 
-                for(let i=0; i < stepCount; i++) {
-                    const rowIdx = (activeGame.r - 1) - i;
-                    const randomCol = Math.floor(Math.random() * activeGame.c);
-                    const targetIdx = (rowIdx * activeGame.c) + randomCol;
+                // Hozirgi qatorni aktiv qilish
+                const rowEl = document.getElementById(`r-${rowIdx}`);
+                const cellEl = document.getElementById(`c-${rowIdx}-${randCol}`);
+                
+                rowEl.classList.add('active-row');
+                cellEl.classList.add('hack-active');
+                cellEl.innerHTML = "SAFE";
+                
+                // Avtomatik scroll (pastdan tepaga)
+                rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                    setTimeout(() => {
-                        cells[targetIdx].classList.add('active-hack');
-                        cells[targetIdx].innerHTML = "HACK";
-                        cells[targetIdx].style.opacity = "1";
-                        tg.HapticFeedback.notificationOccurred('success');
-                    }, i * 500);
-                }
+                tg.HapticFeedback.notificationOccurred('success');
+                state.current++;
 
-                // Cooldown timer
+                // Cooldown
                 btn.style.display = 'none';
-                timer.style.display = 'block';
-                let timeLeft = 20;
-                const cd = setInterval(() => {
-                    timeLeft--;
-                    document.getElementById('sec').innerText = timeLeft;
-                    if(timeLeft <= 0) {
-                        clearInterval(cd);
+                cooldown.style.display = 'block';
+                let s = 15;
+                const timer = setInterval(() => {
+                    s--; document.getElementById('sec').innerText = s;
+                    if(s <= 0) {
+                        clearInterval(timer);
                         btn.style.display = 'block';
                         btn.disabled = false;
-                        btn.innerText = "GET PREDICTION";
-                        timer.style.display = 'none';
+                        btn.innerText = "GET SIGNAL";
+                        cooldown.style.display = 'none';
                     }
                 }, 1000);
-            }, 1500);
+            }, 1200);
         }
     </script>
 </body>
