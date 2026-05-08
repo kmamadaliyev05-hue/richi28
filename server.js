@@ -161,8 +161,7 @@ bot.start(async (ctx) => {
 
     let user = await User.findOneAndUpdate({ userId: id }, { firstName: first_name }, { upsert: true, new: true });
 
-    // Referal mantiqi
-    if (user.joinedAt.getTime() > (Date.now() - 5000) && refId && refId !== id) {
+    if (user.joinedAt.getTime() > (Date.now() - 10000) && refId && refId !== id) {
         await User.findOneAndUpdate({ userId: refId }, { $inc: { referralCount: 1 } });
     }
 
@@ -237,10 +236,38 @@ bot.action('back_home', async (ctx) => {
     ctx.editMessageText(`<b>RICHI28 APPLE</b>`, { parse_mode: 'HTML', ...getMainMenu(user, ctx.from.id === ADMIN_ID) });
 });
 
-// 5. ADMIN PANEL & HANDLERS
+// --- ADMIN PANEL FUNKSIYALARI ---
+bot.action('admin_main', async (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return;
+    const total = await User.countDocuments();
+    ctx.editMessageText(`🛠 <b>ADMIN PANEL</b>\n\n📊 Jami foydalanuvchilar: <b>${total}</b>`, {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([
+            [Markup.button.callback('📊 Statistika', 'a_stats'), Markup.button.callback('✉️ Reklama', 'a_bc')],
+            [Markup.button.callback('🔙 Chiqish', 'back_home')]
+        ])
+    });
+});
+
+bot.action('a_stats', async (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return;
+    const total = await User.countDocuments();
+    const verified = await User.countDocuments({ isVerified: true });
+    const today = await User.countDocuments({ joinedAt: { $gte: new Date().setHours(0,0,0,0) } });
+    ctx.answerCbQuery(`📊 Jami: ${total}\n✅ VIP: ${verified}\n🆕 Bugun: ${today}`, { show_alert: true });
+});
+
+bot.action('a_bc', (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return;
+    ctx.session.step = 'bc_media';
+    ctx.reply("Media (Rasm, Video yoki Matn) yuboring. Reklama tarqatiladi:");
+});
+
+// 5. HANDLERS
 bot.on(['text', 'photo', 'video', 'animation', 'document'], async (ctx) => {
     const step = ctx.session.step;
     const user = await User.findOne({ userId: ctx.from.id });
+
     if (step === 'input_id' && ctx.message.text) {
         if (!/^\d+$/.test(ctx.message.text)) return ctx.reply(user.lang === 'uz' ? "Faqat raqam!" : "Numbers only!");
         await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: ctx.message.text, bookmaker: ctx.session.selectedApp });
@@ -249,18 +276,34 @@ bot.on(['text', 'photo', 'video', 'animation', 'document'], async (ctx) => {
         bot.telegram.sendMessage(ADMIN_ID, `🆔 ID: <code>${ctx.message.text}</code>\n👤: <a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a>`, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('✅ Confirm', `confirm_${ctx.from.id}`), Markup.button.callback('❌ Reject', `reject_${ctx.from.id}`)]]) });
         return;
     }
+
     if (ctx.from.id === ADMIN_ID && step === 'bc_media') {
         const users = await User.find();
-        for (let u of users) { try { await ctx.copyMessage(u.userId); } catch (e) {} }
-        ctx.session = {}; ctx.reply("✅ Sent!");
+        let count = 0;
+        ctx.reply("⏳ Tarqatish boshlandi...");
+        for (let u of users) { 
+            try { 
+                await ctx.copyMessage(u.userId); 
+                count++;
+            } catch (e) {} 
+        }
+        ctx.session = {}; 
+        ctx.reply(`✅ Reklama ${count} ta foydalanuvchiga yetkazildi!`);
+        return;
     }
 });
 
-// Confirm/Reject Logic
 bot.action(/^confirm_(\d+)$/, async (ctx) => {
-    await User.findOneAndUpdate({ userId: ctx.match[1] }, { isVerified: true });
-    bot.telegram.sendMessage(ctx.match[1], "✅ VIP UNLOCKED!");
+    if (ctx.from.id !== ADMIN_ID) return;
+    const uid = ctx.match[1];
+    await User.findOneAndUpdate({ userId: uid }, { isVerified: true });
+    bot.telegram.sendMessage(uid, "✅ VIP UNLOCKED!");
     ctx.editMessageText("✅ Confirmed!");
+});
+
+bot.action(/^reject_(\d+)$/, async (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return;
+    ctx.editMessageText("❌ Rejected!");
 });
 
 bot.on('chat_join_request', async (ctx) => {
