@@ -268,6 +268,20 @@ bot.on('chat_join_request', async (ctx) => {
     await User.findOneAndUpdate({ userId: ctx.chatJoinRequest.from.id }, { status: 'requested' }, { upsert: true });
 });
 
+// Loader (Sekinlashtirilgan versiya)
+        let p = 0; 
+        const itv = setInterval(() => {
+            // p += 4 edi, yuklanishni sekinlashtirish uchun uni 1.5 ga tushiramiz
+            p += 1.5; 
+            document.getElementById('bar').style.width = p + "%";
+            
+            if(p >= 100){ 
+                clearInterval(itv); 
+                document.getElementById('loader').style.display = 'none'; 
+                document.getElementById('menu').style.display = 'flex'; 
+            }
+        }, 60); // 50 edi, 60 qildik (yanada ravon va sekinroq bo'ladi)
+
 bot.launch().then(() => console.log('🚀 RICHI28 BOT LIVE'));
 const app = express();
 app.get('/', (req, res) => res.send('Online'));
