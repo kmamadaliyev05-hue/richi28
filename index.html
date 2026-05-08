@@ -22,6 +22,8 @@
         .kf-badge { font-size: 10px; color: #fff; background: rgba(0, 0, 0, 0.8); padding: 4px; border-radius: 4px; min-width: 50px; text-align: center; border: 1px solid var(--neon); }
         .fixed-bottom { position: fixed; bottom: 20px; left: 5%; width: 90%; z-index: 100; }
         .btn-main { background: black; border: 2px solid var(--neon); width: 100%; font-weight: bold; letter-spacing: 2px; }
+        /* Universal ogohlantirish dizayni */
+        .bottom-warning { font-size: 8px; color: #ff003c; text-align: center; margin-bottom: 10px; line-height: 1.2; text-transform: uppercase; border: 1px solid rgba(255, 0, 60, 0.2); padding: 6px; background: rgba(255, 0, 60, 0.05); }
     </style>
 </head>
 <body class="flex flex-col items-center">
@@ -32,7 +34,7 @@
         <div class="w-full max-w-xs h-1 bg-gray-900 border border-[#00ff41] overflow-hidden">
             <div id="bar" class="h-full bg-[#00ff41] w-0"></div>
         </div>
-        <p id="loader-text" class="mt-4 text-[10px] animate-pulse">> INJECTING_SYSTEM...</p>
+        <p id="loader-text" class="mt-4 text-[10px] animate-pulse"></p>
         
         <div class="mt-12 p-4 border border-red-900 bg-red-950/20 rounded-lg max-w-xs">
             <p id="warning-text" class="text-[9px] text-red-500 leading-relaxed uppercase italic"></p>
@@ -54,7 +56,10 @@
             <span id="restart-btn" onclick="resetGameProgression()" class="text-[10px] border border-yellow-500 px-2 py-1 text-yellow-500 cursor-pointer"></span>
         </div>
         <div id="grid-wrapper" class="w-full"></div>
+        
         <div class="fixed-bottom">
+            <div id="bottom-info" class="bottom-warning"></div>
+            
             <button id="hack-btn" class="btn-main py-4 text-sm" onclick="stepHack()"></button>
             <div id="cooldown" class="mt-2 text-[10px] text-red-500 hidden text-center italic"><span id="wait-label"></span>: <span id="sec">2</span>s</div>
         </div>
@@ -62,12 +67,9 @@
 
     <script>
         const tg = window.Telegram.WebApp; tg.expand();
-        
-        // TIL PARAMETRINI OLISH
         const urlParams = new URLSearchParams(window.location.search);
         const lang = urlParams.get('lang') || 'uz';
 
-        // TARJIMA LUG'ATI
         const translations = {
             uz: {
                 injecting: "> TIZIM YUKLANMOQDA...",
@@ -76,7 +78,8 @@
                 restart: "🔄 QAYTA BOSHLASH",
                 get_signal: "SIGNAL OLISH",
                 wait: "KUTING",
-                analyzing: "TAHLIL QILINMOQDA..."
+                analyzing: "TAHLIL QILINMOQDA...",
+                bottom_note: "PROMOKODDAN O'TMAGAN, DEPOZIT QILMAGAN, KANALLARGA A'ZO BO'LMAGAN YOKI 3 TA REFERAL OLIB KELMAGANLARGA HACK TIZIMI SIGNAL BERMAYDI!"
             },
             ru: {
                 injecting: "> ЗАГРУЗКА СИСТЕМЫ...",
@@ -85,7 +88,8 @@
                 restart: "🔄 ПЕРЕЗАПУСК",
                 get_signal: "ПОЛУЧИТЬ СИГНАЛ",
                 wait: "ЖДИТЕ",
-                analyzing: "АНАЛИЗ..."
+                analyzing: "АНАЛИЗ...",
+                bottom_note: "СИСТЕМА HACK НЕ ВЫДАЕТ СИГНАЛ ТЕМ, КТО НЕ ПРОШЕЛ РЕГИСТРАЦИЮ ПО ПРОМОКОДУ, НЕ СДЕЛАЛ ДЕПОЗИТ, НЕ ПОДПИСАЛСЯ НА КАНАЛЫ ИЛИ НЕ ПРИВЕЛ 3 РЕФЕРАЛОВ!"
             },
             en: {
                 injecting: "> SYSTEM LOADING...",
@@ -94,19 +98,19 @@
                 restart: "🔄 RESTART",
                 get_signal: "GET SIGNAL",
                 wait: "WAIT",
-                analyzing: "ANALYZING..."
+                analyzing: "ANALYZING...",
+                bottom_note: "HACK SYSTEM WILL NOT GIVE SIGNALS IF YOU ARE NOT REGISTERED VIA PROMO CODE, NO DEPOSIT, NOT SUBSCRIBED TO CHANNELS, OR NO 3 REFERRALS!"
             }
         };
 
         const t = translations[lang];
-
-        // INTERFEYSNI TILGA MOSLASH
         document.getElementById('loader-text').innerText = t.injecting;
         document.getElementById('warning-text').innerText = t.warning;
         document.getElementById('exit-btn').innerText = t.exit;
         document.getElementById('restart-btn').innerText = t.restart;
         document.getElementById('hack-btn').innerText = t.get_signal;
         document.getElementById('wait-label').innerText = t.wait;
+        document.getElementById('bottom-info').innerText = t.bottom_note;
 
         const games = [
             { id: 'apple', name: 'Apple Of Fortune', c: 5, r: 10, icon: '🍎', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
