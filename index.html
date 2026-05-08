@@ -3,222 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 HACK PORTAL</title>
+    <title>RICHI28 HACKER PORTAL</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         
         :root {
-            --neon-green: #00ff41;
-            --neon-blue: #00f3ff;
-            --dark: #050505;
+            --neon: #00ff41;
+            --danger: #ff003c;
+            --bg: #050505;
         }
 
         body {
-            background-color: var(--dark);
-            color: var(--neon-green);
+            background-color: var(--bg);
+            color: var(--neon);
             font-family: 'JetBrains Mono', monospace;
             overflow: hidden;
             user-select: none;
-        }
-
-        .neon-border {
-            border: 1px solid var(--neon-green);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
-        }
-
-        .glitch-text {
-            text-shadow: 2px 0 var(--neon-blue), -2px 0 #ff00c1;
-            animation: glitch 2s infinite;
-        }
-
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
+            touch-action: manipulation;
         }
 
         canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.2; }
 
-        .game-card {
-            background: rgba(0, 255, 65, 0.05);
-            transition: all 0.3s;
-        }
-
-        .game-card:active {
-            background: var(--neon-green);
-            color: black;
-            transform: scale(0.95);
+        .hacker-border {
+            border: 1px solid var(--neon);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
         }
 
         .cell {
             border: 1px solid rgba(0, 255, 65, 0.2);
-            aspect-ratio: 1/1;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            background: rgba(0, 20, 0, 0.4);
         }
 
-        .cell.active {
-            background: var(--neon-green);
-            box-shadow: 0 0 15px var(--neon-green);
-            animation: pulse 1s infinite;
+        /* Hacker Format Elements */
+        .cell.active-hack {
+            background: var(--neon);
+            color: black;
+            font-weight: bold;
+            box-shadow: 0 0 20px var(--neon);
+            animation: glitch-cell 0.2s infinite;
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
+        @keyframes glitch-cell {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); filter: hue-rotate(90deg); }
+            100% { transform: scale(1); }
+        }
+
+        .game-card {
+            background: rgba(0, 255, 65, 0.03);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .game-card:active {
+            background: var(--neon);
+            color: black;
+        }
+
+        .btn-glitch {
+            position: relative;
+            background: transparent;
+            border: 2px solid var(--neon);
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .btn-glitch:disabled { opacity: 0.3; border-color: gray; color: gray; }
+
+        #logs-box {
+            font-size: 9px;
+            color: #008f11;
+            scrollbar-width: none;
         }
     </style>
 </head>
 <body class="flex flex-col items-center">
 
-    <canvas id="binary-canvas"></canvas>
+    <canvas id="matrix-rain"></canvas>
 
-    <div id="loading-screen" class="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6">
-        <h1 class="text-3xl font-bold glitch-text mb-8">RICHI28 HACK</h1>
-        <div class="w-full max-w-xs bg-gray-900 h-2 neon-border overflow-hidden">
-            <div id="progress-bar" class="h-full bg-[#00ff41] w-0 transition-all duration-100"></div>
+    <div id="loader" class="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-8">
+        <h1 class="text-3xl font-bold tracking-[10px] mb-10 text-[#00ff41]" style="text-shadow: 0 0 15px #00ff41;">RICHI28</h1>
+        <div class="w-full max-w-xs h-1 bg-gray-900 overflow-hidden relative border border-[#00ff41]">
+            <div id="bar" class="h-full bg-[#00ff41] w-0 transition-all duration-100"></div>
         </div>
-        <div id="terminal-status" class="mt-4 text-[10px] text-left w-full max-w-xs h-20 overflow-hidden opacity-70">
-            > Initializing protocols...<br>
+        <div id="logs-box" class="mt-6 w-full max-w-xs h-32 overflow-hidden leading-relaxed">
+            > Initializing core_v4.0...<br>
         </div>
     </div>
 
-    <div id="main-menu" class="hidden w-full p-4 z-10 flex flex-col items-center">
-        <div class="terminal-header w-full p-3 neon-border bg-black/80 mb-6 text-sm">
-            > USER_AUTH: SUCCESS<br>
-            > SESSION: <span id="user-name">GUEST</span>
+    <div id="menu" class="hidden w-full p-5 z-10 flex flex-col items-center">
+        <div class="w-full p-3 hacker-border bg-black/90 mb-8 text-[10px] leading-5">
+            > SYSTEM: <span class="text-white">ACTIVE</span><br>
+            > EXPLOIT: <span class="text-white">ACCESS_GRANTED</span><br>
+            > TARGET: <span class="text-white" id="user-name">LOADING...</span>
         </div>
         
         <div class="grid grid-cols-2 gap-4 w-full">
-            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('APPLE OF FORTUNE', 5, 10)">🍎 APPLE OF FORTUNE</div>
-            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('EASTERN NIGHTS', 5, 5)">🌙 EASTERN NIGHTS</div>
-            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('WILD WEST GOLD', 5, 4)">🤠 WILD WEST</div>
-            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('DRAGON GOLD', 5, 5)">🐉 DRAGON GOLD</div>
-            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('SWAMP LAND', 5, 5)">🐊 SWAMP LAND</div>
-            <div class="game-card neon-border p-4 text-center text-xs" onclick="openGame('KAMIKAZE', 5, 10)">🛩 KAMIKAZE</div>
+            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('APPLE OF FORTUNE', 5, 10)">[ APPLE ]</div>
+            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('EASTERN NIGHTS', 5, 10)">[ EASTERN ]</div>
+            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('WILD WEST GOLD', 2, 10)">[ WILDWEST ]</div>
+            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('DRAGON\'S GOLD', 5, 10)">[ DRAGON ]</div>
+            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('SWAMP LAND', 5, 4)">[ SWAMP ]</div>
+            <div class="game-card p-4 text-center text-[10px] font-bold" onclick="selectGame('KAMIKAZE', 5, 12)">[ KAMIKAZE ]</div>
         </div>
     </div>
 
-    <div id="game-interface" class="hidden w-full p-4 z-10 flex flex-col items-center">
-        <div class="flex justify-between w-full mb-4 text-xs underline cursor-pointer" onclick="backToMenu()">
-            < BACK_TO_DATABASE
+    <div id="hack-ui" class="hidden w-full p-4 z-10 flex flex-col items-center">
+        <div class="w-full flex justify-between mb-5 items-center">
+            <span onclick="goBack()" class="text-[10px] border-b border-[#00ff41] cursor-pointer">< BACK_TO_HUB</span>
+            <span id="game-label" class="text-xs font-bold text-white"></span>
         </div>
-        <h2 id="game-title" class="text-xl mb-4 text-blue-400">GAME_TITLE</h2>
-        
-        <div id="game-grid" class="grid gap-1 w-full max-w-[300px] border-2 border-[#00ff41] p-2 bg-black/50">
+
+        <div id="grid-container" class="grid gap-1 border-2 border-[#00ff41] p-1 bg-black/80 shadow-[0_0_30px_rgba(0,255,65,0.1)]">
             </div>
 
-        <button id="signal-btn" class="mt-8 w-full max-w-[300px] py-4 bg-black border-2 border-[#00ff41] font-bold hover:bg-[#00ff41] hover:text-black transition-all" onclick="getPrediction()">
+        <button id="run-btn" class="mt-8 w-full py-4 btn-glitch font-bold text-sm tracking-[5px]" onclick="executeExploit()">
             GET PREDICTION
         </button>
-        <div id="cooldown-timer" class="mt-4 text-xs text-red-500 hidden text-center">ANTI-BAN DELAY: <span id="seconds">20</span>s</div>
+
+        <div id="cooldown" class="mt-4 text-[10px] text-red-500 hidden animate-pulse">
+            SECURITY_DELAY: <span id="sec">20</span>s
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        const lang = new URLSearchParams(window.location.search).get('lang') || 'uz';
 
-        // 1. BINARY RAIN
-        const canvas = document.getElementById('binary-canvas');
+        // Matrix Background
+        const canvas = document.getElementById('matrix-rain');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const alphabet = "01ABCDEF7X";
-        const fontSize = 12;
-        const columns = canvas.width / fontSize;
-        const rainDrops = Array.from({length: columns}).fill(1);
-
-        function drawRain() {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#0F0"; ctx.font = fontSize + "px monospace";
-            rainDrops.forEach((y, i) => {
-                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.alphabet));
-                ctx.fillText(text, i * fontSize, y * fontSize);
-                if (y * fontSize > canvas.height && Math.random() > 0.975) rainDrops[i] = 0;
-                rainDrops[i]++;
+        const chars = "010101ABCDEF";
+        const drops = Array.from({length: Math.floor(window.innerWidth/14)}).fill(1);
+        function matrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#0F0"; ctx.font = "14px monospace";
+            drops.forEach((y, i) => {
+                const txt = chars[Math.floor(Math.random()*chars.length)];
+                ctx.fillText(txt, i*14, y*14);
+                if(y*14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
             });
         }
-        setInterval(drawRain, 30);
+        setInterval(matrix, 35);
 
-        // 2. LOADING SIMULATION
-        const progress = document.getElementById('progress-bar');
-        const status = document.getElementById('terminal-status');
-        const logs = ["> Bypassing firewall...", "> Extracting algorithms...", "> Connection: SECURE", "> Injecting script..."];
-        
-        let width = 0;
-        const interval = setInterval(() => {
-            width += 2;
-            progress.style.width = width + "%";
-            if (width % 25 === 0) status.innerHTML += logs[width/25 - 1] + "<br>";
-            if (width >= 100) {
-                clearInterval(interval);
-                document.getElementById('loading-screen').classList.add('hidden');
-                document.getElementById('main-menu').classList.remove('hidden');
-                document.getElementById('user-name').innerText = tg.initDataUnsafe.user?.first_name || "AGENT_X";
+        // Loading simulation
+        let progress = 0;
+        const logEntries = ["> Bypassing server...", "> Injecting payload...", "> Decrypting grid...", "> STABLE CONNECTION"];
+        const loadInt = setInterval(() => {
+            progress += 1.5;
+            document.getElementById('bar').style.width = progress + "%";
+            if(Math.floor(progress) % 25 === 0) {
+                document.getElementById('logs-box').innerHTML += logEntries[Math.floor(progress/25)-1] + "<br>";
             }
-        }, 40);
+            if(progress >= 100) {
+                clearInterval(loadInt);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('menu').style.display = 'flex';
+                document.getElementById('user-name').innerText = (tg.initDataUnsafe.user?.first_name || "AGENT_X").toUpperCase();
+            }
+        }, 30);
 
-        // 3. GAME LOGIC
-        let currentCols = 0;
-        function openGame(name, cols, rows) {
-            currentCols = cols;
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('game-interface').classList.remove('hidden');
-            document.getElementById('game-title').innerText = name;
+        // Game Engine
+        let activeGame = { c: 0, r: 0 };
+        function selectGame(name, c, r) {
+            activeGame = { c, r };
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('hack-ui').style.display = 'flex';
+            document.getElementById('game-label').innerText = name;
             
-            const grid = document.getElementById('game-grid');
-            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-            grid.innerHTML = '';
-            for (let i = 0; i < cols * rows; i++) {
-                grid.innerHTML += `<div class="cell flex items-center justify-center text-[8px] opacity-20">?</div>`;
+            const g = document.getElementById('grid-container');
+            g.style.gridTemplateColumns = `repeat(${c}, 1fr)`;
+            g.innerHTML = '';
+            for(let i=0; i < c*r; i++) {
+                g.innerHTML += `<div class="cell h-10 w-10">0x${Math.floor(Math.random()*16).toString(16)}</div>`;
             }
+            tg.HapticFeedback.impactOccurred('medium');
         }
 
-        function backToMenu() {
-            document.getElementById('game-interface').classList.add('hidden');
-            document.getElementById('main-menu').classList.remove('hidden');
+        function goBack() {
+            document.getElementById('hack-ui').style.display = 'none';
+            document.getElementById('menu').style.display = 'flex';
         }
 
-        function getPrediction() {
-            const btn = document.getElementById('signal-btn');
-            const timerDiv = document.getElementById('cooldown-timer');
+        function executeExploit() {
+            const btn = document.getElementById('run-btn');
+            const timer = document.getElementById('cooldown');
             const cells = document.querySelectorAll('.cell');
             
             btn.disabled = true;
-            btn.innerText = "CALCULATING...";
+            btn.innerText = "INJECTING...";
             tg.HapticFeedback.impactOccurred('heavy');
 
+            // Reset cells
+            cells.forEach(c => { 
+                c.classList.remove('active-hack'); 
+                c.innerHTML = `0x${Math.floor(Math.random()*16).toString(16)}`;
+                c.style.opacity = "0.3";
+            });
+
             setTimeout(() => {
-                const rows = cells.length / currentCols;
-                for (let r = rows - 1; r >= rows - 3; r--) { // Show 3 rows
-                    const rand = Math.floor(Math.random() * currentCols);
-                    const idx = (r * currentCols) + rand;
+                // Prediction logic: TZ bo'yicha pastdan tepaga 3 ta qator
+                const stepCount = activeGame.r > 5 ? 3 : activeGame.r;
+                
+                for(let i=0; i < stepCount; i++) {
+                    const rowIdx = (activeGame.r - 1) - i;
+                    const randomCol = Math.floor(Math.random() * activeGame.c);
+                    const targetIdx = (rowIdx * activeGame.c) + randomCol;
+
                     setTimeout(() => {
-                        cells[idx].classList.add('active');
-                        cells[idx].innerHTML = "HACK";
+                        cells[targetIdx].classList.add('active-hack');
+                        cells[targetIdx].innerHTML = "HACK";
+                        cells[targetIdx].style.opacity = "1";
                         tg.HapticFeedback.notificationOccurred('success');
-                    }, (rows - r) * 400);
+                    }, i * 500);
                 }
 
-                btn.classList.add('hidden');
-                timerDiv.classList.remove('hidden');
-                let sec = 20;
+                // Cooldown timer
+                btn.style.display = 'none';
+                timer.style.display = 'block';
+                let timeLeft = 20;
                 const cd = setInterval(() => {
-                    sec--;
-                    document.getElementById('seconds').innerText = sec;
-                    if (sec <= 0) {
+                    timeLeft--;
+                    document.getElementById('sec').innerText = timeLeft;
+                    if(timeLeft <= 0) {
                         clearInterval(cd);
-                        btn.classList.remove('hidden');
+                        btn.style.display = 'block';
                         btn.disabled = false;
                         btn.innerText = "GET PREDICTION";
-                        timerDiv.classList.add('hidden');
+                        timer.style.display = 'none';
                     }
                 }, 1000);
-            }, 2000);
+            }, 1500);
         }
     </script>
 </body>
