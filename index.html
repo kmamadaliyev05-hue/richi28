@@ -3,58 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 PREDICTOR</title>
+    <title>RICHI28 APPLE VIP</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #f8f9fa; color: #333; font-family: -apple-system, system-ui; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header { background: #fff; width: 100%; padding: 15px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; }
-        .header h1 { font-size: 18px; margin: 0; color: #007aff; }
-        
-        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; max-width: 300px; margin: 20px 0; }
-        .cell { aspect-ratio: 1; background: #fff; border: 1px solid #dee2e6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; transition: transform 0.2s; }
-        .cell.active { background: #34c759; border-color: #34c759; color: white; transform: scale(1.05); box-shadow: 0 4px 10px rgba(52,199,89,0.3); }
+        :root {
+            --gold: #ffcc00;
+            --dark-bg: #0a0a0a;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
 
-        .btn { background: #007aff; color: white; border: none; padding: 18px; width: 100%; max-width: 300px; border-radius: 15px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(0,122,255,0.3); }
-        .btn:active { transform: scale(0.98); }
-        
-        .promo { margin-top: 20px; font-size: 14px; color: #666; border: 1px dashed #007aff; padding: 8px 20px; border-radius: 10px; background: rgba(0,122,255,0.05); }
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            background: linear-gradient(to bottom, #1a1a1a, transparent);
+            border-bottom: 1px solid var(--glass);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            letter-spacing: 2px;
+        }
+
+        /* O'yin maydoni */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            background: var(--glass);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cell {
+            width: 55px;
+            height: 55px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .cell.active {
+            border-color: var(--gold);
+            background: rgba(255, 204, 0, 0.1);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+        }
+
+        .cell img {
+            width: 35px;
+            display: none;
+            filter: drop-shadow(0 0 5px red);
+        }
+
+        .cell.active img {
+            display: block;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* Status panel */
+        .status-panel {
+            margin-top: 30px;
+            text-align: center;
+            width: 80%;
+        }
+
+        #status-text {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 15px;
+            height: 20px;
+        }
+
+        .get-signal-btn {
+            background: linear-gradient(45deg, #ffcc00, #ffaa00);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: black;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 5px 20px rgba(255, 204, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .get-signal-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Scanning effect */
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--gold);
+            box-shadow: 0 0 15px var(--gold);
+            top: 0;
+            left: 0;
+            display: none;
+            z-index: 10;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <h1>RICHI28 PREDICTOR v4.0</h1>
-        <p style="font-size: 12px; color: #999; margin: 5px 0 0 0;">Algorithmic Data Analysis</p>
+        <h1>RICHI28 VIP 🍎</h1>
     </div>
 
-    <div class="grid" id="grid"></div>
+    <div id="status-text">Server holati: Tayyor</div>
 
-    <div class="promo" onclick="copy()">PROMO-KOD: RICHI28</div>
+    <div class="game-grid" id="grid">
+        <div class="cell" id="c1"></div>
+        <div class="cell" id="c2"></div>
+        <div class="cell" id="c3"></div>
+        <div class="cell" id="c4"></div>
+        <div class="cell" id="c5"></div>
+        
+        <div class="cell" id="c6"></div>
+        <div class="cell" id="c7"></div>
+        <div class="cell" id="c8"></div>
+        <div class="cell" id="c9"></div>
+        <div class="cell" id="c10"></div>
+    </div>
 
-    <button class="btn" onclick="getSignal()">PREDICT SIGNAL</button>
+    <div class="status-panel">
+        <button class="get-signal-btn" onclick="generateSignal()">SIGNAL OLISH</button>
+    </div>
 
     <script>
-        const grid = document.getElementById('grid');
-        for(let i=0; i<25; i++) grid.innerHTML += '<div class="cell"></div>';
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Appni to'liq ekranga yoyish
 
-        function copy() {
-            navigator.clipboard.writeText('RICHI28');
-            alert('Promo-kod nusxalandi!');
+        const cells = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('status-text');
+
+        function generateSignal() {
+            // Tozalash
+            cells.forEach(cell => {
+                cell.classList.remove('active');
+                cell.innerHTML = '';
+            });
+
+            statusText.innerText = "Ma'lumotlar tahlil qilinmoqda...";
+            statusText.style.color = "#ffcc00";
+
+            // Skanerlash animatsiyasi (2 soniya)
+            setTimeout(() => {
+                const rows = 2; // Nechta qatorga signal berish
+                
+                for(let i = 0; i < rows; i++) {
+                    const randomCell = Math.floor(Math.random() * 5) + (i * 5);
+                    const cell = cells[randomCell];
+                    
+                    setTimeout(() => {
+                        cell.classList.add('active');
+                        cell.innerHTML = '<img src="https://cdn-icons-png.flaticon.com/512/415/415733.png" style="display:block">';
+                    }, i * 300);
+                }
+
+                statusText.innerText = "Signal muvaffaqiyatli olindi!";
+                statusText.style.color = "#00ff00";
+                
+                // Vibratsiya (agar qo'llab-quvvatlasa)
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+
+            }, 1500);
         }
 
-        function getSignal() {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(c => { c.innerHTML = ''; c.classList.remove('active'); });
-
-            for(let i=0; i<3; i++) {
-                const rand = (i * 5) + Math.floor(Math.random() * 5);
-                setTimeout(() => {
-                    cells[rand].innerHTML = '🍎';
-                    cells[rand].classList.add('active');
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-                }, (i + 1) * 350);
-            }
-        }
-        window.Telegram.WebApp.expand();
+        // Dastlabki kataklarni to'ldirish
+        cells.forEach(cell => {
+            cell.innerHTML = '<span style="color: rgba(255,255,255,0.1); font-size: 10px;">?</span>';
+        });
     </script>
 </body>
 </html>
