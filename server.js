@@ -106,7 +106,7 @@ const ADMIN_ID = 6137845806;
 bot.use(session());
 bot.use((ctx, next) => { if (!ctx.session) ctx.session = {}; return next(); });
 
-// --- MUKAMMAL REAL-TIME TEKSHIRUV ---
+// --- MUKAMMAL REAL-TIME TEKSHIRUV (CHIQIB KETGAN VIPLARNI RESET QILISH BILAN) ---
 async function canAccess(ctx) {
     const uid = ctx.from.id;
     if (uid === ADMIN_ID) return true;
@@ -127,13 +127,19 @@ async function canAccess(ctx) {
 
     if (!isSubscribed) {
         const user = await User.findOne({ userId: uid });
-        // Faqat haqiqiy so'rov (zayavka) yuborgan bo'lsagina o'tkazamiz
+        
+        // Zayavka holatida bo'lsa o'tkazamiz
         if (user && user.status === 'requested') {
             return true;
         }
-        // Agar kanalda yo'q bo'lsa va zayavkasi ham bo'lmasa - bazada statusni 'new'ga qaytaramiz
-        if (user && user.status !== 'new') {
-            await User.findOneAndUpdate({ userId: uid }, { status: 'new' });
+
+        // AGAR OBUNA BO'LMASA VA ZAYAVKASI BO'LMASA:
+        // Hatto u VIP bo'lsa ham, kanaldan chiqib ketgan bo'lsa - hamma narsasini reset qilamiz!
+        if (user && (user.status !== 'new' || user.isVerified === true)) {
+            await User.findOneAndUpdate(
+                { userId: uid }, 
+                { status: 'new', isVerified: false, gameId: null, bookmaker: null }
+            );
         }
         return false;
     }
@@ -183,7 +189,6 @@ bot.action(/^set_(uz|ru|en)$/, async (ctx) => {
     ctx.editMessageText(`<b>RICHI28 APPLE</b> ${i18n[lang].welcome}\n\n🆔 ID: <code>${ctx.from.id}</code>`, { parse_mode: 'HTML', ...getMainMenu(user, ctx.from.id === ADMIN_ID) });
 });
 
-// 4. ADMIN PANEL (BOSHQARUV)
 bot.action('admin_main', async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     const total = await User.countDocuments();
@@ -205,14 +210,13 @@ bot.action('a_stats', async (ctx) => {
     const uz = await User.countDocuments({ lang: 'uz' });
     const ru = await User.countDocuments({ lang: 'ru' });
     const en = await User.countDocuments({ lang: 'en' });
-    
-    ctx.editMessageText(`📊 <b>BATAFSIL STATISTIKA</b>\n\n👥 Jami: <b>${total}</b>\n✅ VIP: <b>${verified}</b>\n🆕 Bugun: <b>${today}</b>\n\n🇺🇿 O'zbek: ${uz}\n🇷🇺 Rus: ${ru}\n🇬🇧 Ingliz: ${en}`, {
+    ctx.editMessageText(`📊 <b>STATISTIKA</b>\n\n👥 Jami: <b>${total}</b>\n✅ VIP: <b>${verified}</b>\n🆕 Bugun: <b>${today}</b>\n\n🇺🇿 UZ: ${uz} | 🇷🇺 RU: ${ru} | 🇬🇧 EN: ${en}`, {
         parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'admin_main')]])
     });
 });
 
 bot.action('a_bc_menu', (ctx) => {
-    ctx.editMessageText("Xabarni kimlarga tarqatamiz?", Markup.inlineKeyboard([
+    ctx.editMessageText("Reklama filtri:", Markup.inlineKeyboard([
         [Markup.button.callback("🌍 Hammaga", "bc_all"), Markup.button.callback("🇺🇿 O'zbeklarga", "bc_uz")],
         [Markup.button.callback("🇷🇺 Ruslarga", "bc_ru"), Markup.button.callback("🇬🇧 Inglizlarga", "bc_en")],
         [Markup.button.callback("🔙 Orqaga", "admin_main")]
@@ -222,33 +226,32 @@ bot.action('a_bc_menu', (ctx) => {
 bot.action(/^bc_(all|uz|ru|en)$/, (ctx) => {
     ctx.session.bcTarget = ctx.match[1];
     ctx.session.step = 'bc_media';
-    ctx.reply("Media (Rasm, Video, Matn) yuboring. Reklama tarqatiladi:");
+    ctx.reply("Reklama uchun media yuboring:");
 });
 
 bot.action('a_ch_man', async (ctx) => {
     const chs = await Config.find({ key: 'channel' });
     const btns = chs.map(c => [Markup.button.callback(`❌ ${c.name}`, `del_cfg_${c._id}`)]);
     btns.push([Markup.button.callback('➕ Qo\'shish', 'add_ch')], [Markup.button.callback('🔙 Orqaga', 'admin_main')]);
-    ctx.editMessageText("🔗 <b>KANALLARNI BOSHQARISH</b>", { parse_mode: 'HTML', ...Markup.inlineKeyboard(btns) });
+    ctx.editMessageText("🔗 <b>KANALLAR</b>", { parse_mode: 'HTML', ...Markup.inlineKeyboard(btns) });
 });
 
 bot.action('a_app_man', async (ctx) => {
     const apps = await Config.find({ key: 'app' });
     const btns = apps.map(a => [Markup.button.callback(`❌ ${a.name}`, `del_cfg_${a._id}`)]);
     btns.push([Markup.button.callback('➕ Qo\'shish', 'add_app')], [Markup.button.callback('🔙 Orqaga', 'admin_main')]);
-    ctx.editMessageText("📱 <b>ILOVALARNI BOSHQARISH</b>", { parse_mode: 'HTML', ...Markup.inlineKeyboard(btns) });
+    ctx.editMessageText("📱 <b>ILOVALAR</b>", { parse_mode: 'HTML', ...Markup.inlineKeyboard(btns) });
 });
 
 bot.action(/^del_cfg_(.+)$/, async (ctx) => {
     await Config.findByIdAndDelete(ctx.match[1]);
     ctx.answerCbQuery("O'chirildi");
-    ctx.editMessageText("Muvaffaqiyatli o'chirildi.", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'admin_main')]]));
+    ctx.editMessageText("O'chirildi.", Markup.inlineKeyboard([[Markup.button.callback('🔙 Orqaga', 'admin_main')]]));
 });
 
-bot.action('add_ch', (ctx) => { ctx.session.step = 'ch_n'; ctx.reply("Kanal nomi:"); });
-bot.action('add_app', (ctx) => { ctx.session.step = 'app_n'; ctx.reply("Ilova nomi:"); });
+bot.action('add_ch', (ctx) => { ctx.session.step = 'ch_n'; ctx.reply("Nomi:"); });
+bot.action('add_app', (ctx) => { ctx.session.step = 'app_n'; ctx.reply("Nomi:"); });
 
-// 5. TEXT HANDLERS
 bot.on(['text', 'photo', 'video', 'animation', 'document'], async (ctx) => {
     const step = ctx.session.step;
     if (ctx.from.id === ADMIN_ID) {
@@ -258,21 +261,19 @@ bot.on(['text', 'photo', 'video', 'animation', 'document'], async (ctx) => {
             const users = await User.find(filter);
             let count = 0;
             ctx.reply("⏳ Tarqatish boshlandi...");
-            for (let u of users) {
-                try { await ctx.copyMessage(u.userId); count++; } catch (e) {}
-            }
+            for (let u of users) { try { await ctx.copyMessage(u.userId); count++; } catch (e) {} }
             ctx.session.step = null;
-            return ctx.reply(`✅ Reklama ${count} ta foydalanuvchiga yetkazildi!`);
+            return ctx.reply(`✅ Yetkazildi: ${count}`);
         }
-        if (step === 'ch_n') { ctx.session.tmpN = ctx.message.text; ctx.session.step = 'ch_i'; return ctx.reply("Chat ID (-100...):"); }
+        if (step === 'ch_n') { ctx.session.tmpN = ctx.message.text; ctx.session.step = 'ch_i'; return ctx.reply("ID (-100...):"); }
         if (step === 'ch_i') { ctx.session.tmpI = ctx.message.text; ctx.session.step = 'ch_u'; return ctx.reply("Link:"); }
         if (step === 'ch_u') {
             await Config.create({ key: 'channel', name: ctx.session.tmpN, chatId: ctx.session.tmpI, url: ctx.message.text });
-            ctx.session.step = null; return ctx.reply("✅ Qo'shildi!");
+            ctx.session.step = null; return ctx.reply("✅ Kanal qo'shildi!");
         }
         if (step === 'app_n') {
             await Config.create({ key: 'app', name: ctx.message.text });
-            ctx.session.step = null; return ctx.reply("✅ Qo'shildi!");
+            ctx.session.step = null; return ctx.reply("✅ Ilova qo'shildi!");
         }
     }
 
@@ -342,5 +343,5 @@ bot.on('chat_join_request', async (ctx) => {
     await User.findOneAndUpdate({ userId: ctx.chatJoinRequest.from.id }, { status: 'requested' }, { upsert: true });
 });
 
-bot.launch().then(() => console.log('🚀 RICHI28 ADMIN PRO LIVE'));
+bot.launch().then(() => console.log('🚀 RICHI28 SYSTEM LIVE'));
 const app = express(); app.get('/', (req, res) => res.send('Online')); app.listen(process.env.PORT || 3000);
