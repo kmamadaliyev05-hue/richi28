@@ -11,7 +11,7 @@
         :root { --neon: #00ff41; --bg: #050505; --red: #ff003c; }
         body { background-color: var(--bg); color: var(--neon); font-family: 'JetBrains Mono', monospace; overflow: hidden; user-select: none; }
         canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.15; }
-        .hacker-card { background: rgba(0, 255, 65, 0.05); border: 1px solid var(--neon); transition: 0.3s; cursor: pointer; }
+        .hacker-card { background: rgba(0, 255, 65, 0.05); border: 1px solid var(--neon); transition: 0.3s; cursor: pointer; position: relative; overflow: hidden; }
         .hacker-card:active { background: var(--neon); color: black; }
         #grid-wrapper { max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column-reverse; padding: 20px 0; scrollbar-width: none; }
         #grid-wrapper::-webkit-scrollbar { display: none; }
@@ -42,6 +42,9 @@
             <div id="bar" class="h-full bg-[#00ff41] w-0"></div>
         </div>
         <p id="loader-text" class="mt-4 text-[10px] animate-pulse">> BYPASSING ENCRYPTION...</p>
+        <div class="mt-12 p-4 border border-red-900 bg-red-950/20 rounded-lg max-w-xs">
+            <p id="warning-text" class="text-[9px] text-red-500 leading-relaxed uppercase italic"></p>
+        </div>
     </div>
 
     <div id="menu" class="hidden w-full p-5 flex flex-col items-center z-10 h-screen pt-16 overflow-y-auto pb-40">
@@ -53,7 +56,7 @@
             </div>
             <div class="p-2 border border-yellow-500 bg-yellow-900/10">
                 <span class="text-[8px] text-yellow-500 uppercase" id="expire-label">Exploit Expire</span>
-                <div class="text-[10px] text-yellow-500 font-bold" id="expire-timer">02:45:12</div>
+                <div class="text-[10px] text-yellow-500 font-bold" id="expire-timer">02:44:50</div>
             </div>
         </div>
 
@@ -65,9 +68,14 @@
                 </div>
                 <div class="text-right">
                     <span class="text-[10px] opacity-60 uppercase" id="rank-label">Daraja</span><br>
-                    <span class="text-[10px] font-bold text-red-500" id="user-rank">NEWBIE</span>
+                    <span class="text-[10px] font-bold" id="user-rank" style="color: #ff003c;">NEWBIE</span>
                 </div>
             </div>
+        </div>
+
+        <div class="w-full p-3 border border-[#00ff41] bg-black/80 mb-6 text-[10px]">
+            > STATUS: <span class="text-white uppercase">Encrypted</span><br>
+            > BYPASS: <span class="text-white uppercase">Stable v4.2</span>
         </div>
 
         <div class="grid grid-cols-1 gap-3 w-full pb-10" id="game-list"></div>
@@ -75,25 +83,25 @@
 
     <div id="game-ui" class="hidden w-full p-4 flex flex-col items-center z-10 h-screen pt-12">
         <div class="w-full flex justify-between items-center mb-4">
-            <span id="exit-btn" onclick="location.reload()" class="text-[10px] underline text-[#00f3ff] cursor-pointer uppercase">EXIT</span>
+            <span id="exit-btn" onclick="location.reload()" class="text-[10px] underline text-[#00f3ff] cursor-pointer uppercase font-bold"></span>
             <span id="game-name" class="text-[10px] font-bold text-white uppercase tracking-widest text-center"></span>
-            <span id="restart-btn" onclick="resetGameProgression()" class="text-[10px] border border-yellow-500 px-2 py-1 text-yellow-500 cursor-pointer uppercase">RESTART</span>
+            <span id="restart-btn" onclick="resetGameProgression()" class="text-[10px] border border-yellow-500 px-2 py-1 text-yellow-500 cursor-pointer uppercase font-bold"></span>
         </div>
         <div class="flex justify-between w-full text-[8px] mb-2 opacity-50 px-2">
             <span>LATENCY: 42ms | DB: 1X_MAIN_PRO</span>
-            <span class="text-green-500" id="prob-label">PROBABILITY: 98.4%</span>
+            <span class="text-green-500 font-bold" id="prob-label"></span>
         </div>
         <div id="grid-wrapper" class="w-full"></div>
         
         <div class="fixed-bottom">
             <div id="bottom-info" class="bottom-warning"></div>
             <button id="hack-btn" class="btn-main py-4 text-sm" onclick="stepHack()"></button>
-            <div id="cooldown" class="mt-2 text-[10px] text-red-500 hidden text-center italic"><span id="wait-label">WAIT</span>: <span id="sec">2</span>s</div>
+            <div id="cooldown" class="mt-2 text-[10px] text-red-500 hidden text-center italic"><span id="wait-label"></span>: <span id="sec">2</span>s</div>
         </div>
     </div>
 
-    <audio id="sfx-click" src="https://www.soundjay.com/buttons/sounds/button-29.mp3"></audio>
-    <audio id="sfx-hack" src="https://www.soundjay.com/communication/sounds/digital-camera-shutter-1.mp3"></audio>
+    <audio id="audio-click" src="https://www.soundjay.com/buttons/sounds/button-29.mp3"></audio>
+    <audio id="audio-success" src="https://www.soundjay.com/communication/sounds/digital-camera-shutter-1.mp3"></audio>
 
     <script>
         const tg = window.Telegram.WebApp; tg.expand();
@@ -125,6 +133,7 @@
 
         const t = translations[lang];
         document.getElementById('loader-text').innerText = t.injecting;
+        document.getElementById('warning-text').innerText = t.bottom_note;
         document.getElementById('exit-btn').innerText = t.exit;
         document.getElementById('restart-btn').innerText = t.restart;
         document.getElementById('hack-btn').innerText = t.get_signal;
@@ -137,11 +146,11 @@
         document.getElementById('prob-label').innerText = `${t.prob}: 98.4%`;
         document.getElementById('display-id').innerText = `ID: ${userId}`;
 
-        // DARAXA TIZIMI (REFERALGA QARAB)
+        // RANK SYSTEM
         const rankEl = document.getElementById('user-rank');
-        if(userRefs >= 10) { rankEl.innerText = "ELITE"; rankEl.className = "text-[10px] font-bold text-yellow-500"; }
-        else if(userRefs >= 3) { rankEl.innerText = "PRO"; rankEl.className = "text-[10px] font-bold text-blue-500"; }
-        else { rankEl.innerText = "NEWBIE"; }
+        if(userRefs >= 10) { rankEl.innerText = "ELITE"; rankEl.style.color = "#FFD700"; }
+        else if(userRefs >= 3) { rankEl.innerText = "PRO"; rankEl.style.color = "#00f3ff"; }
+        else { rankEl.innerText = "NEWBIE"; rankEl.style.color = "#ff003c"; }
 
         const games = [
             { id: 'apple', name: 'Apple Of Fortune', c: 5, r: 10, icon: '🍎', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
@@ -155,13 +164,18 @@
         let state = { current: 0, activeGame: null };
         const list = document.getElementById('game-list');
         games.forEach(g => {
-            list.innerHTML += `<div class="hacker-card p-4 flex items-center justify-between mb-2" onclick="initGame('${g.id}')">
-                <div class="flex flex-col"><span class="text-xs font-bold uppercase">${g.name}</span><span class="text-[8px] opacity-60">STABILITY: 98%</span></div>
-                <span class="text-2xl">${g.icon}</span></div>`;
+            list.innerHTML += `
+                <div class="hacker-card p-4 flex items-center justify-between mb-2" onclick="initGame('${g.id}')">
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold uppercase text-white">${g.name}</span>
+                        <span class="text-[8px] opacity-60">STABILITY: 98%</span>
+                    </div>
+                    <span class="text-2xl">${g.icon}</span>
+                </div>`;
         });
 
         function initGame(gid) {
-            document.getElementById('sfx-click').play();
+            document.getElementById('audio-click').play();
             state.activeGame = games.find(x => x.id === gid); state.current = 0;
             document.getElementById('menu').style.display = 'none';
             document.getElementById('game-ui').style.display = 'flex';
@@ -181,16 +195,19 @@
             }
         }
 
-        function resetGameProgression() { state.current = 0; renderGrid(); }
+        function resetGameProgression() { 
+            document.getElementById('audio-click').play();
+            state.current = 0; renderGrid(); 
+        }
 
         function stepHack() {
             if (state.current >= state.activeGame.r) { resetGameProgression(); return; }
-            document.getElementById('sfx-hack').play();
             const btn = document.getElementById('hack-btn'); const cd = document.getElementById('cooldown');
             btn.disabled = true; btn.innerText = t.analyzing;
             tg.HapticFeedback.impactOccurred('heavy');
             
             setTimeout(() => {
+                document.getElementById('audio-success').play();
                 const rowIdx = state.current;
                 const randCol = Math.floor(Math.random() * state.activeGame.c);
                 const rowEl = document.getElementById(`r-${rowIdx}`);
@@ -214,7 +231,7 @@
             }, 800);
         }
 
-        // MATRIX BACKGROUND
+        // MATRIX
         const canvas = document.getElementById('matrix'); const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         const drops = Array.from({length: 40}).fill(1);
@@ -229,30 +246,24 @@
         }
         setInterval(drawMatrix, 40);
 
-        // LIVE WIN FEED
+        // LIVE WIN
         const nList = ["User 441***", "User 902***", "User 115***", "User 678***", "User 332***"];
-        const gList = ["Apple", "Kamikaze", "Dragon", "Wild"];
         setInterval(() => {
             const rN = nList[Math.floor(Math.random()*nList.length)];
-            const rG = gList[Math.floor(Math.random()*gList.length)];
-            document.getElementById('live-win-box').innerText = `> ${rN} ${t.win_text} ${rG} x${(Math.random()*5 + 1).toFixed(2)}`;
+            const rG = games[Math.floor(Math.random()*6)].name.split(' ')[0];
+            document.getElementById('live-win-box').innerText = `> ${rN} ${t.win_text} ${rG} x${(Math.random()*4 + 1).toFixed(2)}`;
         }, 4000);
 
-        // EXPIRE TIMER
+        // TAYMER
         let eh=2, em=44, es=50;
         setInterval(() => {
             es--; if(es<0){es=59; em--;} if(em<0){em=59; eh--;}
             document.getElementById('expire-timer').innerText = `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}:${String(es).padStart(2,'0')}`;
         }, 1000);
 
-        let p = 0; 
-        const itv = setInterval(() => {
+        let p = 0; const itv = setInterval(() => {
             p += 1.5; document.getElementById('bar').style.width = p + "%";
-            if(p >= 100){ 
-                clearInterval(itv); 
-                document.getElementById('loader').style.display = 'none'; 
-                document.getElementById('menu').style.display = 'flex'; 
-            }
+            if(p >= 100){ clearInterval(itv); document.getElementById('loader').style.display = 'none'; document.getElementById('menu').style.display = 'flex'; }
         }, 60);
     </script>
 </body>
