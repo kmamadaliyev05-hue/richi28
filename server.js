@@ -3,82 +3,100 @@ const mongoose = require('mongoose');
 const express = require('express');
 require('dotenv').config();
 
-// 1. DATABASE ULANISHI
+// 1. DATABASE ULANISHI & SCHEMA
 mongoose.connect(process.env.MONGO_URI).then(async () => {
-    console.log('✅ MongoDB Connected');
-    try { await mongoose.connection.db.collection('configs').dropIndexes(); } catch (e) {}
+    console.log('✅ MongoDB Connected: Security System Active');
     seedApps(); 
 });
 
 const User = mongoose.model('User', new mongoose.Schema({
     userId: { type: Number, unique: true },
+    hackerId: { type: String, unique: true },
     firstName: String,
     lang: { type: String, default: 'uz' },
-    status: { type: String, default: 'new' },
     isVerified: { type: Boolean, default: false },
-    gameId: String,
-    bookmaker: String,
+    rank: { type: String, default: 'NEWBIE' }, // NEWBIE, PRO, ELITE
+    insurance: { type: Boolean, default: false },
+    accuracy: { type: Number, default: 45 },
     referralCount: { type: Number, default: 0 },
-    refTask: { type: Number, default: 5 },
+    referredBy: Number,
+    accounts: [{ bookmaker: String, gameId: String, status: String }], // Multi-Wallet Portfolio
+    lastBonus: { type: Date, default: new Date(0) },
+    status: { type: String, default: 'new' },
     joinedAt: { type: Date, default: Date.now }
 }));
 
 const Config = mongoose.model('Config', new mongoose.Schema({
     key: String, name: String, chatId: String, url: String
-}, { autoIndex: false }));
+}));
 
 // --- MULTI-LANG LUG'ATI ---
 const i18n = {
     uz: {
-        welcome: "tizimiga xush kelibsiz!",
-        sub_req: "Botdan foydalanish uchun kanallarga a'zo bo'ling yoki so'rov yuboring:",
-        check: "✅ Tekshirish",
-        signal: "🚀 Signal olish",
-        vip_signal: "⚡️ Signal olish (VIP)",
-        apps: "📱 Ilovalar",
-        ref: "👥 Yo'llanma silka",
-        guide: "📖 Bot bilan tanishish",
-        terms: "📜 Signal olish shartlari",
-        platform: "🎯 <b>Platformani tanlang:</b>",
-        input_id: "🆔 ID yuboring (faqat raqam):",
-        back: "🔙 Orqaga",
-        no_sub: "❌ Obuna yoki so'rov topilmadi!",
-        verified: "✅ Tasdiqlandi!",
-        ref_text: (count, task, link) => `👥 <b>Referal tizimi</b>\n\n📊 Odamlar: <b>${count}</b> ta\n🎯 Vazifa: <b>${task}</b> ta\n\n🔗 Havolangiz:\n<code>${link}</code>`,
-        terms_text: "<b>📜 SIGNAL OLISH SHARTLARI:</b>\n\n1. Ro'yxatdan o'tishda <b>RICHI28</b> promokodini ishlating.\n2. Balansni kamida 60,000 so'mga to'ldiring.\n3. O'yin ID raqamini botga yuboring.\n\n⚠️ Diqqat: Shartlar bajarilmasa, Hack tizimi xato ishlashi mumkin!",
-        guide_text: "<b>📖 FOYDALANISH QO'LLANMASI:</b>\n\n1. Avval kanallarga obuna bo'ling.\n2. 'Signal olish' tugmasini bosing.\n3. O'zingiz o'ynayotgan platformani tanlang va ID yuboring.\n4. Admin tasdiqlagach, VIP tugmasi orqali Web App'ga kiring."
+        welcome: "tizimiga xush kelibsiz, agent!",
+        sub_req: "⚠️ Kirish rad etildi! Operatsiyani davom ettirish uchun kanallarga obuna bo'ling:",
+        check: "🔍 Obunani tekshirish",
+        main_menu: "Asosiy operatsion menyu:",
+        btn_signal: "🚀 SIGNAL OLISH (Web App)",
+        btn_profile: "👤 HACKER PROFILI",
+        btn_ref: "👥 VIRUS REFERAL",
+        btn_academy: "📚 HACKER ACADEMY",
+        btn_settings: "🛠 SOZLAMALAR",
+        btn_support: "🆘 SUPPORT (ADMIN)",
+        btn_bonus: "🎁 KUNLIK BONUS",
+        input_id: (app) => `🎯 [${app}] platformasi uchun ID raqamingizni kiriting:`,
+        searching: "🔍 ID ma'lumotlar bazasidan qidirilmoqda...",
+        checking_promo: "🔄 Promokod tekshirilmoqda (RICHI28)...",
+        connecting: "📡 Bukmeker serveriga xavfsiz ulanish o'rnatilmoqda...",
+        matched: "✅ Ma'lumotlar mos keldi! Admin tasdiqlashini kuting.",
+        bonus_taken: "❌ Bugungi bonus olingan! 24 soatdan keyin qaytib keling.",
+        bonus_win: (acc) => `🎁 Tabriklaymiz! Bugun sizga +${acc}% aniqlik kodi berildi.`,
+        no_sub: "❌ Hali ham obuna topilmadi!",
+        verified_msg: "✅ Tizim ochiq! Operatsiyani boshlashingiz mumkin."
     },
     ru: {
-        welcome: "Добро пожаловать в систему!",
-        sub_req: "Для использования бота подпишитесь на каналы или отправьте запрос:",
-        check: "✅ Проверить",
-        signal: "🚀 Получить сигнал",
-        vip_signal: "⚡️ Получить сигнал (VIP)",
-        apps: "📱 Приложения",
-        ref: "👥 Рефералка",
-        guide: "📖 Инструкция",
-        terms: "📜 Условия получения",
-        platform: "🎯 <b>Выберите платформу:</b>",
-        input_id: "🆔 Отправьте ID (только цифры):",
-        back: "🔙 Назад",
+        welcome: "добро пожаловать в систему, агент!",
+        sub_req: "⚠️ Доступ запрещен! Подпишитесь на каналы для продолжения:",
+        check: "🔍 Проверить подписку",
+        main_menu: "Главное меню операций:",
+        btn_signal: "🚀 ПОЛУЧИТЬ СИГНАЛ (Web App)",
+        btn_profile: "👤 ПРОФИЛЬ ХАКЕРА",
+        btn_ref: "👥 ВИРУСНЫЙ РЕФЕРАЛ",
+        btn_academy: "📚 АКАДЕМИЯ ХАКЕРА",
+        btn_settings: "🛠 НАСТРОЙКИ",
+        btn_support: "🆘 ПОДДЕРЖКА",
+        btn_bonus: "🎁 ЕЖЕДНЕВНЫЙ БОНУС",
+        input_id: (app) => `🎯 Введите ваш ID для платформы [${app}]:`,
+        searching: "🔍 Поиск ID в базе данных...",
+        checking_promo: "🔄 Проверка промокода (RICHI28)...",
+        connecting: "📡 Установка безопасного соединения...",
+        matched: "✅ Данные совпали! Ожидайте подтверждения.",
+        bonus_taken: "❌ Бонус уже получен! Приходите завтра.",
+        bonus_win: (acc) => `🎁 Поздравляем! Вам начислено +${acc}% к точности.`,
         no_sub: "❌ Подписка не найдена!",
-        verified: "✅ Подтверждено!"
+        verified_msg: "✅ Система разблокирована!"
     },
     en: {
-        welcome: "Welcome to the system!",
-        sub_req: "Subscribe to the channels to use the bot:",
-        check: "✅ Check",
-        signal: "🚀 Get Signal",
-        vip_signal: "⚡️ Get Signal (VIP)",
-        apps: "📱 Apps",
-        ref: "👥 Referral link",
-        guide: "📖 How to use",
-        terms: "📜 Terms & Conditions",
-        platform: "🎯 <b>Select platform:</b>",
-        input_id: "🆔 Send ID (numbers only):",
-        back: "🔙 Back",
+        welcome: "welcome to the system, agent!",
+        sub_req: "⚠️ Access Denied! Subscribe to channels to proceed:",
+        check: "🔍 Check Subscription",
+        main_menu: "Main Operational Menu:",
+        btn_signal: "🚀 GET SIGNAL (Web App)",
+        btn_profile: "👤 HACKER PROFILE",
+        btn_ref: "👥 VIRAL REFERRAL",
+        btn_academy: "📚 HACKER ACADEMY",
+        btn_settings: "🛠 SETTINGS",
+        btn_support: "🆘 SUPPORT",
+        btn_bonus: "🎁 DAILY BONUS",
+        input_id: (app) => `🎯 Enter your ID for [${app}] platform:`,
+        searching: "🔍 Searching ID in database...",
+        checking_promo: "🔄 Checking Promo Code (RICHI28)...",
+        connecting: "📡 Establishing secure connection...",
+        matched: "✅ Data matched! Wait for admin approval.",
+        bonus_taken: "❌ Bonus already taken! Come back tomorrow.",
+        bonus_win: (acc) => `🎁 Congrats! You got +${acc}% accuracy boost.`,
         no_sub: "❌ Subscription not found!",
-        verified: "✅ Verified!"
+        verified_msg: "✅ System access granted!"
     }
 };
 
@@ -88,56 +106,54 @@ const ADMIN_ID = 6137845806;
 bot.use(session());
 bot.use((ctx, next) => { if (!ctx.session) ctx.session = {}; return next(); });
 
-// --- ENG QATTIQ REAL-TIME NAZORAT ---
+// --- UTILS ---
+const generateHackerId = () => Math.floor(10000000 + Math.random() * 90000000).toString();
+
 async function canAccess(ctx) {
     const uid = ctx.from.id;
     if (uid === ADMIN_ID) return true;
     const channels = await Config.find({ key: 'channel' });
     if (channels.length === 0) return true;
-    let isSubscribed = false;
     for (const ch of channels) {
         try {
             const member = await ctx.telegram.getChatMember(ch.chatId, uid);
-            if (['member', 'administrator', 'creator'].includes(member.status)) { isSubscribed = true; break; }
-        } catch (e) {}
-    }
-    if (!isSubscribed) {
-        const user = await User.findOne({ userId: uid });
-        if (user && user.status === 'requested') return true;
-        if (user && (user.isVerified || user.status !== 'new')) {
-            await User.findOneAndUpdate({ userId: uid }, { isVerified: false, status: 'new', gameId: null });
-        }
-        return false;
+            if (!['member', 'administrator', 'creator'].includes(member.status)) return false;
+        } catch (e) { continue; }
     }
     return true;
 }
 
-const getMainMenu = (u, isAdmin) => {
-    const lang = u.lang || 'uz';
-    const t = i18n[lang];
-    const webUrl = `${process.env.WEB_APP_URL}?lang=${lang}&id=${u.userId}`;
-    let btns = [
-        [u.isVerified ? Markup.button.webApp(t.vip_signal, webUrl) : Markup.button.callback(t.signal, 'get_signal')],
-        [Markup.button.callback(t.terms, 'show_terms'), Markup.button.callback(t.guide, 'show_guide')],
-        [Markup.button.url(t.apps, 'https://t.me/apple_ilovalar'), Markup.button.callback(t.ref, 'ref_menu')]
-    ];
-    if (isAdmin) btns.push([Markup.button.callback('🛠 Admin Panel', 'admin_main')]);
-    return Markup.inlineKeyboard(btns);
+const getMainMenu = (u) => {
+    const t = i18n[u.lang || 'uz'];
+    const webUrl = `${process.env.WEB_APP_URL}?lang=${u.lang}&id=${u.hackerId}&refs=${u.referralCount}`;
+    return Markup.inlineKeyboard([
+        [Markup.button.webApp(t.btn_signal, webUrl)],
+        [Markup.button.callback(t.btn_profile, 'my_profile'), Markup.button.callback(t.btn_ref, 'ref_menu')],
+        [Markup.button.callback(t.btn_bonus, 'get_bonus')],
+        [Markup.button.callback(t.btn_academy, 'academy'), Markup.button.callback(t.btn_settings, 'settings')],
+        [Markup.button.url(t.btn_support, `tg://user?id=${ADMIN_ID}`)]
+    ]);
 };
 
-const getJoinMenu = async (lang) => {
-    const t = i18n[lang] || i18n.uz;
-    const channels = await Config.find({ key: 'channel' });
-    const btns = channels.map(ch => [Markup.button.url(`📢 ${ch.name}`, ch.url)]);
-    btns.push([Markup.button.callback(t.check, 'check_sub')]);
-    return Markup.inlineKeyboard(btns);
-};
-
-// --- HANDLERS ---
+// --- START & SETUP ---
 bot.start(async (ctx) => {
     const { id, first_name } = ctx.from;
-    await User.findOneAndUpdate({ userId: id }, { firstName: first_name }, { upsert: true });
-    return ctx.reply("🌐 Tilni tanlang / Язык / Language:", Markup.inlineKeyboard([
+    const refId = ctx.startPayload ? parseInt(ctx.startPayload) : null;
+    
+    let user = await User.findOne({ userId: id });
+    if (!user) {
+        user = await User.create({ 
+            userId: id, 
+            firstName: first_name, 
+            hackerId: generateHackerId(),
+            referredBy: refId
+        });
+        if (refId && refId !== id) {
+            await User.findOneAndUpdate({ userId: refId }, { $inc: { referralCount: 1 } });
+        }
+    }
+    
+    return ctx.reply("🌐 Select System Language / Tilni tanlang:", Markup.inlineKeyboard([
         [Markup.button.callback("🇺🇿 O'zbekcha", "set_uz"), Markup.button.callback("🇷🇺 Русский", "set_ru"), Markup.button.callback("🇬🇧 English", "set_en")]
     ]));
 });
@@ -146,122 +162,170 @@ bot.action(/^set_(uz|ru|en)$/, async (ctx) => {
     const lang = ctx.match[1];
     const user = await User.findOneAndUpdate({ userId: ctx.from.id }, { lang }, { new: true });
     if (!(await canAccess(ctx))) {
-        return ctx.editMessageText(i18n[lang].sub_req, await getJoinMenu(lang));
+        const channels = await Config.find({ key: 'channel' });
+        const btns = channels.map(c => [Markup.button.url(`📢 ${c.name}`, c.url)]);
+        btns.push([Markup.button.callback(i18n[lang].check, 'check_sub')]);
+        return ctx.editMessageText(i18n[lang].sub_req, Markup.inlineKeyboard(btns));
     }
-    ctx.editMessageText(`<b>RICHI28 APPLE</b> ${i18n[lang].welcome}`, { parse_mode: 'HTML', ...getMainMenu(user, ctx.from.id === ADMIN_ID) });
+    ctx.editMessageText(`<b>RICHI28 TITAN</b> ${i18n[lang].welcome}\n\n🆔 Agent ID: <code>${user.hackerId}</code>`, { parse_mode: 'HTML', ...getMainMenu(user) });
 });
 
-bot.action('check_sub', async (ctx) => {
+// --- PROFILE & PORTFOLIO ---
+bot.action('my_profile', async (ctx) => {
     const u = await User.findOne({ userId: ctx.from.id });
-    if (await canAccess(ctx)) return ctx.editMessageText(i18n[u.lang].verified, getMainMenu(u, ctx.from.id === ADMIN_ID));
-    await ctx.answerCbQuery(i18n[u.lang].no_sub, { show_alert: true });
+    const t = i18n[u.lang];
+    const portfolio = u.accounts.length > 0 ? u.accounts.map(a => `\n   └ ${a.bookmaker}: <code>${a.gameId}</code> [${a.status === 'active' ? '✅' : '⏳'}]`).join('') : " Bo'sh";
+    
+    const text = `👤 <b>HACKER PROFILI</b>\n\n` +
+                 `🆔 <b>ID:</b> <code>${u.hackerId}</code>\n` +
+                 `📊 <b>DARAJA:</b> ${u.rank === 'ELITE' ? '🥇 ELITE' : u.rank === 'PRO' ? '🥈 PRO' : '🥉 NEWBIE'}\n` +
+                 `📈 <b>ANIQLIK:</b> ${u.accuracy}%\n` +
+                 `🛡 <b>SUG'URTA:</b> ${u.insurance ? '✅ FAOL' : '❌ FAOL EMAS'}\n` +
+                 `👥 <b>REFERALLAR:</b> ${u.referralCount} ta\n` +
+                 `📂 <b>PORTFOLIO:</b>${portfolio}\n\n` +
+                 `⚠️ <i>VIP status uchun RICHI28 promokodi bilan minimal 60,000 so'm depozit kerak.</i>`;
+
+    ctx.editMessageText(text, { parse_mode: 'HTML', ...Markup.inlineKeyboard([
+        [Markup.button.callback("➕ ID QO'SHISH / O'ZGARTIRISH", 'get_signal')],
+        [Markup.button.callback("🔙 ORQAGA", 'back_home')]
+    ])});
 });
 
+// --- VIRUS REFERRAL ---
+bot.action('ref_menu', async (ctx) => {
+    const u = await User.findOne({ userId: ctx.from.id });
+    const link = `https://t.me/${ctx.botInfo.username}?start=${u.userId}`;
+    const text = `👥 <b>VIRUS REFERAL TIZIMI</b>\n\n` +
+                 `Loyihani do'stlarga tarqating va admin tasdiqlashisiz VIP statusga ega bo'ling!\n\n` +
+                 `📊 Sizning referallaringiz: <b>${u.referralCount}</b> ta\n` +
+                 `🎁 <b>3 ta referal</b> = PRO Rank\n` +
+                 `🥇 <b>10 ta referal</b> = ELITE Rank + 99% Aniqlik\n\n` +
+                 `🔗 Havolangiz:\n<code>${link}</code>`;
+    ctx.editMessageText(text, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("🔙 ORQAGA", 'back_home')]])});
+});
+
+// --- DAILY BONUS ---
+bot.action('get_bonus', async (ctx) => {
+    const u = await User.findOne({ userId: ctx.from.id });
+    const now = new Date();
+    if (now - u.lastBonus < 24 * 60 * 60 * 1000) {
+        return ctx.answerCbQuery(i18n[u.lang].bonus_taken, { show_alert: true });
+    }
+    const addAcc = Math.floor(Math.random() * 5) + 1;
+    await User.findOneAndUpdate({ userId: ctx.from.id }, { $inc: { accuracy: addAcc }, lastBonus: now });
+    ctx.answerCbQuery(i18n[u.lang].bonus_win(addAcc), { show_alert: true });
+});
+
+// --- MULTI-WALLET & ID HANDLING ---
 bot.action('get_signal', async (ctx) => {
-    if (!(await canAccess(ctx))) return;
     const u = await User.findOne({ userId: ctx.from.id });
     const apps = await Config.find({ key: 'app' });
-    const btns = apps.map(a => [Markup.button.callback(a.name, `select_app_${a.name}`)]);
-    btns.push([Markup.button.callback(i18n[u.lang].back, 'back_home')]);
-    ctx.editMessageText(i18n[u.lang].platform, { parse_mode: 'HTML', ...Markup.inlineKeyboard(btns) });
+    const btns = apps.map(a => [Markup.button.callback(a.name, `sel_app_${a.name}`)]);
+    btns.push([Markup.button.callback("🔙 ORQAGA", 'back_home')]);
+    ctx.editMessageText("🎯 Signal olish uchun platformani tanlang:", Markup.inlineKeyboard(btns));
 });
 
-bot.action(/^select_app_(.+)$/, async (ctx) => {
-    if (!(await canAccess(ctx))) return;
-    ctx.session.selectedApp = ctx.match[1]; ctx.session.step = 'input_id';
+bot.action(/^sel_app_(.+)$/, async (ctx) => {
+    ctx.session.selectedApp = ctx.match[1];
+    ctx.session.step = 'wait_id';
     const u = await User.findOne({ userId: ctx.from.id });
-    ctx.editMessageText(i18n[u.lang].input_id, Markup.inlineKeyboard([[Markup.button.callback(i18n[u.lang].back, 'get_signal')]]));
+    ctx.editMessageText(i18n[u.lang].input_id(ctx.match[1]), Markup.inlineKeyboard([[Markup.button.callback("🔙", 'get_signal')]]));
 });
 
-// MULTI-STEP VERIFICATION IMITATION
 bot.on('text', async (ctx) => {
     const uid = ctx.from.id;
-    if (ctx.session.step === 'input_id' && /^\d+$/.test(ctx.message.text)) {
-        if (!(await canAccess(ctx))) return ctx.reply("Avval obuna bo'ling!");
+    const u = await User.findOne({ userId: uid });
+    if (!u) return;
+
+    if (ctx.session.step === 'wait_id' && /^\d+$/.test(ctx.message.text)) {
+        const gameId = ctx.message.text;
+        const app = ctx.session.selectedApp;
         ctx.session.step = null;
-        const u = await User.findOne({ userId: uid });
-        const msg = await ctx.reply("🔍 Searching ID in database...");
-        setTimeout(() => ctx.telegram.editMessageText(uid, msg.message_id, null, "🔄 Checking Promo Code (RICHI28)..."), 2500);
-        setTimeout(() => ctx.telegram.editMessageText(uid, msg.message_id, null, "📡 Connecting to Bukmeker Server..."), 5000);
-        setTimeout(() => {
-            ctx.telegram.editMessageText(uid, msg.message_id, null, "✅ Data matched! Waiting for Admin approval.");
-            bot.telegram.sendMessage(ADMIN_ID, `🆔 ID: <code>${ctx.message.text}</code>\n👤: ${ctx.from.first_name}`, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('✅ Confirm', `confirm_${uid}`), Markup.button.callback('❌ Reject', `reject_${uid}`)]]) });
-        }, 7500);
+        
+        const msg = await ctx.reply(i18n[u.lang].searching);
+        setTimeout(() => ctx.telegram.editMessageText(uid, msg.message_id, null, i18n[u.lang].checking_promo), 2000);
+        setTimeout(() => ctx.telegram.editMessageText(uid, msg.message_id, null, i18n[u.lang].connecting), 4000);
+        setTimeout(async () => {
+            ctx.telegram.editMessageText(uid, msg.message_id, null, i18n[u.lang].matched);
+            
+            // Super Admin Notification with History
+            const history = u.accounts.map(a => `${a.bookmaker}: ${a.gameId}`).join(', ') || 'Yo\'q';
+            bot.telegram.sendMessage(ADMIN_ID, 
+                `🕵️‍♂️ <b>ID TASDIQLASH SO'ROVI</b>\n\n` +
+                `👤 User: <b>${ctx.from.first_name}</b> (@${ctx.from.username || 'yoq'})\n` +
+                `🆔 Hacker ID: <code>${u.hackerId}</code>\n\n` +
+                `📱 Platforma: <b>${app}</b>\n` +
+                `🔢 Yangi ID: <code>${gameId}</code>\n\n` +
+                `📊 Tarix: <b>${u.accounts.length} ta ID</b>\n` +
+                `📂 Portfolio: <i>${history}</i>\n` +
+                `👥 Referallar: <b>${u.referralCount} ta</b>`,
+                { parse_mode: 'HTML', ...Markup.inlineKeyboard([
+                    [Markup.button.callback('✅ Ruxsat berish', `adm_verify_${uid}_${app}_${gameId}`)],
+                    [Markup.button.callback('❌ Rad etish', `adm_reject_${uid}`)]
+                ])}
+            );
+        }, 6500);
         return;
     }
-    if (ctx.session.step === 'input_id') return ctx.reply("Numbers only!");
 });
 
-// --- ADMIN PANEL ---
+// --- ADMIN COMMANDS & CONTROL ---
+bot.action(/^adm_verify_(\d+)_(.+)_(\d+)$/, async (ctx) => {
+    const [_, targetId, app, gId] = ctx.match;
+    const target = await User.findOne({ userId: targetId });
+    
+    // Multi-wallet update: if exists, update; else push
+    const exists = target.accounts.find(a => a.bookmaker === app);
+    if (exists) {
+        await User.updateOne({ userId: targetId, "accounts.bookmaker": app }, { $set: { "accounts.$.gameId": gId, "accounts.$.status": 'active' } });
+    } else {
+        await User.updateOne({ userId: targetId }, { $push: { accounts: { bookmaker: app, gameId: gId, status: 'active' } } });
+    }
+
+    await User.findOneAndUpdate({ userId: targetId }, { isVerified: true, rank: target.referralCount >= 10 ? 'ELITE' : 'PRO', accuracy: target.referralCount >= 10 ? 99 : 85 });
+    
+    bot.telegram.sendMessage(targetId, "✅ <b>TIZIM TASDIQLANDI!</b>\n\nSizning Portfolio yangilandi. Web App orqali signal olishingiz mumkin.", { parse_mode: 'HTML' });
+    ctx.editMessageText(`✅ Agent ${targetId} tasdiqlandi!`);
+});
+
+bot.action(/^adm_reject_(\d+)$/, (ctx) => {
+    bot.telegram.sendMessage(ctx.match[1], "❌ <b>ID RAD ETILDI!</b>\n\nIltimos, RICHI28 promokodi bilan ro'yxatdan o'tganingizni va depozit qilganingizni tekshiring.", { parse_mode: 'HTML' });
+    ctx.editMessageText("❌ Rad etildi.");
+});
+
 bot.action('admin_main', async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
-    ctx.editMessageText(`🛠 <b>ADMIN PANEL</b>`, Markup.inlineKeyboard([
-        [Markup.button.callback('📊 Statistika', 'a_stats'), Markup.button.callback('✉️ Reklama', 'a_bc_menu')],
-        [Markup.button.callback('🔗 Kanallar', 'a_ch_man'), Markup.button.callback('📱 Ilovalar', 'a_app_man')],
+    ctx.editMessageText(`🛠 <b>SUPER ADMIN PANEL</b>`, Markup.inlineKeyboard([
+        [Markup.button.callback('📊 Global Stats', 'a_stats'), Markup.button.callback('📢 Smart BC', 'a_bc_menu')],
+        [Markup.button.callback('🚦 Accuracy Control', 'a_acc'), Markup.button.callback('🔗 Channels/Apps', 'a_config')],
         [Markup.button.callback('🔙 Chiqish', 'back_home')]
     ]));
 });
 
-bot.action('a_stats', async (ctx) => {
-    const total = await User.countDocuments();
-    const verified = await User.countDocuments({ isVerified: true });
-    const today = await User.countDocuments({ joinedAt: { $gte: new Date().setHours(0,0,0,0) } });
-    const uz = await User.countDocuments({ lang: 'uz' });
-    const ru = await User.countDocuments({ lang: 'ru' });
-    const en = await User.countDocuments({ lang: 'en' });
-    ctx.editMessageText(`📊 <b>STATISTIKA</b>\n\n👥 Jami: ${total}\n✅ VIP: ${verified}\n🆕 Bugun: ${today}\n\n🇺🇿 UZ: ${uz} | 🇷🇺 RU: ${ru} | 🇬🇧 EN: ${en}`, Markup.inlineKeyboard([[Markup.button.callback('🔙', 'admin_main')]]));
+// --- SYSTEM ACTIONS ---
+bot.action('check_sub', async (ctx) => {
+    const u = await User.findOne({ userId: ctx.from.id });
+    if (await canAccess(ctx)) return ctx.editMessageText(i18n[u.lang].verified_msg, getMainMenu(u));
+    await ctx.answerCbQuery(i18n[u.lang].no_sub, { show_alert: true });
 });
 
-bot.action('a_bc_menu', (ctx) => {
-    ctx.editMessageText("Reklama filtri:", Markup.inlineKeyboard([
-        [Markup.button.callback("🌍 Hammaga", "bc_all")],
-        [Markup.button.callback("🇺🇿 UZ", "bc_uz"), Markup.button.callback("🇷🇺 RU", "bc_ru"), Markup.button.callback("🇬🇧 EN", "bc_en")],
-        [Markup.button.callback("🔙", 'admin_main')]
-    ]));
+bot.action('back_home', async (ctx) => {
+    const u = await User.findOne({ userId: ctx.from.id });
+    if (!(await canAccess(ctx))) return ctx.editMessageText(i18n[u.lang].sub_req, await getJoinMenu(u.lang));
+    ctx.editMessageText(`<b>RICHI28 SECURE</b>\n🆔 Agent ID: <code>${u.hackerId}</code>`, { parse_mode: 'HTML', ...getMainMenu(u) });
 });
 
-bot.action(/^bc_(all|uz|ru|en)$/, (ctx) => { ctx.session.bcTarget = ctx.match[1]; ctx.session.step = 'bc_media'; ctx.reply("Media yuboring:"); });
-
-bot.action('a_ch_man', async (ctx) => {
-    const chs = await Config.find({ key: 'channel' });
-    const btns = chs.map(c => [Markup.button.callback(`❌ ${c.name}`, `del_cfg_${c._id}`)]);
-    btns.push([Markup.button.callback('➕ Qo\'shish', 'add_ch')], [Markup.button.callback('🔙', 'admin_main')]);
-    ctx.editMessageText("🔗 KANALLAR", Markup.inlineKeyboard(btns));
+bot.on('chat_join_request', async (ctx) => {
+    await User.findOneAndUpdate({ userId: ctx.chatJoinRequest.from.id }, { status: 'requested' }, { upsert: true });
 });
 
-bot.action('a_app_man', async (ctx) => {
-    const apps = await Config.find({ key: 'app' });
-    const btns = apps.map(a => [Markup.button.callback(`❌ ${a.name}`, `del_cfg_${a._id}`)]);
-    btns.push([Markup.button.callback('➕ Qo\'shish', 'add_app')], [Markup.button.callback('🔙', 'admin_main')]);
-    ctx.editMessageText("📱 ILOVALAR", Markup.inlineKeyboard(btns));
-});
-
-bot.action(/^del_cfg_(.+)$/, async (ctx) => { await Config.findByIdAndDelete(ctx.match[1]); ctx.editMessageText("O'chirildi.", Markup.inlineKeyboard([[Markup.button.callback('🔙', 'admin_main')]])); });
-bot.action('add_ch', (ctx) => { ctx.session.step = 'ch_n'; ctx.reply("Kanal nomi:"); });
-bot.action('add_app', (ctx) => { ctx.session.step = 'app_n'; ctx.reply("Ilova nomi:"); });
-
-// --- BUTTON ACTIONS ---
-bot.action('show_terms', async (ctx) => { if (!(await canAccess(ctx))) return; const u = await User.findOne({userId: ctx.from.id}); ctx.editMessageText(i18n[u.lang].terms_text, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(i18n[u.lang].back, 'back_home')]]) }); });
-bot.action('show_guide', async (ctx) => { if (!(await canAccess(ctx))) return; const u = await User.findOne({userId: ctx.from.id}); ctx.editMessageText(i18n[u.lang].guide_text, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(i18n[u.lang].back, 'back_home')]]) }); });
-bot.action('back_home', async (ctx) => { if (!(await canAccess(ctx))) return; const u = await User.findOne({userId: ctx.from.id}); ctx.editMessageText(`<b>RICHI28 APPLE</b>`, { parse_mode: 'HTML', ...getMainMenu(u, ctx.from.id === ADMIN_ID) }); });
-bot.action('ref_menu', async (ctx) => { if (!(await canAccess(ctx))) return; const u = await User.findOne({userId: ctx.from.id}); const link = `https://t.me/${ctx.botInfo.username}?start=${u.userId}`; ctx.editMessageText(i18n[u.lang].ref_text(u.referralCount, u.refTask, link), { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(i18n[u.lang].back, 'back_home')]]) }); });
-
-bot.action(/^confirm_(\d+)$/, async (ctx) => { if (ctx.from.id !== ADMIN_ID) return; await User.findOneAndUpdate({ userId: ctx.match[1] }, { isVerified: true }); bot.telegram.sendMessage(ctx.match[1], "✅ VIP UNLOCKED!"); ctx.editMessageText("✅ Confirmed!"); });
-bot.action(/^reject_(\d+)$/, (ctx) => ctx.editMessageText("❌ Rejected!"));
-
-bot.on(['photo', 'video', 'animation', 'document'], async (ctx) => {
-    if (ctx.from.id === ADMIN_ID && ctx.session.step === 'bc_media') {
-        const filter = ctx.session.bcTarget === 'all' ? {} : { lang: ctx.session.bcTarget };
-        const users = await User.find(filter);
-        ctx.reply("⏳ Tarqatilmoqda...");
-        let c = 0; for (let u of users) { try { await ctx.copyMessage(u.userId); c++; } catch (e) {} }
-        ctx.session.step = null; ctx.reply(`✅ Yetkazildi: ${c}`);
+async function seedApps() {
+    const apps = ['1XBET', 'LINEBET', 'MELBET', 'MEGAPARI'];
+    for (const a of apps) {
+        const exists = await Config.findOne({ key: 'app', name: a });
+        if (!exists) await Config.create({ key: 'app', name: a });
     }
-});
+}
 
-bot.on('chat_join_request', async (ctx) => { await User.findOneAndUpdate({ userId: ctx.chatJoinRequest.from.id }, { status: 'requested' }, { upsert: true }); });
-
-async function seedApps() { const defaultApps = ['1XBET', 'LINEBET']; for (const a of defaultApps) { const exists = await Config.findOne({ key: 'app', name: a }); if (!exists) await Config.create({ key: 'app', name: a }); } }
-
-bot.launch().then(() => console.log('🚀 RICHI28 ULTIMATE LIVE'));
-const app = express(); app.get('/', (req, res) => res.send('Online')); app.listen(process.env.PORT || 3000);
+bot.launch().then(() => console.log('🚀 RICHI28 TITAN ENGINE ONLINE'));
+const app = express(); app.get('/', (req, res) => res.send('Titan System Online')); app.listen(process.env.PORT || 3000);
