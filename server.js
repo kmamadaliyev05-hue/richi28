@@ -234,52 +234,30 @@ bot.action("open_console", async (ctx) => {
 });
 
 // 2. SIGNALLAR (VERIFICATION CENTER) VA PLATFORMALAR RO'YXATI
-bot.action("menu_signals", async (ctx) => {
-    try {
-        const user = await User.findOne({ userId: ctx.from.id });
-        const s = strings[user.lang] || strings.uz;
-        const apps = await Config.find({ key: 'app' });
-        
-        const btns = [];
-        
-        // Baza orqali admin panelda qo'shilgan platformalar chiqadi
-        apps.forEach(a => {
-            btns.push([Markup.button.callback(`🚀 ${a.name}`, `view_app_${a._id}`)]);
-        });
-
-        // Baza bo'sh bo'lsa (namuna sifatida chiqib turishi uchun)
-        if(apps.length === 0) {
-            btns.push([Markup.button.callback("🎰 1XBET", "view_app_default_1xbet")]);
-            btns.push([Markup.button.callback("🟢 LINEBET", "view_app_default_linebet")]);
-        }
-
-        btns.push([Markup.button.callback(s.back, "home")]);
-        
-        return ctx.editMessageText(s.signals_title || "🚀 Platformani tanlang:", Markup.inlineKeyboard(btns));
-    } catch (error) { console.error(error); }
-});
-
-// Platforma ichiga kirganda
 bot.action(/^view_app_(.+)$/, async (ctx) => {
     try {
+        initSession(ctx);
         const appId = ctx.match[1];
         let name = "Platforma";
-        let regLink = "https://1xbet.com"; // Default ro'yxatdan o'tish linki
-        let dlLink = "https://t.me/richi28_apk"; // Default yuklash kanali
+        let regLink = "https://1xbet.com";
+        let dlLink = "https://t.me/richi28_apk";
 
         if (appId === "default_1xbet") {
             name = "1XBET";
         } else if (appId === "default_linebet") {
-            name = "LINEBET"; regLink = "https://linebet.com";
+            name = "LINEBET"; 
+            regLink = "https://linebet.com";
         } else {
-            // Admin qo'shgan haqiqiy bazadagi appni qidirish
             const appInfo = await Config.findById(appId);
             if (appInfo) {
                 name = appInfo.name;
-                regLink = appInfo.url || "https://1xbet.com"; // URL = Ro'yxatdan o'tish linki deb olinadi
-                dlLink = appInfo.content || "https://t.me/richi28_apk"; // Content = Ilovani yuklash linki deb olinadi
+                regLink = appInfo.url || "https://1xbet.com";
+                dlLink = appInfo.content || "https://t.me/richi28_apk";
             }
         }
+
+        // Foydalanuvchi qaysi platformada ekanini eslab qolamiz
+        ctx.session.selectedApp = name;
 
         const text = `🎰 <b>${name}</b> platformasi\n\n👇 Maxsus ro'yxatdan o'tish linki orqali ro'yxatdan o'ting va o'z ID raqamingizni tasdiqlang!`;
 
@@ -289,17 +267,43 @@ bot.action(/^view_app_(.+)$/, async (ctx) => {
                 [Markup.button.url("🔗 Ro'yxatdan o'tish", regLink)],
                 [Markup.button.url("📥 Ilovani yuklash", dlLink)],
                 [Markup.button.callback("🆔 ID TASDIQLASH", "verify_id_start")],
-                [Markup.button.callback("⬅️ Ortga", "menu_signals")] // Ortga bossa ro'yxatga qaytadi
+                [Markup.button.callback("⬅️ Ortga", "menu_signals")]
             ])
         });
     } catch (error) { console.error(error); }
 });
 
-bot.action("verify_id_start", async (ctx) => {
-    initSession(ctx); 
-    ctx.session.step = 'await_id';
-    return ctx.reply("📝 Platformadagi ID raqamingizni kiriting:\n\n(Bekor qilish uchun /start)");
-});
+// A. ID TASDIQLASH UCHUN (TEXT HANDLER ICHIDA)
+if (ctx.session.step === 'await_id') {
+    const inputId = ctx.message.text;
+
+    // 10 ta raqamdan iboratligini tekshirish (faqat raqam va uzunligi 10)
+    const idRegex = /^\d{10}$/; 
+
+    if (!idRegex.test(inputId)) {
+        return ctx.reply("❌ Xato! ID faqat 10 ta raqamdan iborat bo'lishi kerak.\n\nNamuna: 1234567890\n\nQaytadan kiriting:");
+    }
+
+    // Tanlangan platforma nomini olish (agar bo'sh bo'lsa 'Noma'lum')
+    const platform = ctx.session.selectedApp || "Noma'lum";
+
+    await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: inputId });
+    
+    // Adminga to'liq ma'lumot boradi
+    const adminMsg = `🆔 <b>YANGI ID SO'ROVI</b>\n\n` +
+                     `👤 Foydalanuvchi: ${ctx.from.first_name}\n` +
+                     `🔑 User ID: <code>${ctx.from.id}</code>\n` +
+                     `🎮 <b>Platforma: ${platform}</b>\n` +
+                     `🆔 Game ID: <code>${inputId}</code>`;
+
+    bot.telegram.sendMessage(ADMIN_ID, adminMsg, {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([[Markup.button.callback("✅ TASDIQLASH", `approve_${ctx.from.id}`)]])
+    });
+
+    ctx.session.step = null;
+    return ctx.reply(`⏳ Xabar yuborildi!\n\nPlatforma: ${platform}\nID: ${inputId}\n\nAdmin tasdiqlashini kuting.`);
+}
 
 // 3. TARMOQ
 bot.action("menu_network", async (ctx) => {
