@@ -233,7 +233,7 @@ bot.action("open_console", async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
-// 2. SIGNALLAR
+// 2. SIGNALLAR (VERIFICATION CENTER) VA PLATFORMALAR RO'YXATI
 bot.action("menu_signals", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
@@ -241,23 +241,62 @@ bot.action("menu_signals", async (ctx) => {
         const apps = await Config.find({ key: 'app' });
         
         const btns = [];
+        
+        // Baza orqali admin panelda qo'shilgan platformalar chiqadi
         apps.forEach(a => {
-            btns.push([Markup.button.url(`📥 ${a.name} yuklash`, a.url)]);
+            btns.push([Markup.button.callback(`🚀 ${a.name}`, `view_app_${a._id}`)]);
         });
 
+        // Baza bo'sh bo'lsa (namuna sifatida chiqib turishi uchun)
         if(apps.length === 0) {
-            btns.push([Markup.button.url("📥 Ilovani yuklash (1XBET)", "https://1xbet.com")]);
+            btns.push([Markup.button.callback("🎰 1XBET", "view_app_default_1xbet")]);
+            btns.push([Markup.button.callback("🟢 LINEBET", "view_app_default_linebet")]);
         }
 
-        btns.push([Markup.button.callback("🆔 ID TASDIQLASH", "verify_id_start")]);
         btns.push([Markup.button.callback(s.back, "home")]);
         
-        return ctx.editMessageText(s.signals_title, Markup.inlineKeyboard(btns));
+        return ctx.editMessageText(s.signals_title || "🚀 Platformani tanlang:", Markup.inlineKeyboard(btns));
+    } catch (error) { console.error(error); }
+});
+
+// Platforma ichiga kirganda
+bot.action(/^view_app_(.+)$/, async (ctx) => {
+    try {
+        const appId = ctx.match[1];
+        let name = "Platforma";
+        let regLink = "https://1xbet.com"; // Default ro'yxatdan o'tish linki
+        let dlLink = "https://t.me/richi28_apk"; // Default yuklash kanali
+
+        if (appId === "default_1xbet") {
+            name = "1XBET";
+        } else if (appId === "default_linebet") {
+            name = "LINEBET"; regLink = "https://linebet.com";
+        } else {
+            // Admin qo'shgan haqiqiy bazadagi appni qidirish
+            const appInfo = await Config.findById(appId);
+            if (appInfo) {
+                name = appInfo.name;
+                regLink = appInfo.url || "https://1xbet.com"; // URL = Ro'yxatdan o'tish linki deb olinadi
+                dlLink = appInfo.content || "https://t.me/richi28_apk"; // Content = Ilovani yuklash linki deb olinadi
+            }
+        }
+
+        const text = `🎰 <b>${name}</b> platformasi\n\n👇 Maxsus ro'yxatdan o'tish linki orqali ro'yxatdan o'ting va o'z ID raqamingizni tasdiqlang!`;
+
+        return ctx.editMessageText(text, {
+            parse_mode: 'HTML',
+            ...Markup.inlineKeyboard([
+                [Markup.button.url("🔗 Ro'yxatdan o'tish", regLink)],
+                [Markup.button.url("📥 Ilovani yuklash", dlLink)],
+                [Markup.button.callback("🆔 ID TASDIQLASH", "verify_id_start")],
+                [Markup.button.callback("⬅️ Ortga", "menu_signals")] // Ortga bossa ro'yxatga qaytadi
+            ])
+        });
     } catch (error) { console.error(error); }
 });
 
 bot.action("verify_id_start", async (ctx) => {
-    initSession(ctx);
+    initSession(ctx); 
     ctx.session.step = 'await_id';
     return ctx.reply("📝 Platformadagi ID raqamingizni kiriting:\n\n(Bekor qilish uchun /start)");
 });
