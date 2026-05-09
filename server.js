@@ -3,41 +3,43 @@ const mongoose = require('mongoose');
 const express = require('express');
 require('dotenv').config();
 
-// 1. DATABASE CONNECTION
-mongoose.connect(process.env.MONGO_URI).then(() => {
-    console.log('✅ RICHI28 HACK PORTAL Database Connected');
-}).catch(err => console.log('❌ DB Error:', err));
+// 1. DATABASE STRUKTURASI
+mongoose.connect(process.env.MONGO_URI).then(() => console.log('✅ RICHI28 DB CONNECTED'));
 
-const User = mongoose.model('User', new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
     userId: { type: Number, unique: true },
     firstName: String,
     lang: { type: String, default: 'uz' },
     isVerified: { type: Boolean, default: false },
-    gameId: String,
+    gameId: { type: String, default: 'Kiritilmagan' },
     balance: { type: Number, default: 0 },
     referrals: { type: Number, default: 0 },
-    status: { type: String, default: 'active' }, 
+    invitedBy: Number,
     joinedAt: { type: Date, default: Date.now }
-}));
+});
 
-const Config = mongoose.model('Config', new mongoose.Schema({
-    key: String, // channel, app
+const ConfigSchema = new mongoose.Schema({
+    key: String, // 'channel' yoki 'app'
     name: String,
     url: String,
     chatId: String
-}));
+});
 
-// 2. BOT INITIALIZATION
+const User = mongoose.model('User', UserSchema);
+const Config = mongoose.model('Config', ConfigSchema);
+
+// 2. BOTNI SOZLASH
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const ADMIN_ID = 6137845806;
 
 bot.use(session());
+bot.use((ctx, next) => { if (!ctx.session) ctx.session = {}; return next(); });
 
-// --- MULTI-LANG LUG'ATI ---
+// 3. LUG'AT (Matrix Style)
 const i18n = {
     uz: {
-        welcome: "⚡️ [ RICHI28 HACK PORTAL ] ⚡️\nTizimga xush kelibsiz, Agent!",
-        main_menu: "Asosiy boshqaruv konsoli:",
+        welcome: "⚡️ [ RICHI28 HACK PORTAL ] ⚡️\n\nTizimga xush kelibsiz, Agent! Kirish muvaffaqiyatli yakunlandi.",
+        main_menu: "💻 ASOSIY TERMINAL:",
         btn_web: "💻 KONSOLNI OCHISH",
         btn_signals: "🚀 SIGNALLAR",
         btn_network: "👥 TARMOQ",
@@ -46,17 +48,15 @@ const i18n = {
         btn_wallet: "💰 HAMYON",
         btn_settings: "🛠 SOZLAMALAR",
         btn_support: "👨‍💻 ADMIN BILAN ALOQA",
-        no_access: "⚠️ Ruxsat yo'q! Avval ID tasdiqlang.",
-        id_prompt: "🆔 Platformadagi ID raqamingizni yuboring (Faqat raqam):",
-        wait_admin: "⏳ Ma'lumotlar qabul qilindi. Admin tasdiqlashini kuting.",
-        ref_text: (count, link) => `👥 <b>TARMOQ (REFERAL)</b>\n\n📊 Taklif qilinganlar: <b>${count}</b> ta\n\n🎁 Vazifa: 5 ta odam = 5,000 UZS\n\n🔗 Havolangiz:\n<code>${link}</code>`,
-        wallet_text: (bal) => `💰 <b>HAMYON</b>\n\nHisobingiz: <b>${bal.toLocaleString()} UZS</b>\n\nMinimal yechish: 50,000 UZS`,
-        guide_text: "📖 <b>FOYDALANISH QO'LLANMASI</b>\n\n1. Signallar bo'limidan platforma tanlang.\n2. Ro'yxatdan o'tib ID yuboring.\n3. Tasdiqlangandan so'ng Konsolni oching!",
-        back: "🔙 ORQAGA"
+        no_access: "⚠️ ERROR: Ruxsat yo'q! Avval [SIGNALLAR] bo'limida ID tasdiqlang.",
+        id_prompt: "🆔 Platformadagi ID raqamingizni yuboring:",
+        wait_admin: "⏳ Ma'lumot yuborildi. Tizim tasdiqlashini kuting.",
+        back: "🔙 ORQAGA",
+        ref_text: (count, link) => `👥 <b>TARMOQ STATUSI</b>\n\n📊 Takliflar: ${count} ta\n🔗 Havolangiz: <code>${link}</code>\n\n🎁 Mukofot: 5 ta = 5,000 | 10 ta = 13,000 UZS`
     },
     ru: {
-        welcome: "⚡️ [ RICHI28 HACK PORTAL ] ⚡️\nДобро пожаловать в систему, Агент!",
-        main_menu: "Главная консоль управления:",
+        welcome: "⚡️ [ RICHI28 HACK PORTAL ] ⚡️\n\nДобро пожаловать, Агент! Вход выполнен.",
+        main_menu: "💻 ГЛАВНЫЙ ТЕРМИНАЛ:",
         btn_web: "💻 ОТКРЫТЬ КОНСОЛЬ",
         btn_signals: "🚀 СИГНАЛЫ",
         btn_network: "👥 СЕТЬ",
@@ -65,14 +65,15 @@ const i18n = {
         btn_wallet: "💰 КОШЕЛЕК",
         btn_settings: "🛠 НАСТРОЙКИ",
         btn_support: "👨‍💻 СВЯЗЬ С АДМИНОМ",
-        id_prompt: "🆔 Отправьте ваш ID номер (только цифры):",
-        wait_admin: "⏳ Данные приняты. Ожидайте подтверждения админом.",
-        ref_text: (count, link) => `👥 <b>СЕТЬ (РЕФЕРАЛ)</b>\n\n📊 Приглашено: <b>${count}</b>\n\n🔗 Ваша ссылка:\n<code>${link}</code>`,
-        back: "🔙 НАЗАД"
+        no_access: "⚠️ ERROR: Доступ запрещен! Сначала подтвердите ID в [СИГНАЛЫ].",
+        id_prompt: "🆔 Отправьте ваш ID номер платформы:",
+        wait_admin: "⏳ Данные отправлены. Ожидайте подтверждения системы.",
+        back: "🔙 НАЗАД",
+        ref_text: (count, link) => `👥 <b>СТАТУС СЕТИ</b>\n\n📊 Рефералы: ${count}\n🔗 Ссылка: <code>${link}</code>`
     },
     en: {
-        welcome: "⚡️ [ RICHI28 HACK PORTAL ] ⚡️\nWelcome to the system, Agent!",
-        main_menu: "Main control console:",
+        welcome: "⚡️ [ RICHI28 HACK PORTAL ] ⚡️\n\nWelcome, Agent! System access granted.",
+        main_menu: "💻 MAIN TERMINAL:",
         btn_web: "💻 OPEN CONSOLE",
         btn_signals: "🚀 SIGNALS",
         btn_network: "👥 NETWORK",
@@ -80,84 +81,115 @@ const i18n = {
         btn_guide: "📚 GUIDE",
         btn_wallet: "💰 WALLET",
         btn_settings: "🛠 SETTINGS",
-        btn_support: "👨‍💻 SUPPORT",
-        id_prompt: "🆔 Send your ID number (digits only):",
-        wait_admin: "⏳ Data received. Wait for admin approval.",
-        ref_text: (count, link) => `👥 <b>NETWORK (REFERRAL)</b>\n\n📊 Invited: <b>${count}</b>\n\n🔗 Your link:\n<code>${link}</code>`,
-        back: "🔙 BACK"
+        btn_support: "👨‍💻 CONTACT ADMIN",
+        no_access: "⚠️ ERROR: Access denied! Confirm your ID in [SIGNALS] first.",
+        id_prompt: "🆔 Send your platform ID number:",
+        wait_admin: "⏳ Data sent. Wait for system approval.",
+        back: "🔙 BACK",
+        ref_text: (count, link) => `👥 <b>NETWORK STATUS</b>\n\n📊 Referrals: ${count}\n🔗 Link: <code>${link}</code>`
     }
 };
 
-// 3. KEYBOARDS
-const getMainMenu = (lang, isAdmin, isVerified) => {
-    const t = i18n[lang] || i18n.uz;
-    let buttons = [
-        [Markup.button.webApp(t.btn_web, `${process.env.WEB_APP_URL}?user=${isVerified}&lang=${lang}`)],
-        [Markup.button.callback(t.btn_signals, 'signals'), Markup.button.callback(t.btn_network, 'network')],
-        [Markup.button.callback(t.btn_wins, 'wins'), Markup.button.callback(t.btn_guide, 'guide')],
-        [Markup.button.callback(t.btn_wallet, 'wallet'), Markup.button.callback(t.btn_settings, 'settings')],
-        [Markup.button.url(t.btn_support, 'https://t.me/richi28_admin')]
+// 4. KLAVIATURA GENERATORI
+const getMenu = (u, isAdmin) => {
+    const t = i18n[u.lang];
+    const btns = [
+        [Markup.button.callback(t.btn_web, 'open_console')],
+        [Markup.button.callback(t.btn_signals, 'signals_menu'), Markup.button.callback(t.btn_network, 'network_menu')],
+        [Markup.button.callback(t.btn_wins, 'wins_menu'), Markup.button.callback(t.btn_guide, 'guide_menu')],
+        [Markup.button.callback(t.btn_wallet, 'wallet_menu'), Markup.button.callback(t.btn_settings, 'settings_menu')],
+        [Markup.button.callback(t.btn_support, 'support_menu')]
     ];
-    if (isAdmin) buttons.push([Markup.button.callback('👑 ADMIN PANEL', 'admin_panel')]);
-    return Markup.inlineKeyboard(buttons);
+    if (isAdmin) btns.push([Markup.button.callback('👑 ADMIN PANEL', 'admin_main')]);
+    return Markup.inlineKeyboard(btns);
 };
 
-// 4. HANDLERS
+// 5. ASOSIY LOGIKA
 bot.start(async (ctx) => {
     const { id, first_name } = ctx.from;
-    const refId = ctx.startPayload;
-    
+    const refId = ctx.startPayload ? parseInt(ctx.startPayload) : null;
+
     let user = await User.findOne({ userId: id });
     if (!user) {
-        user = await User.create({ userId: id, firstName: first_name });
-        if (refId && refId !== id.toString()) {
+        user = await User.create({ userId: id, firstName: first_name, invitedBy: refId });
+        if (refId && refId !== id) {
             await User.findOneAndUpdate({ userId: refId }, { $inc: { referrals: 1 } });
         }
     }
 
     return ctx.reply("🌐 Select Language / Tilni tanlang:", Markup.inlineKeyboard([
-        [Markup.button.callback("🇺🇿 O'zbekcha", "setlang_uz"), Markup.button.callback("🇷🇺 Русский", "setlang_ru"), Markup.button.callback("🇬🇧 English", "setlang_en")]
+        [Markup.button.callback("🇺🇿 UZ", "set_uz"), Markup.button.callback("🇷🇺 RU", "set_ru"), Markup.button.callback("🇬🇧 EN", "set_en")]
     ]));
 });
 
-bot.action(/^setlang_(.+)$/, async (ctx) => {
+bot.action(/^set_(uz|ru|en)$/, async (ctx) => {
     const lang = ctx.match[1];
     const user = await User.findOneAndUpdate({ userId: ctx.from.id }, { lang }, { new: true });
-    ctx.editMessageText(i18n[lang].welcome, {
+    ctx.editMessageText(i18n[lang].welcome, getMenu(user, ctx.from.id === ADMIN_ID));
+});
+
+// KONSOLNI OCHISH (VERIFICATION CHECK)
+bot.action('open_console', async (ctx) => {
+    const user = await User.findOne({ userId: ctx.from.id });
+    if (!user.isVerified) {
+        return ctx.answerCbQuery(i18n[user.lang].no_access, { show_alert: true });
+    }
+    const webAppUrl = `${process.env.WEB_APP_URL}?lang=${user.lang}&id=${user.gameId}`;
+    ctx.reply("🟢 KONSOLGA KIRISH RUXSAT ETILDI:", Markup.inlineKeyboard([
+        [Markup.button.webApp("🚀 TERMINALNI ISHGA TUSHIRISH", webAppUrl)]
+    ]));
+});
+
+// SIGNALLAR (ILOVALAR)
+bot.action('signals_menu', async (ctx) => {
+    const user = await User.findOne({ userId: ctx.from.id });
+    const apps = await Config.find({ key: 'app' });
+    const btns = apps.map(a => [Markup.button.url(`📥 ${a.name}`, a.url)]);
+    btns.push([Markup.button.callback("🆔 ID TASDIQLASH", 'verify_id')]);
+    btns.push([Markup.button.callback(i18n[user.lang].back, 'home')]);
+    ctx.editMessageText("🚀 Platformani tanlang va ro'yxatdan o'tib ID yuboring:", Markup.inlineKeyboard(btns));
+});
+
+bot.action('verify_id', (ctx) => {
+    ctx.session.step = 'get_id';
+    ctx.reply(i18n[ctx.session.lang || 'uz'].id_prompt);
+});
+
+// YUTUQLAR (FAKE LOG GENERATOR)
+bot.action('wins_menu', async (ctx) => {
+    const user = await User.findOne({ userId: ctx.from.id });
+    const games = ['Apple', 'Kamikaze', 'Dragon', 'Mines', 'Crash'];
+    let logs = "🏆 <b>LIVE HACK LOGS:</b>\n\n";
+    for(let i=0; i<5; i++) {
+        const id = Math.floor(Math.random() * 900) + 100;
+        const sum = (Math.random() * 5000000 + 500000).toLocaleString();
+        logs += `[✅] ID ${id}*** | 🍎 ${games[Math.floor(Math.random()*games.length)]} | +${sum} UZS\n`;
+    }
+    ctx.editMessageText(logs, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(i18n[user.lang].back, 'home')]]) });
+});
+
+// ADMIN PANEL
+bot.action('admin_main', (ctx) => {
+    if (ctx.from.id !== ADMIN_ID) return;
+    ctx.editMessageText("👑 <b>ADMIN CONTROL PANEL</b>", {
         parse_mode: 'HTML',
-        ...getMainMenu(lang, ctx.from.id === ADMIN_ID, user.isVerified)
+        ...Markup.inlineKeyboard([
+            [Markup.button.callback('📢 Kanallar', 'adm_chan'), Markup.button.callback('📱 Ilovalar', 'adm_apps')],
+            [Markup.button.callback('✅ ID Tasdiqlash', 'adm_verify'), Markup.button.callback('📊 Statistika', 'adm_stats')],
+            [Markup.button.callback('✉️ Reklama', 'adm_bc')],
+            [Markup.button.callback('🔙 Chiqish', 'home')]
+        ])
     });
 });
 
-// SIGNALLAR (PLATFORMALAR)
-bot.action('signals', async (ctx) => {
-    const user = await User.findOne({ userId: ctx.from.id });
-    const t = i18n[user.lang];
-    const apps = await Config.find({ key: 'app' });
-    
-    const buttons = apps.map(app => [Markup.button.url(`📥 ${app.name} (Kanal)`, app.url)]);
-    buttons.push([Markup.button.callback('🆔 ID TASDIQLASH', 'verify_id')]);
-    buttons.push([Markup.button.callback(t.back, 'back_home')]);
-    
-    ctx.editMessageText("🚀 Kerakli platformani tanlang va ID raqamingizni tasdiqlang:", Markup.inlineKeyboard(buttons));
-});
-
-bot.action('verify_id', async (ctx) => {
-    const user = await User.findOne({ userId: ctx.from.id });
-    ctx.session.step = 'awaiting_id';
-    ctx.reply(i18n[user.lang].id_prompt);
-});
-
-// TEXT HANDLER
+// TEXT HANDLER (ID YUBORISH VA SUPPORT)
 bot.on('text', async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
-    if (ctx.session.step === 'awaiting_id') {
-        if (!/^\d+$/.test(ctx.message.text)) return ctx.reply("❌ Faqat raqam yuboring!");
-        
-        await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: ctx.message.text, status: 'requested' });
+    if (ctx.session.step === 'get_id') {
+        const gameId = ctx.message.text;
+        await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId });
         ctx.reply(i18n[user.lang].wait_admin);
-        
-        bot.telegram.sendMessage(ADMIN_ID, `🆕 <b>ID TASDIQLASH:</b>\n\n👤 Agent: ${ctx.from.first_name}\n🆔 ID: <code>${ctx.message.text}</code>`, {
+        bot.telegram.sendMessage(ADMIN_ID, `🆕 <b>ID TASDIQLASH:</b>\nUser: <a href="tg://user?id=${ctx.from.id}">${ctx.from.firstName}</a>\nID: <code>${gameId}</code>`, {
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
                 [Markup.button.callback('✅ TASDIQLASH', `approve_${ctx.from.id}`)],
@@ -168,65 +200,23 @@ bot.on('text', async (ctx) => {
     }
 });
 
-// TARMOQ (REFERAL)
-bot.action('network', async (ctx) => {
-    const user = await User.findOne({ userId: ctx.from.id });
-    const link = `https://t.me/${ctx.botInfo.username}?start=${ctx.from.id}`;
-    ctx.editMessageText(i18n[user.lang].ref_text(user.referrals, link), {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([[Markup.button.callback(i18n[user.lang].back, 'back_home')]])
-    });
-});
-
-// YUTUQLAR (FAKE LOGS)
-const generateFakeLogs = () => {
-    const games = ['Apple', 'Kamikaze', 'Dragon', 'Mines', 'Crash'];
-    const amount = (Math.floor(Math.random() * 4000000) + 500000).toLocaleString();
-    const id = Math.floor(100000 + Math.random() * 900000);
-    return `[✅] ID ${id}*** | ⚡️ ${games[Math.floor(Math.random()*games.length)]} | +${amount} UZS`;
-};
-
-bot.action('wins', async (ctx) => {
-    const user = await User.findOne({ userId: ctx.from.id });
-    let logs = "🏆 <b>OXIRGI YUTUQLAR (LIVE):</b>\n\n";
-    for(let i=0; i<6; i++) { logs += `<code>${generateFakeLogs()}</code>\n`; }
-    ctx.editMessageText(logs, {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([[Markup.button.callback(i18n[user.lang].back, 'back_home')]])
-    });
-});
-
-// HAMYON
-bot.action('wallet', async (ctx) => {
-    const user = await User.findOne({ userId: ctx.from.id });
-    ctx.editMessageText(i18n[user.lang].wallet_text(user.balance), {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([[Markup.button.callback(i18n[user.lang].back, 'back_home')]])
-    });
-});
-
-// ADMIN LOGIC
+// APPROVE LOGIC
 bot.action(/^approve_(\d+)$/, async (ctx) => {
-    const targetId = ctx.match[1];
-    await User.findOneAndUpdate({ userId: targetId }, { isVerified: true });
-    bot.telegram.sendMessage(targetId, "✅ <b>TABRIKLAYMIZ!</b>\n\nID raqamingiz tasdiqlandi. Endi KONSOL orqali VIP signallar olishingiz mumkin!", { parse_mode: 'HTML' });
-    ctx.editMessageText("✅ Agent tasdiqlandi.");
+    const tid = ctx.match[1];
+    await User.findOneAndUpdate({ userId: tid }, { isVerified: true });
+    bot.telegram.sendMessage(tid, "✅ <b>ACCESS GRANTED!</b>\n\nSizning ID raqamingiz tasdiqlandi. Endi Konsol orqali signallarni olishingiz mumkin!", { parse_mode: 'HTML' });
+    ctx.answerCbQuery("Tasdiqlandi!");
+    ctx.editMessageText("✅ Foydalanuvchi tasdiqlandi.");
 });
 
-bot.action('back_home', async (ctx) => {
+bot.action('home', async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
-    ctx.editMessageText(i18n[user.lang].welcome, {
-        parse_mode: 'HTML',
-        ...getMainMenu(user.lang, ctx.from.id === ADMIN_ID, user.isVerified)
-    });
+    ctx.editMessageText(i18n[user.lang].welcome, getMenu(user, ctx.from.id === ADMIN_ID));
 });
 
-// 5. SERVER
+// 6. SERVER & LAUNCH
 const app = express();
-app.get('/', (req, res) => res.send('Richi28 Hack Portal is Running...'));
+app.get('/', (req, res) => res.send('Server Running'));
 app.listen(process.env.PORT || 3000);
 
-bot.launch().then(() => console.log('⚡️ RICHI28 HACK PORTAL LIVE'));
-
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+bot.launch().then(() => console.log('🚀 RICHI28 PORTAL LIVE'));
