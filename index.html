@@ -22,8 +22,6 @@
         .kf-badge { font-size: 10px; color: #fff; background: rgba(0, 0, 0, 0.8); padding: 4px; border-radius: 4px; min-width: 50px; text-align: center; border: 1px solid var(--neon); }
         .fixed-bottom { position: fixed; bottom: 20px; left: 5%; width: 90%; z-index: 100; }
         .btn-main { background: black; border: 2px solid var(--neon); width: 100%; font-weight: bold; letter-spacing: 2px; }
-        
-        /* Professional UI Elements */
         .live-win { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0, 255, 65, 0.1); font-size: 9px; padding: 8px; text-align: center; border-bottom: 1px solid var(--neon); z-index: 150; }
         .health-bar { height: 4px; background: #222; border-radius: 2px; margin-top: 4px; overflow: hidden; }
         .health-fill { height: 100%; background: var(--red); width: 25%; animation: pulse-red 2s infinite; }
@@ -36,7 +34,6 @@
 </head>
 <body class="flex flex-col items-center">
     <canvas id="matrix"></canvas>
-
     <div class="live-win" id="live-win-box">> INITIALIZING SECURE CONNECTION...</div>
 
     <div id="loader" class="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-6 text-center text-[#00ff41]">
@@ -44,10 +41,7 @@
         <div class="w-full max-w-xs h-1 bg-gray-900 border border-[#00ff41] overflow-hidden">
             <div id="bar" class="h-full bg-[#00ff41] w-0"></div>
         </div>
-        <p id="loader-text" class="mt-4 text-[10px] animate-pulse"></p>
-        <div class="mt-12 p-4 border border-red-900 bg-red-950/20 rounded-lg max-w-xs">
-            <p id="warning-text" class="text-[9px] text-red-500 leading-relaxed uppercase italic"></p>
-        </div>
+        <p id="loader-text" class="mt-4 text-[10px] animate-pulse">> BYPASSING ENCRYPTION...</p>
     </div>
 
     <div id="menu" class="hidden w-full p-5 flex flex-col items-center z-10 h-screen pt-16 overflow-y-auto pb-40">
@@ -64,109 +58,73 @@
         </div>
 
         <div class="w-full p-4 mb-6 hacker-border bg-black/80">
-            <div class="flex justify-between items-start mb-2">
+            <div class="flex justify-between items-center">
                 <div class="flex flex-col">
-                    <span class="text-[10px] opacity-60 uppercase" id="user-label">Hacker ID</span>
+                    <span class="text-[10px] opacity-60 uppercase" id="user-label">Xaker ID</span>
                     <span class="text-xs font-bold text-white" id="display-id">ID: ########</span>
                 </div>
                 <div class="text-right">
-                    <span class="text-[10px] opacity-60 uppercase" id="rank-label">Rank</span><br>
+                    <span class="text-[10px] opacity-60 uppercase" id="rank-label">Daraja</span><br>
                     <span class="text-[10px] font-bold text-red-500" id="user-rank">NEWBIE</span>
                 </div>
             </div>
-            <div class="text-[9px] text-[#00ff41] mt-2 italic underline" id="profile-note"></div>
         </div>
 
-        <div class="w-full p-3 border border-[#00ff41] bg-black/80 mb-6 text-[10px]">
-            > STATUS: <span class="text-white">ENCRYPTED</span><br>
-            > BYPASS: <span class="text-white">STABLE v4.2</span>
-        </div>
-
-        <div class="grid grid-cols-1 gap-3 w-full" id="game-list"></div>
+        <div class="grid grid-cols-1 gap-3 w-full pb-10" id="game-list"></div>
     </div>
 
     <div id="game-ui" class="hidden w-full p-4 flex flex-col items-center z-10 h-screen pt-12">
         <div class="w-full flex justify-between items-center mb-4">
-            <span id="exit-btn" onclick="location.reload()" class="text-[10px] underline text-[#00f3ff] cursor-pointer"></span>
+            <span id="exit-btn" onclick="location.reload()" class="text-[10px] underline text-[#00f3ff] cursor-pointer uppercase">EXIT</span>
             <span id="game-name" class="text-[10px] font-bold text-white uppercase tracking-widest text-center"></span>
-            <span id="restart-btn" onclick="resetGameProgression()" class="text-[10px] border border-yellow-500 px-2 py-1 text-yellow-500 cursor-pointer"></span>
+            <span id="restart-btn" onclick="resetGameProgression()" class="text-[10px] border border-yellow-500 px-2 py-1 text-yellow-500 cursor-pointer uppercase">RESTART</span>
         </div>
         <div class="flex justify-between w-full text-[8px] mb-2 opacity-50 px-2">
             <span>LATENCY: 42ms | DB: 1X_MAIN_PRO</span>
-            <span class="text-green-500" id="prob-label"></span>
+            <span class="text-green-500" id="prob-label">PROBABILITY: 98.4%</span>
         </div>
         <div id="grid-wrapper" class="w-full"></div>
         
         <div class="fixed-bottom">
             <div id="bottom-info" class="bottom-warning"></div>
             <button id="hack-btn" class="btn-main py-4 text-sm" onclick="stepHack()"></button>
-            <div id="cooldown" class="mt-2 text-[10px] text-red-500 hidden text-center italic"><span id="wait-label"></span>: <span id="sec">2</span>s</div>
+            <div id="cooldown" class="mt-2 text-[10px] text-red-500 hidden text-center italic"><span id="wait-label">WAIT</span>: <span id="sec">2</span>s</div>
         </div>
     </div>
+
+    <audio id="sfx-click" src="https://www.soundjay.com/buttons/sounds/button-29.mp3"></audio>
+    <audio id="sfx-hack" src="https://www.soundjay.com/communication/sounds/digital-camera-shutter-1.mp3"></audio>
 
     <script>
         const tg = window.Telegram.WebApp; tg.expand();
         const urlParams = new URLSearchParams(window.location.search);
         const lang = urlParams.get('lang') || 'uz';
-        const userId = urlParams.get('id') || 'UNKNOWN';
+        const userId = urlParams.get('id') || '45829103';
+        const userRefs = parseInt(urlParams.get('refs')) || 0;
 
         const translations = {
             uz: {
-                injecting: "> TIZIM YUKLANMOQDA...",
-                warning: "⚠️ DIQQAT: Agar siz promokoddan ro'yxatdan o'tmagan yoki minimal depozit qilmagan bo'lsangiz, HACK tizimi xato signal berishi mumkin!",
-                exit: "CHIQISH",
-                restart: "🔄 QAYTA BOSHLASH",
-                get_signal: "SIGNAL OLISH",
-                wait: "KUTING",
-                analyzing: "ULANISH O'RNATILMOQDA...",
-                safety: "HISOB XAVFSIZLIGI",
-                expire: "EXPLOIT MUDDATI",
-                bottom_note: "PROMOKODDAN O'TMAGAN, DEPOZIT QILMAGAN, KANALLARGA A'ZO BO'LMAGAN YOKI 3 TA REFERAL OLIB KELMAGANLARGA HACK TIZIMI SIGNAL BERMAYDI!",
-                win_text: "o'yinida yutib oldi",
-                user_label: "Xaker ID",
-                rank_label: "Daraja",
-                prob: "YUTUQ EHTIMOLI",
-                profile_note: "* Daraja va aniqlikni oshirish uchun depozit qiling."
+                injecting: "> TIZIM YUKLANMOQDA...", safety: "HISOB XAVFSIZLIGI", expire: "EXPLOIT MUDDATI",
+                exit: "CHIQISH", restart: "QAYTA BOSHLASH", get_signal: "SIGNAL OLISH", wait: "KUTING",
+                analyzing: "TAHLIL QILINMOQDA...", bottom_note: "PROMOKODDAN O'TMAGAN YOKI DEPOZIT QILMAGANLARGA TIZIM SIGNAL BERMAYDI!",
+                win_text: "o'yinida yutib oldi", user_label: "Xaker ID", rank_label: "Daraja", prob: "EHTIMOL"
             },
             ru: {
-                injecting: "> ЗАГРУЗКА СИСТЕМЫ...",
-                warning: "⚠️ ВНИМАНИЕ: Если вы не зарегистрированы по промокоду или не внесли минимальный депозит, система HACK может давать неверные сигналы!",
-                exit: "ВЫХОД",
-                restart: "🔄 ПЕРЕЗАПУСК",
-                get_signal: "ПОЛУЧИТЬ СИГНАЛ",
-                wait: "ЖДИТЕ",
-                analyzing: "УСТАНОВКА СВЯЗИ...",
-                safety: "БЕЗОПАСНОСТЬ",
-                expire: "СРОК ЭКСПЛОЙТА",
-                bottom_note: "СИСТЕМА HACK НЕ ВЫДАЕТ СИГНАЛ ТЕМ, КТО НЕ ПРОШЕЛ РЕГИСТРАЦИЮ ПО ПРОМОКОДУ, НЕ СДЕЛАЛ ДЕПОЗИТ, НЕ ПОДПИСАЛСЯ НА КАНАЛЫ ИЛИ НЕ ПРИВЕЛ 3 РЕФЕРАЛОВ!",
-                win_text: "выиграл в",
-                user_label: "Хакер ID",
-                rank_label: "Ранг",
-                prob: "ВЕРОЯТНОСТЬ",
-                profile_note: "* Сделайте депозит, чтобы повысить ранг и точность."
+                injecting: "> ЗАГРУЗКА СИСТЕМЫ...", safety: "БЕЗОПАСНОСТЬ", expire: "СРОК ЭКСПЛОЙТА",
+                exit: "ВЫХОД", restart: "СБРОС", get_signal: "ПОЛУЧИТЬ СИГНАЛ", wait: "ЖДИТЕ",
+                analyzing: "АНАЛИЗ ДАННЫХ...", bottom_note: "БЕЗ ПРОМОКОДА ИЛИ ДЕПОЗИТА СИСТЕМА НЕ ДАЕТ СИГНАЛОВ!",
+                win_text: "выиграл в", user_label: "Хакер ID", rank_label: "Ранг", prob: "ВЕРОЯТНОСТЬ"
             },
             en: {
-                injecting: "> SYSTEM LOADING...",
-                warning: "⚠️ ATTENTION: If you are not registered via promo code or haven't made a minimum deposit, the HACK system may give incorrect signals!",
-                exit: "EXIT",
-                restart: "🔄 RESTART",
-                get_signal: "GET SIGNAL",
-                wait: "WAIT",
-                analyzing: "CONNECTING...",
-                safety: "ACCOUNT SAFETY",
-                expire: "EXPLOIT EXPIRE",
-                bottom_note: "HACK SYSTEM WILL NOT GIVE SIGNALS IF YOU ARE NOT REGISTERED VIA PROMO CODE, NO DEPOSIT, NOT SUBSCRIBED TO CHANNELS, OR NO 3 REFERRALS!",
-                win_text: "won in",
-                user_label: "Hacker ID",
-                rank_label: "Rank",
-                prob: "PROBABILITY",
-                profile_note: "* Deposit to upgrade rank and accuracy."
+                injecting: "> SYSTEM LOADING...", safety: "ACCOUNT SAFETY", expire: "EXPLOIT EXPIRE",
+                exit: "EXIT", restart: "RESTART", get_signal: "GET SIGNAL", wait: "WAIT",
+                analyzing: "ANALYZING...", bottom_note: "SYSTEM WILL NOT WORK WITHOUT PROMOCODE OR DEPOSIT!",
+                win_text: "won in", user_label: "Hacker ID", rank_label: "Rank", prob: "PROBABILITY"
             }
         };
 
         const t = translations[lang];
         document.getElementById('loader-text').innerText = t.injecting;
-        document.getElementById('warning-text').innerText = t.warning;
         document.getElementById('exit-btn').innerText = t.exit;
         document.getElementById('restart-btn').innerText = t.restart;
         document.getElementById('hack-btn').innerText = t.get_signal;
@@ -177,31 +135,19 @@
         document.getElementById('user-label').innerText = t.user_label;
         document.getElementById('rank-label').innerText = t.rank_label;
         document.getElementById('prob-label').innerText = `${t.prob}: 98.4%`;
-        document.getElementById('profile-note').innerText = t.profile_note;
         document.getElementById('display-id').innerText = `ID: ${userId}`;
 
-        // LIVE WIN GENERATOR
-        const names = ["User 441***", "User 902***", "User 115***", "User 678***", "User 332***"];
-        const gameNames = ["Apple", "Kamikaze", "Dragon's Gold", "Wild West"];
-        const xf = ["x2.41", "x4.02", "x1.54", "x6.71", "x11.18"];
-        setInterval(() => {
-            const rN = names[Math.floor(Math.random()*names.length)];
-            const rG = gameNames[Math.floor(Math.random()*gameNames.length)];
-            const rX = xf[Math.floor(Math.random()*xf.length)];
-            document.getElementById('live-win-box').innerText = `> ${rN} ${t.win_text} ${rG} ${rX}`;
-        }, 5000);
-
-        // EXPIRE TIMER
-        let h=2, m=45, s=12;
-        setInterval(() => {
-            s--; if(s<0){s=59; m--;} if(m<0){m=59; h--;}
-            document.getElementById('expire-timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-        }, 1000);
+        // DARAXA TIZIMI (REFERALGA QARAB)
+        const rankEl = document.getElementById('user-rank');
+        if(userRefs >= 10) { rankEl.innerText = "ELITE"; rankEl.className = "text-[10px] font-bold text-yellow-500"; }
+        else if(userRefs >= 3) { rankEl.innerText = "PRO"; rankEl.className = "text-[10px] font-bold text-blue-500"; }
+        else { rankEl.innerText = "NEWBIE"; }
 
         const games = [
             { id: 'apple', name: 'Apple Of Fortune', c: 5, r: 10, icon: '🍎', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
             { id: 'kamikaze', name: 'Kamikaze', c: 5, r: 12, icon: '🛩', kfs: [1.2, 1.5, 2, 3, 5, 10, 20, 50, 100, 250, 500, 1000] },
             { id: 'dragon', name: 'Dragon\'s Gold', c: 5, r: 10, icon: '🪙', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
+            { id: 'eastern', name: 'Eastern Nights', c: 5, r: 10, icon: '🪔', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
             { id: 'wild', name: 'Wild West Gold', c: 3, r: 10, icon: '💰', kfs: [3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049] },
             { id: 'swamp', name: 'Swamp Land', c: 5, r: 4, icon: '🐸', kfs: [1.3, 2.17, 5.43, 27.16] }
         ];
@@ -209,12 +155,13 @@
         let state = { current: 0, activeGame: null };
         const list = document.getElementById('game-list');
         games.forEach(g => {
-            list.innerHTML += `<div class="hacker-card p-4 flex items-center justify-between" onclick="initGame('${g.id}')">
+            list.innerHTML += `<div class="hacker-card p-4 flex items-center justify-between mb-2" onclick="initGame('${g.id}')">
                 <div class="flex flex-col"><span class="text-xs font-bold uppercase">${g.name}</span><span class="text-[8px] opacity-60">STABILITY: 98%</span></div>
                 <span class="text-2xl">${g.icon}</span></div>`;
         });
 
         function initGame(gid) {
+            document.getElementById('sfx-click').play();
             state.activeGame = games.find(x => x.id === gid); state.current = 0;
             document.getElementById('menu').style.display = 'none';
             document.getElementById('game-ui').style.display = 'flex';
@@ -238,9 +185,11 @@
 
         function stepHack() {
             if (state.current >= state.activeGame.r) { resetGameProgression(); return; }
+            document.getElementById('sfx-hack').play();
             const btn = document.getElementById('hack-btn'); const cd = document.getElementById('cooldown');
             btn.disabled = true; btn.innerText = t.analyzing;
             tg.HapticFeedback.impactOccurred('heavy');
+            
             setTimeout(() => {
                 const rowIdx = state.current;
                 const randCol = Math.floor(Math.random() * state.activeGame.c);
@@ -265,6 +214,7 @@
             }, 800);
         }
 
+        // MATRIX BACKGROUND
         const canvas = document.getElementById('matrix'); const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         const drops = Array.from({length: 40}).fill(1);
@@ -278,6 +228,22 @@
             });
         }
         setInterval(drawMatrix, 40);
+
+        // LIVE WIN FEED
+        const nList = ["User 441***", "User 902***", "User 115***", "User 678***", "User 332***"];
+        const gList = ["Apple", "Kamikaze", "Dragon", "Wild"];
+        setInterval(() => {
+            const rN = nList[Math.floor(Math.random()*nList.length)];
+            const rG = gList[Math.floor(Math.random()*gList.length)];
+            document.getElementById('live-win-box').innerText = `> ${rN} ${t.win_text} ${rG} x${(Math.random()*5 + 1).toFixed(2)}`;
+        }, 4000);
+
+        // EXPIRE TIMER
+        let eh=2, em=44, es=50;
+        setInterval(() => {
+            es--; if(es<0){es=59; em--;} if(em<0){em=59; eh--;}
+            document.getElementById('expire-timer').innerText = `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}:${String(es).padStart(2,'0')}`;
+        }, 1000);
 
         let p = 0; 
         const itv = setInterval(() => {
