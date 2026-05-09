@@ -29,6 +29,9 @@
         .health-fill { height: 100%; background: var(--red); width: 25%; animation: pulse-red 2s infinite; }
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .bottom-warning { font-size: 8px; color: #ff003c; text-align: center; margin-bottom: 10px; line-height: 1.2; text-transform: uppercase; border: 1px solid rgba(255, 0, 60, 0.2); padding: 6px; background: rgba(255, 0, 60, 0.05); }
+        .hacker-border { border: 1px solid var(--neon); position: relative; overflow: hidden; }
+        .hacker-border::before { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent); animation: scan 3s infinite; }
+        @keyframes scan { 100% { left: 100%; } }
     </style>
 </head>
 <body class="flex flex-col items-center">
@@ -42,28 +45,45 @@
             <div id="bar" class="h-full bg-[#00ff41] w-0"></div>
         </div>
         <p id="loader-text" class="mt-4 text-[10px] animate-pulse"></p>
-        
         <div class="mt-12 p-4 border border-red-900 bg-red-950/20 rounded-lg max-w-xs">
             <p id="warning-text" class="text-[9px] text-red-500 leading-relaxed uppercase italic"></p>
         </div>
     </div>
 
-    <div id="menu" class="hidden w-full p-5 flex flex-col items-center z-10 h-screen pt-16 overflow-y-auto pb-32">
+    <div id="menu" class="hidden w-full p-5 flex flex-col items-center z-10 h-screen pt-16 overflow-y-auto pb-40">
         <div class="w-full grid grid-cols-2 gap-4 mb-6">
             <div class="p-2 border border-red-500 bg-red-900/10">
                 <span class="text-[8px] text-red-500 uppercase" id="safety-label">Account Safety</span>
                 <div class="health-bar"><div class="health-fill"></div></div>
-                <span class="text-[9px] text-red-500 font-bold">25% - CRITICAL</span>
+                <span class="text-[9px] text-red-500 font-bold" id="safety-status">25% - CRITICAL</span>
             </div>
             <div class="p-2 border border-yellow-500 bg-yellow-900/10">
                 <span class="text-[8px] text-yellow-500 uppercase" id="expire-label">Exploit Expire</span>
                 <div class="text-[10px] text-yellow-500 font-bold" id="expire-timer">02:45:12</div>
             </div>
         </div>
+
+        <div class="w-full p-4 mb-6 hacker-border bg-black/80">
+            <div class="flex justify-between items-start mb-2">
+                <div class="flex flex-col">
+                    <span class="text-[10px] opacity-60 uppercase" id="user-label">Hacker ID</span>
+                    <span class="text-xs font-bold text-white" id="display-id">ID: ########</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] opacity-60 uppercase" id="rank-label">Rank</span><br>
+                    <span class="text-[10px] font-bold text-red-500" id="user-rank">NEWBIE</span>
+                </div>
+            </div>
+            <div class="text-[9px] text-[#00ff41] mt-2 italic underline" id="profile-note">
+                * Complete deposit to upgrade rank and accuracy.
+            </div>
+        </div>
+
         <div class="w-full p-3 border border-[#00ff41] bg-black/80 mb-6 text-[10px]">
             > STATUS: <span class="text-white">ENCRYPTED</span><br>
-            > BYPASS: <span class="text-white">STABLE</span>
+            > BYPASS: <span class="text-white">STABLE v4.2</span>
         </div>
+
         <div class="grid grid-cols-1 gap-3 w-full" id="game-list"></div>
     </div>
 
@@ -73,7 +93,10 @@
             <span id="game-name" class="text-[10px] font-bold text-white uppercase tracking-widest text-center"></span>
             <span id="restart-btn" onclick="resetGameProgression()" class="text-[10px] border border-yellow-500 px-2 py-1 text-yellow-500 cursor-pointer"></span>
         </div>
-        <div class="text-[8px] mb-2 opacity-50 w-full text-left">LATENCY: 42ms | DB: 1X_MAIN_PRO</div>
+        <div class="flex justify-between w-full text-[8px] mb-2 opacity-50 px-2">
+            <span>LATENCY: 42ms | DB: 1X_MAIN_PRO</span>
+            <span class="text-green-500" id="prob-label">WIN PROBABILITY: 98.4%</span>
+        </div>
         <div id="grid-wrapper" class="w-full"></div>
         
         <div class="fixed-bottom">
@@ -87,6 +110,7 @@
         const tg = window.Telegram.WebApp; tg.expand();
         const urlParams = new URLSearchParams(window.location.search);
         const lang = urlParams.get('lang') || 'uz';
+        const userId = urlParams.get('id') || 'UNKNOWN';
 
         const translations = {
             uz: {
@@ -96,11 +120,15 @@
                 restart: "🔄 QAYTA BOSHLASH",
                 get_signal: "SIGNAL OLISH",
                 wait: "KUTING",
-                analyzing: "TAHLIL QILINMOQDA...",
+                analyzing: "CONNECTING TO DATABASE...",
                 safety: "HISOB XAVFSIZLIGI",
                 expire: "EXPLOIT MUDDATI",
                 bottom_note: "PROMOKODDAN O'TMAGAN, DEPOZIT QILMAGAN, KANALLARGA A'ZO BO'LMAGAN YOKI 3 TA REFERAL OLIB KELMAGANLARGA HACK TIZIMI SIGNAL BERMAYDI!",
-                win_text: "Apple o'yinida yutib oldi"
+                win_text: "Apple o'yinida yutib oldi",
+                user_label: "Xaker ID",
+                rank_label: "Daraja",
+                prob: "YUTUQ EHTIMOLI",
+                profile_note: "* Daraja va aniqlikni oshirish uchun depozit qiling."
             },
             ru: {
                 injecting: "> ЗАГРУЗКА СИСТЕМЫ...",
@@ -109,11 +137,15 @@
                 restart: "🔄 ПЕРЕЗАПУСК",
                 get_signal: "ПОЛУЧИТЬ СИГНАЛ",
                 wait: "ЖДИТЕ",
-                analyzing: "АНАЛИЗ...",
+                analyzing: "ПОДКЛЮЧЕНИЕ К БАЗЕ...",
                 safety: "БЕЗОПАСНОСТЬ",
                 expire: "СРОК ЭКСПЛОЙТА",
                 bottom_note: "СИСТЕМА HACK НЕ ВЫДАЕТ СИГНАЛ ТЕМ, КТО НЕ ПРОШЕЛ РЕГИСТРАЦИЮ ПО ПРОМОКОДУ, НЕ СДЕЛАЛ ДЕПОЗИТ, НЕ ПОДПИСАЛСЯ НА КАНАЛЫ ИЛИ НЕ ПРИВЕЛ 3 РЕФЕРАЛОВ!",
-                win_text: "выиграл в Apple"
+                win_text: "выиграл в Apple",
+                user_label: "Хакер ID",
+                rank_label: "Ранг",
+                prob: "ВЕРОЯТНОСТЬ ВЫИГРЫША",
+                profile_note: "* Сделайте депозит, чтобы повысить ранг и точность."
             },
             en: {
                 injecting: "> SYSTEM LOADING...",
@@ -122,11 +154,15 @@
                 restart: "🔄 RESTART",
                 get_signal: "GET SIGNAL",
                 wait: "WAIT",
-                analyzing: "ANALYZING...",
+                analyzing: "CONNECTING TO DATABASE...",
                 safety: "ACCOUNT SAFETY",
                 expire: "EXPLOIT EXPIRE",
                 bottom_note: "HACK SYSTEM WILL NOT GIVE SIGNALS IF YOU ARE NOT REGISTERED VIA PROMO CODE, NO DEPOSIT, NOT SUBSCRIBED TO CHANNELS, OR NO 3 REFERRALS!",
-                win_text: "just won in Apple"
+                win_text: "just won in Apple",
+                user_label: "Hacker ID",
+                rank_label: "Rank",
+                prob: "WIN PROBABILITY",
+                profile_note: "* Deposit to upgrade rank and accuracy."
             }
         };
 
@@ -140,6 +176,11 @@
         document.getElementById('bottom-info').innerText = t.bottom_note;
         document.getElementById('safety-label').innerText = t.safety;
         document.getElementById('expire-label').innerText = t.expire;
+        document.getElementById('user-label').innerText = t.user_label;
+        document.getElementById('rank-label').innerText = t.rank_label;
+        document.getElementById('prob-label').innerText = `${t.prob}: 98.4%`;
+        document.getElementById('profile-note').innerText = t.profile_note;
+        document.getElementById('display-id').innerText = `ID: ${userId}`;
 
         // LIVE WIN GENERATOR
         const names = ["User 441***", "User 902***", "User 115***", "User 678***", "User 332***"];
@@ -161,16 +202,14 @@
             { id: 'apple', name: 'Apple Of Fortune', c: 5, r: 10, icon: '🍎', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
             { id: 'kamikaze', name: 'Kamikaze', c: 5, r: 12, icon: '🛩', kfs: [1.2, 1.5, 2, 3, 5, 10, 20, 50, 100, 250, 500, 1000] },
             { id: 'dragon', name: 'Dragon\'s Gold', c: 5, r: 10, icon: '🪙', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
-            { id: 'eastern', name: 'Eastern Nights', c: 5, r: 10, icon: '🪔', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
-            { id: 'wild', name: 'Wild West Gold', c: 3, r: 10, icon: '💰', kfs: [3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049] },
-            { id: 'swamp', name: 'Swamp Land', c: 5, r: 4, icon: '🐸', kfs: [1.3, 2.17, 5.43, 27.16] }
+            { id: 'wild', name: 'Wild West Gold', c: 3, r: 10, icon: '💰', kfs: [3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049] }
         ];
 
         let state = { current: 0, activeGame: null };
         const list = document.getElementById('game-list');
         games.forEach(g => {
             list.innerHTML += `<div class="hacker-card p-4 flex items-center justify-between" onclick="initGame('${g.id}')">
-                <div class="flex flex-col"><span class="text-xs font-bold uppercase">${g.name}</span><span class="text-[8px] opacity-60">TARGET: DATABASE_X</span></div>
+                <div class="flex flex-col"><span class="text-xs font-bold uppercase">${g.name}</span><span class="text-[8px] opacity-60">STABILITY: 98%</span></div>
                 <span class="text-2xl">${g.icon}</span></div>`;
         });
 
