@@ -40,50 +40,88 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('🛡️ RICHI28 DATABASE CONNECTED'))
     .catch(err => console.error('❌ DB Error:', err));
 
-// 3. I18N (MULTI-LANGUAGE) - 1-BOSQICH
+// 3. I18N (MULTI-LANGUAGE) - Tillar to'liq kiritildi
 const strings = {
     uz: {
         welcome: "⚡️ [ RICHI28 HACK PORTAL ] ⚡️\n\nTizimga xush kelibsiz, Agent! Kirish muvaffaqiyatli.",
         sub_req: "🔐 Botdan foydalanish uchun quyidagi kanallarga obuna bo'ling:",
         verify_sub: "✅ Tasdiqlash",
-        main_menu: "Asosiy menyu tanlang:",
+        main_menu: "Asosiy menyu:",
         access_denied: "⚠️ Ruxsat yo'q! Avval ID tasdiqlang.",
         signals_title: "🚀 Platformani tanlang va ro'yxatdan o'tib ID yuboring:",
-        wallet_title: (bal) => `💰 <b>HAMYON</b>\n\nJami balans: ${bal.toLocaleString()} UZS\n\nPul yechish uchun minimum: 50,000 UZS.`,
-        ref_title: (count, link) => `👥 <b>TARMOQ</b>\n\nSizning link: <code>${link}</code>\n\nChaqirilgan do'stlar: ${count} ta\n\n🎁 Mukofotlar:\n- 5 do'st = 5,000 UZS\n- 10 do'st = 13,000 UZS`,
+        wallet_title: (bal) => `💰 <b>HAMYON</b>\n\nJami balans: ${bal.toLocaleString()} UZS\n\nKamida 50,000 UZS bo'lganda yechish mumkin.`,
+        ref_title: (count, link) => `👥 <b>TARMOQ</b>\n\nSizning link: <code>${link}</code>\nChaqirilgan do'stlar: ${count} ta\n\n🎁 Mukofotlar:\n- 5 do'st = 5,000 UZS\n- 10 do'st = 13,000 UZS`,
         settings_title: (id, status, notify) => `🛠 <b>SOZLAMALAR</b>\n\n👤 ID: ${id}\n✅ Status: ${status ? 'Tasdiqlangan' : 'Noma\'lum'}\n🔔 Bildirishnoma: ${notify ? 'ON' : 'OFF'}`,
-        back: "⬅️ Ortga"
+        guide_title: "📚 <b>FOYDALANISH QO'LLANMASI</b>",
+        wins_title: "🏆 <b>SO'NGGI YUTUQLAR LOGI:</b>",
+        support_msg: "👨‍💻 Muammoingizni yozib qoldiring, admin tez orada javob beradi:",
+        back: "⬅️ Ortga",
+        btn_console: "💻 KONSOLNI OCHISH",
+        btn_signals: "🚀 SIGNALLAR",
+        btn_network: "👥 TARMOQ",
+        btn_wins: "🏆 YUTUQLAR",
+        btn_guide: "📚 QO'LLANMA",
+        btn_wallet: "💰 HAMYON",
+        btn_settings: "🛠 SOZLAMALAR",
+        btn_support: "👨‍💻 ADMIN BILAN ALOQA"
     },
     ru: {
         welcome: "⚡️ [ RICHI28 HACK PORTAL ] ⚡️\n\nДобро пожаловать в систему, Агент!",
-        sub_req: "🔐 Сначала подпишитесь на каналы:",
+        sub_req: "🔐 Подпишитесь на каналы для продолжения:",
         verify_sub: "✅ Проверить",
-        main_menu: "Выберите раздел:",
-        access_denied: "⚠️ Доступ запрещен! Сначала подтвердите ID.",
-        signals_title: "🚀 Выберите платформу и отправьте свой ID:",
-        wallet_title: (bal) => `💰 <b>КОШЕЛЕК</b>\n\nБаланс: ${bal.toLocaleString()} UZS`,
-        back: "⬅️ Назад"
+        main_menu: "Основное меню:",
+        access_denied: "⚠️ Нет доступа! Сначала подтвердите ID.",
+        signals_title: "🚀 Выберите платформу и отправьте ваш ID:",
+        wallet_title: (bal) => `💰 <b>КОШЕЛЕК</b>\n\nОбщий баланс: ${bal.toLocaleString()} UZS`,
+        ref_title: (count, link) => `👥 <b>СЕТЬ</b>\n\nВаша ссылка: <code>${link}</code>\nПриглашено: ${count}`,
+        settings_title: (id, status, notify) => `🛠 <b>НАСТРОЙКИ</b>\n\n👤 ID: ${id}\n✅ Статус: ${status ? 'Подтвержден' : 'Неизвестно'}`,
+        guide_title: "📚 <b>РУКОВОДСТВО</b>",
+        wins_title: "🏆 <b>ЛОГ ПОСЛЕДНИХ ВЫИГРЫШЕЙ:</b>",
+        support_msg: "👨‍💻 Опишите вашу проблему, админ скоро ответит:",
+        back: "⬅️ Назад",
+        btn_console: "💻 ОТКРЫТЬ КОНСОЛЬ",
+        btn_signals: "🚀 СИГНАЛЫ",
+        btn_network: "👥 СЕТЬ",
+        btn_wins: "🏆 ВЫИГРЫШИ",
+        btn_guide: "📚 ИНСТРУКЦИЯ",
+        btn_wallet: "💰 КОШЕЛЕК",
+        btn_settings: "🛠 НАСТРОЙКИ",
+        btn_support: "👨‍💻 СВЯЗЬ С АДМИНОМ"
     },
     en: {
         welcome: "⚡️ [ RICHI28 HACK PORTAL ] ⚡️\n\nWelcome to the system, Agent!",
-        sub_req: "🔐 Subscribe to channels to continue:",
+        sub_req: "🔐 Please subscribe to channels to continue:",
         verify_sub: "✅ Verify",
-        main_menu: "Choose main menu:",
+        main_menu: "Main Menu:",
         access_denied: "⚠️ Access denied! Verify your ID first.",
         signals_title: "🚀 Choose platform and send your ID:",
         wallet_title: (bal) => `💰 <b>WALLET</b>\n\nTotal Balance: ${bal.toLocaleString()} UZS`,
-        back: "⬅️ Back"
+        ref_title: (count, link) => `👥 <b>NETWORK</b>\n\nYour link: <code>${link}</code>\nReferrals: ${count}`,
+        settings_title: (id, status, notify) => `🛠 <b>SETTINGS</b>\n\n👤 ID: ${id}\n✅ Status: ${status ? 'Verified' : 'Unknown'}`,
+        guide_title: "📚 <b>GUIDEBOOK</b>",
+        wins_title: "🏆 <b>LATEST WINS LOG:</b>",
+        support_msg: "👨‍💻 Describe your problem, admin will reply soon:",
+        back: "⬅️ Back",
+        btn_console: "💻 OPEN CONSOLE",
+        btn_signals: "🚀 SIGNALS",
+        btn_network: "👥 NETWORK",
+        btn_wins: "🏆 WINS",
+        btn_guide: "📚 GUIDE",
+        btn_wallet: "💰 WALLET",
+        btn_settings: "🛠 SETTINGS",
+        btn_support: "👨‍💻 CONTACT ADMIN"
     }
 };
 
-// 4. KEYBOARD GENERATORS - 2-BOSQICH
+// 4. KEYBOARD GENERATOR
 const getMainMenu = (lang, isAdmin) => {
+    const s = strings[lang] || strings.uz;
     const btns = [
-        [Markup.button.callback("💻 KONSOLNI OCHISH", "open_console")],
-        [Markup.button.callback("🚀 SIGNALLAR", "menu_signals"), Markup.button.callback("👥 TARMOQ", "menu_network")],
-        [Markup.button.callback("🏆 YUTUQLAR", "menu_wins"), Markup.button.callback("📚 QO'LLANMA", "menu_guide")],
-        [Markup.button.callback("💰 HAMYON", "menu_wallet"), Markup.button.callback("🛠 SOZLAMALAR", "menu_settings")],
-        [Markup.button.callback("👨‍💻 ADMIN BILAN ALOQA", "menu_support")]
+        [Markup.button.callback(s.btn_console, "open_console")],
+        [Markup.button.callback(s.btn_signals, "menu_signals"), Markup.button.callback(s.btn_network, "menu_network")],
+        [Markup.button.callback(s.btn_wins, "menu_wins"), Markup.button.callback(s.btn_guide, "menu_guide")],
+        [Markup.button.callback(s.btn_wallet, "menu_wallet"), Markup.button.callback(s.btn_settings, "menu_settings")],
+        [Markup.button.callback(s.btn_support, "menu_support")]
     ];
     if (isAdmin) btns.push([Markup.button.callback("⚙️ ADMIN PANEL", "admin_panel")]);
     return Markup.inlineKeyboard(btns);
@@ -103,7 +141,7 @@ const checkSubscription = async (ctx) => {
     return true;
 };
 
-// 6. BOT FLOW & LANGUAGE SELECTION
+// 6. BOT FLOW
 bot.start(async (ctx) => {
     const refId = ctx.startPayload ? parseInt(ctx.startPayload) : null;
     let user = await User.findOne({ userId: ctx.from.id });
@@ -115,7 +153,7 @@ bot.start(async (ctx) => {
         }
     }
 
-    return ctx.reply("🌐 Tilingizni tanlang / Выберите язык / Select Language:", Markup.inlineKeyboard([
+    return ctx.reply("🌐 Select Language / Tilni tanlang / Выберите язык:", Markup.inlineKeyboard([
         [Markup.button.callback("🇺🇿 O'zbekcha", "setlang_uz")],
         [Markup.button.callback("🇷🇺 Русский", "setlang_ru")],
         [Markup.button.callback("🇬🇧 English", "setlang_en")]
@@ -124,7 +162,7 @@ bot.start(async (ctx) => {
 
 bot.action(/^setlang_(.+)$/, async (ctx) => {
     const lang = ctx.match[1];
-    await User.findOneAndUpdate({ userId: ctx.from.id }, { lang });
+    const user = await User.findOneAndUpdate({ userId: ctx.from.id }, { lang }, { new: true });
     
     if (!(await checkSubscription(ctx))) {
         const chans = await Config.find({ key: 'channel' });
@@ -140,7 +178,8 @@ bot.action("check_sub", async (ctx) => {
     if (await checkSubscription(ctx)) {
         return ctx.editMessageText(strings[user.lang].welcome, getMainMenu(user.lang, ctx.from.id === ADMIN_ID));
     }
-    return ctx.answerCbQuery("❌ Avval obuna bo'ling!", { show_alert: true });
+    const alertMsg = user.lang === 'uz' ? "Obuna bo'lmagansiz!" : (user.lang === 'ru' ? "Вы не подписаны!" : "Not subscribed!");
+    return ctx.answerCbQuery(alertMsg, { show_alert: true });
 });
 
 bot.action("home", async (ctx) => {
@@ -148,76 +187,77 @@ bot.action("home", async (ctx) => {
     return ctx.editMessageText(strings[user.lang].welcome, getMainMenu(user.lang, ctx.from.id === ADMIN_ID));
 });
 
-// 7. SECTIONS & BACK LOGIC - 3-BOSQICH
+// 7. SECTIONS & BACK LOGIC
 
 // 1. KONSOL
 bot.action("open_console", async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
-    if (!user.isVerified) return ctx.answerCbQuery(strings[user.lang].access_denied, { show_alert: true });
+    const s = strings[user.lang];
+    if (!user.isVerified) return ctx.answerCbQuery(s.access_denied, { show_alert: true });
     
     return ctx.editMessageText("🟢 TERMINAL IS ACTIVE", Markup.inlineKeyboard([
-        [Markup.button.webApp("🚀 OPEN TERMINAL", process.env.WEB_APP_URL)],
-        [Markup.button.callback(strings[user.lang].back, "home")]
+        [Markup.button.webApp("🚀 OPEN TERMINAL", process.env.WEB_APP_URL || "https://google.com")],
+        [Markup.button.callback(s.back, "home")]
     ]));
 });
 
 // 2. SIGNALLAR
 bot.action("menu_signals", async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
+    const s = strings[user.lang];
     const apps = await Config.find({ key: 'app' });
-    const btns = apps.map(a => [Markup.button.url(`📥 ${a.name} yuklash`, a.url)]);
-    btns.push([Markup.button.callback("🆔 ID TASDIQLASH", "verify_id_start")]);
-    btns.push([Markup.button.callback(strings[user.lang].back, "home")]);
-    return ctx.editMessageText(strings[user.lang].signals_title, Markup.inlineKeyboard(btns));
+    const btns = apps.map(a => [Markup.button.url(`📥 ${a.name}`, a.url)]);
+    btns.push([Markup.button.callback("🆔 VERIFY ID", "verify_id_start")]);
+    btns.push([Markup.button.callback(s.back, "home")]);
+    return ctx.editMessageText(s.signals_title, Markup.inlineKeyboard(btns));
 });
 
-bot.action("verify_id_start", (ctx) => {
+bot.action("verify_id_start", async (ctx) => {
+    const user = await User.findOne({ userId: ctx.from.id });
     ctx.session.step = 'await_id';
-    return ctx.reply("📝 Platformadagi ID raqamingizni kiriting:");
+    const msg = user.lang === 'uz' ? "ID kiriting:" : (user.lang === 'ru' ? "Введите ID:" : "Enter ID:");
+    return ctx.reply(msg);
 });
 
 // 3. TARMOQ
 bot.action("menu_network", async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
+    const s = strings[user.lang];
     const link = `https://t.me/${ctx.botInfo.username}?start=${ctx.from.id}`;
-    return ctx.editMessageText(strings[user.lang].ref_title(user.referrals, link), {
+    return ctx.editMessageText(s.ref_title(user.referrals, link), {
         parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([[Markup.button.callback(strings[user.lang].back, "home")]])
+        ...Markup.inlineKeyboard([[Markup.button.callback(s.back, "home")]])
     });
 });
 
 // 4. HAMYON
 bot.action("menu_wallet", async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
-    return ctx.editMessageText(strings[user.lang].wallet_title(user.balance), {
+    const s = strings[user.lang];
+    return ctx.editMessageText(s.wallet_title(user.balance), {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
-            [Markup.button.callback("💸 Pul yechish", "withdraw_start")],
-            [Markup.button.callback(strings[user.lang].back, "home")]
+            [Markup.button.callback("💸 Withdraw", "withdraw_start")],
+            [Markup.button.callback(s.back, "home")]
         ])
     });
-});
-
-bot.action("withdraw_start", (ctx) => {
-    ctx.session.step = 'withdraw_card';
-    return ctx.reply("💳 Karta raqamingizni kiriting:");
 });
 
 // 5. SOZLAMALAR
 bot.action("menu_settings", async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
-    return ctx.editMessageText(strings[user.lang].settings_title(user.userId, user.isVerified, user.notifications), {
+    const s = strings[user.lang];
+    return ctx.editMessageText(s.settings_title(user.userId, user.isVerified, user.notifications), {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
-            [Markup.button.callback("🔄 Tilni o'zgartirish", "start_lang_change")],
-            [Markup.button.callback("🔔 Bildirishnomalar ON/OFF", "toggle_notify")],
-            [Markup.button.callback(strings[user.lang].back, "home")]
+            [Markup.button.callback("🔄 Language", "start_lang_change")],
+            [Markup.button.callback(s.back, "home")]
         ])
     });
 });
 
 bot.action("start_lang_change", (ctx) => {
-    return ctx.reply("Yangi tilni tanlang:", Markup.inlineKeyboard([
+    return ctx.reply("New Language:", Markup.inlineKeyboard([
         [Markup.button.callback("🇺🇿 O'zbekcha", "setlang_uz")],
         [Markup.button.callback("🇷🇺 Русский", "setlang_ru")],
         [Markup.button.callback("🇬🇧 English", "setlang_en")]
@@ -227,71 +267,71 @@ bot.action("start_lang_change", (ctx) => {
 // 6. QO'LLANMA
 bot.action("menu_guide", async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
+    const s = strings[user.lang];
     const guide = await Config.findOne({ key: 'guide' });
-    const text = guide ? guide.content : "Qo'llanma tez kunda yuklanadi...";
-    return ctx.editMessageText(`📚 <b>FOYDALANISH QO'LLANMASI</b>\n\n${text}`, {
+    const text = guide ? guide.content : "...";
+    return ctx.editMessageText(`${s.guide_title}\n\n${text}`, {
         parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([[Markup.button.callback(strings[user.lang].back, "home")]])
+        ...Markup.inlineKeyboard([[Markup.button.callback(s.back, "home")]])
     });
 });
 
 // 7. YUTUQLAR
 bot.action("menu_wins", async (ctx) => {
     const user = await User.findOne({ userId: ctx.from.id });
-    let wins = "🏆 <b>SO'NGGI YUTUQLAR LOGI:</b>\n\n";
-    for(let i=0; i<12; i++) {
+    const s = strings[user.lang];
+    let wins = `${s.wins_title}\n\n`;
+    for(let i=0; i<10; i++) {
         const id = Math.floor(1000 + Math.random() * 8000);
         const amt = (Math.floor(Math.random() * 5000000) + 500000).toLocaleString();
         wins += `✅ ID: ${id}** | +${amt} UZS\n`;
     }
     return ctx.editMessageText(wins, {
         parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([[Markup.button.callback(strings[user.lang].back, "home")]])
+        ...Markup.inlineKeyboard([[Markup.button.callback(s.back, "home")]])
     });
 });
 
 // 8. ADMIN BILAN ALOQA
 bot.action("menu_support", async (ctx) => {
+    const user = await User.findOne({ userId: ctx.from.id });
     ctx.session.step = 'support';
-    return ctx.reply("👨‍💻 Muammoingizni yozib qoldiring, admin tez orada javob beradi:");
+    return ctx.reply(strings[user.lang].support_msg);
 });
 
-// TEXT HANDLERS
+// TEXT HANDLER
 bot.on('text', async (ctx) => {
     if (!ctx.session || !ctx.session.step) return;
+    const user = await User.findOne({ userId: ctx.from.id });
 
     if (ctx.session.step === 'await_id') {
         await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: ctx.message.text });
-        bot.telegram.sendMessage(ADMIN_ID, `🆔 <b>TASDIQLASH SO'ROVI</b>\n\nFoydalanuvchi: ${ctx.from.first_name}\nID: <code>${ctx.from.id}</code>\nKiritgan Game ID: <code>${ctx.message.text}</code>`, {
+        bot.telegram.sendMessage(ADMIN_ID, `🆔 <b>NEW ID</b>\n\nUser: ${ctx.from.first_name}\nID: <code>${ctx.from.id}</code>\nGame ID: <code>${ctx.message.text}</code>`, {
             parse_mode: 'HTML',
-            ...Markup.inlineKeyboard([[Markup.button.callback("✅ TASDIQLASH", `approve_${ctx.from.id}`)]])
+            ...Markup.inlineKeyboard([[Markup.button.callback("✅ APPROVE", `approve_${ctx.from.id}`)]])
         });
         ctx.session.step = null;
-        return ctx.reply("⏳ Ma'lumot yuborildi. Admin tasdiqlashini kuting.");
+        const resp = user.lang === 'uz' ? "Yuborildi!" : (user.lang === 'ru' ? "Отправлено!" : "Sent!");
+        return ctx.reply(resp);
     } 
     
     if (ctx.session.step === 'support') {
-        bot.telegram.sendMessage(ADMIN_ID, `📩 <b>YANGI XABAR (SUPPORT)</b>\n\nKimdan: ${ctx.from.first_name}\nID: ${ctx.from.id}\n\nXabar: ${ctx.message.text}`);
+        bot.telegram.sendMessage(ADMIN_ID, `📩 <b>SUPPORT</b>\n\nID: ${ctx.from.id}\nMsg: ${ctx.message.text}`);
         ctx.session.step = null;
-        return ctx.reply("✅ Xabaringiz yuborildi.");
-    }
-
-    if (ctx.session.step === 'withdraw_card') {
-        ctx.reply("💰 Summani kiriting (Masalan: 50000):");
-        ctx.session.step = 'withdraw_amount';
+        return ctx.reply("✅ OK.");
     }
 });
 
 bot.action(/^approve_(\d+)$/, async (ctx) => {
     const targetId = ctx.match[1];
     await User.findOneAndUpdate({ userId: targetId }, { isVerified: true });
-    bot.telegram.sendMessage(targetId, "✅ Tabriklaymiz! ID raqamingiz tasdiqlandi. KONSOL ochildi.");
-    return ctx.answerCbQuery("Tasdiqlandi!");
+    bot.telegram.sendMessage(targetId, "✅ Verified!");
+    return ctx.answerCbQuery("Done!");
 });
 
 // 9. SERVER
 const PORT = process.env.PORT || 3000;
-app.get('/', (req, res) => res.send('Richi28 Hack Live Status: OK'));
-app.listen(PORT, '0.0.0.0', () => console.log(`Server: ${PORT}`));
+app.get('/', (req, res) => res.send('OK'));
+app.listen(PORT, '0.0.0.0', () => console.log(`Run: ${PORT}`));
 
-bot.launch().then(() => console.log('🚀 RICHI28 BOT IS LIVE'));
+bot.launch().then(() => console.log('🚀 STARTED'));
