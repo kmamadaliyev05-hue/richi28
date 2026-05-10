@@ -526,25 +526,18 @@ bot.action("admin_console_link", (ctx) => { initSession(ctx); ctx.session.step =
 bot.action("admin_console_access", (ctx) => { return ctx.answerCbQuery("Tez orada qo'shiladi...", { show_alert: true }); });
 
 // 2. SIGNALS EDIT
-bot.action("admin_signals", async (ctx) => {
-    const apps = await Config.find({ key: 'app' });
-    let btns = [];
-    apps.forEach(a => btns.push([Markup.button.callback(`❌ O'chirish: ${a.name}`, `del_app_${a._id}`)]));
-    
-    btns.push([Markup.button.callback("➕ Ilova qo'shish", "admin_add_app"), Markup.button.callback("✅ ID Tasdiqlash", "admin_verify_ids")]);
-    btns.push([Markup.button.callback("⬅️ Ortga", "admin_panel")]);
-
-    return ctx.editMessageText("🚀 <b>SIGNALS EDIT</b>\n\n👇 Mavjud platformalar ro'yxati:", {
+bot.action("admin_signals", (ctx) => {
+    return ctx.editMessageText("🚀 <b>SIGNALS EDIT</b>", {
         parse_mode: 'HTML',
-        ...Markup.inlineKeyboard(btns)
+        ...Markup.inlineKeyboard([
+            [Markup.button.callback("➕ Ilova qo'shish", "admin_add_app"), Markup.button.callback("✅ ID Tasdiqlash", "admin_verify_ids")],
+            [Markup.button.callback("⬅️ Ortga", "admin_panel")]
+        ])
     });
 });
 bot.action("admin_add_app", (ctx) => { initSession(ctx); ctx.session.step = 'admin_add_app_name'; return ctx.reply("Ilova nomini kiriting (masalan, 1XBET):"); });
-bot.action(/^del_app_(.+)$/, async (ctx) => {
-    await Config.findByIdAndDelete(ctx.match[1]);
-    await ctx.answerCbQuery("Platforma o'chirildi!", {show_alert: true});
-    bot.handleUpdate({ callback_query: { id: ctx.callbackQuery.id, from: ctx.from, message: ctx.callbackQuery.message, data: "admin_signals" } }); // Qayta yuklash
-});
+bot.action("admin_verify_ids", async (ctx) => { return ctx.answerCbQuery("Tasdiqlanmagan ID lar kutilmoqda...", { show_alert: true }); });
+
 // 3. TARMOQ
 bot.action("admin_network", (ctx) => {
     return ctx.editMessageText("👥 <b>TARMOQ (Referal)</b>", {
@@ -571,11 +564,17 @@ bot.action("admin_wins_log", (ctx) => { initSession(ctx); ctx.session.step = 'ad
 
 // 5. QO'LLANMA
 bot.action("admin_guide", (ctx) => {
-    initSession(ctx); ctx.session.step = 'admin_guide_upload';
-    return ctx.editMessageText("📚 <b>QO'LLANMA</b>\n\nYangi qo'llanmani yuboring.\n<i>(Video yuborsangiz, tagiga yozuvini qo'shib yuboring. Faqat matn ham yuborish mumkin)</i>:", {
-        parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("⬅️ Ortga", "admin_panel")]])
+    return ctx.editMessageText("📚 <b>QO'LLANMA</b>", {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([
+            [Markup.button.callback("📹 Video yuklash", "admin_guide_video"), Markup.button.callback("📝 Matnni tahrirlash", "admin_guide_text")],
+            [Markup.button.callback("⬅️ Ortga", "admin_panel")]
+        ])
     });
 });
+bot.action("admin_guide_text", (ctx) => { initSession(ctx); ctx.session.step = 'admin_guide_text'; return ctx.reply("Qo'llanma matnini yuboring:"); });
+bot.action("admin_guide_video", (ctx) => { return ctx.answerCbQuery("Tez orada...", { show_alert: true }); });
+
 // 6. HAMYON
 bot.action("admin_wallet", (ctx) => {
     return ctx.editMessageText("💰 <b>HAMYON</b>", {
@@ -589,32 +588,18 @@ bot.action("admin_wallet", (ctx) => {
 bot.action("admin_wallet_min", (ctx) => { initSession(ctx); ctx.session.step = 'admin_wallet_min'; return ctx.reply("Yangi minimal pul yechish summasini yozing:"); });
 bot.action("admin_wallet_reqs", (ctx) => { return ctx.answerCbQuery("Hozircha so'rovlar yo'q.", { show_alert: true }); });
 
-// 7. kanallar
-bot.action("admin_channels", async (ctx) => {
-    const chans = await Config.find({ key: 'channel' });
-    let btns = [];
-    let text = "📢 <b>MAJBURIY KANALLAR</b>\n\nQuyidagi kanallar o'rnatilgan:\n";
-    
-    if(chans.length === 0) text += "Hozircha kanallar yo'q.";
-    else chans.forEach((c, i) => {
-        text += `${i+1}. ${c.name} (${c.chatId})\n`;
-        btns.push([Markup.button.callback(`❌ O'chirish: ${c.name}`, `del_chan_${c._id}`)]);
+// 7. SOZLAMALAR
+bot.action("admin_settings", (ctx) => {
+    return ctx.editMessageText("🛠 <b>SOZLAMALAR</b>", {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([
+            [Markup.button.callback("🌐 Tillarni boshqarish", "admin_set_lang"), Markup.button.callback("📢 Majburiy kanallar", "admin_set_chan")],
+            [Markup.button.callback("⬅️ Ortga", "admin_panel")]
+        ])
     });
-
-    btns.push([Markup.button.callback("➕ Kanal qo'shish", "admin_add_chan")]);
-    btns.push([Markup.button.callback("⬅️ Ortga", "admin_panel")]);
-
-    return ctx.editMessageText(text, { parse_mode: 'HTML', ...Markup.inlineKeyboard(btns) });
 });
-bot.action("admin_add_chan", (ctx) => {
-    initSession(ctx); ctx.session.step = 'admin_add_channel';
-    return ctx.reply("Kanal ma'lumotlarini quyidagi formatda yuboring:\n\nKanal Nomi | Kanal Linki | Kanal ID\n\nMasalan:\nMening Kanalim | https://t.me/kanal | -100123456789");
-});
-bot.action(/^del_chan_(.+)$/, async (ctx) => {
-    await Config.findByIdAndDelete(ctx.match[1]);
-    await ctx.answerCbQuery("Kanal o'chirildi!", {show_alert: true});
-    bot.handleUpdate({ callback_query: { id: ctx.callbackQuery.id, from: ctx.from, message: ctx.callbackQuery.message, data: "admin_channels" } }); // Qayta yuklash
-});
+bot.action("admin_set_chan", (ctx) => { initSession(ctx); ctx.session.step = 'admin_add_channel'; return ctx.reply("Majburiy obuna uchun kanal linki va IDsini yuboring:"); });
+bot.action("admin_set_lang", (ctx) => { return ctx.answerCbQuery("Tillarni kod orqali o'zgartirish qulayroq.", { show_alert: true }); });
 
 // 8. ARIZALAR
 bot.action("admin_support", (ctx) => {
@@ -696,25 +681,17 @@ bot.on('message', async (ctx) => {
                 await Config.findOneAndUpdate({key: 'wins_log'}, {content: text}, {upsert: true});
                 ctx.session.step = null; return ctx.reply("✅ Yutuqlar ro'yxati yangilandi!");
             }
-           if (ctx.from.id === ADMIN_ID && step === 'admin_guide_upload') {
-        const isVideo = !!ctx.message.video;
-        const text = isVideo ? (ctx.message.caption || "Qo'llanma") : (ctx.message.text || "Qo'llanma");
-        const videoId = isVideo ? ctx.message.video.file_id : null;
-
-        await Config.findOneAndUpdate({ key: 'guide' }, { content: text, url: videoId }, { upsert: true });
-        ctx.session.step = null;
-        return ctx.reply("✅ Qo'llanma muvaffaqiyatli saqlandi!", Markup.inlineKeyboard([[Markup.button.callback("⬅️ Admin Panel", "admin_panel")]]));
-    }
+            if (step === 'admin_guide_text') {
+                await Config.findOneAndUpdate({key: 'guide'}, {content: text}, {upsert: true});
+                ctx.session.step = null; return ctx.reply("✅ Qo'llanma matni yangilandi!");
+            }
             if (step === 'admin_wallet_min') {
                 ctx.session.step = null; return ctx.reply("✅ Minimal summa yangilandi!");
             }
-            // --- PLATFORMA QO'SHISH ---
-    if (ctx.from.id === ADMIN_ID && step === 'admin_add_app_name') {
-        if (!ctx.message.text) return;
-        await Config.create({ key: 'app', name: ctx.message.text, url: 'https://1xbet.com', content: 'https://t.me/dl' });
-        ctx.session.step = null;
-        return ctx.reply(`✅ ${ctx.message.text} platformasi qo'shildi!`, Markup.inlineKeyboard([[Markup.button.callback("⬅️ Ortga", "admin_signals")]]));
-    }
+            if (step === 'admin_add_app_name') {
+                ctx.session.tempApp = { name: text };
+                ctx.session.step = 'admin_add_app_url';
+                return ctx.reply("Platforma registratsiya ssilkasini yuboring:");
             }
             if (step === 'admin_add_app_url') {
                 ctx.session.tempApp.url = text;
@@ -728,21 +705,8 @@ bot.on('message', async (ctx) => {
                 ctx.session.step = null;
                 return ctx.reply("✅ Javob yuborildi.");
             }
-            // --- KANAL QO'SHISH ---
-    if (ctx.from.id === ADMIN_ID && step === 'admin_add_channel') {
-        if (!ctx.message.text) return ctx.reply("Iltimos, matnli formatda yuboring.");
-        const parts = ctx.message.text.split('|').map(p => p.trim());
-        if (parts.length === 3) {
-            await Config.create({ key: 'channel', name: parts[0], url: parts[1], chatId: parts[2] });
-            ctx.session.step = null;
-            return ctx.reply(`✅ Kanal qo'shildi: ${parts[0]}`, Markup.inlineKeyboard([[Markup.button.callback("⬅️ Kanallarga qaytish", "admin_channels")]]));
-        } else {
-            return ctx.reply("❌ Noto'g'ri format! Iltimos, Namuna bo'yicha yuboring:\nKanal nomi | https://t.me/k | -100...");
         }
-    }
-        }
-     
-    
+
         // USER TEXT STATES
         if (step === 'await_id') {
             if (!/^\d{10}$/.test(text)) return ctx.reply("❌ Xato! 10 ta raqam bo'lishi kerak.");
