@@ -233,6 +233,30 @@ bot.action("open_console", async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
+bot.action("menu_signals", async (ctx) => {
+    try {
+        const user = await User.findOne({ userId: ctx.from.id });
+        const s = strings[user.lang] || strings.uz;
+        const apps = await Config.find({ key: 'app' });
+        
+        const btns = [];
+        
+        apps.forEach(a => {
+            btns.push([Markup.button.callback(`🚀 ${a.name}`, `view_app_${a._id}`)]);
+        });
+
+        if(apps.length === 0) {
+            btns.push([Markup.button.callback("🎰 1XBET", "view_app_default_1xbet")]);
+            btns.push([Markup.button.callback("🟢 LINEBET", "view_app_default_linebet")]);
+        }
+
+        btns.push([Markup.button.callback(s.back, "home")]);
+        
+        return ctx.editMessageText(s.signals_title || "🚀 Platformani tanlang:", Markup.inlineKeyboard(btns));
+    } catch (error) { console.error(error); }
+});
+
+
 // 2. SIGNALLAR (VERIFICATION CENTER) VA PLATFORMALAR RO'YXATI
 bot.action(/^view_app_(.+)$/, async (ctx) => {
     try {
@@ -273,37 +297,11 @@ bot.action(/^view_app_(.+)$/, async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
-// A. ID TASDIQLASH UCHUN (TEXT HANDLER ICHIDA)
-if (ctx.session.step === 'await_id') {
-    const inputId = ctx.message.text;
-
-    // 10 ta raqamdan iboratligini tekshirish (faqat raqam va uzunligi 10)
-    const idRegex = /^\d{10}$/; 
-
-    if (!idRegex.test(inputId)) {
-        return ctx.reply("❌ Xato! ID faqat 10 ta raqamdan iborat bo'lishi kerak.\n\nNamuna: 1234567890\n\nQaytadan kiriting:");
-    }
-
-    // Tanlangan platforma nomini olish (agar bo'sh bo'lsa 'Noma'lum')
-    const platform = ctx.session.selectedApp || "Noma'lum";
-
-    await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: inputId });
-    
-    // Adminga to'liq ma'lumot boradi
-    const adminMsg = `🆔 <b>YANGI ID SO'ROVI</b>\n\n` +
-                     `👤 Foydalanuvchi: ${ctx.from.first_name}\n` +
-                     `🔑 User ID: <code>${ctx.from.id}</code>\n` +
-                     `🎮 <b>Platforma: ${platform}</b>\n` +
-                     `🆔 Game ID: <code>${inputId}</code>`;
-
-    bot.telegram.sendMessage(ADMIN_ID, adminMsg, {
-        parse_mode: 'HTML',
-        ...Markup.inlineKeyboard([[Markup.button.callback("✅ TASDIQLASH", `approve_${ctx.from.id}`)]])
-    });
-
-    ctx.session.step = null;
-    return ctx.reply(`⏳ Xabar yuborildi!\n\nPlatforma: ${platform}\nID: ${inputId}\n\nAdmin tasdiqlashini kuting.`);
-}
+bot.action("verify_id_start", async (ctx) => {
+    initSession(ctx); 
+    ctx.session.step = 'await_id';
+    return ctx.reply("📝 Platformadagi ID raqamingizni kiriting:\n\n❗️ Faqat 10 ta raqamdan iborat bo'lishi shart.\n\n(Bekor qilish uchun /start)");
+});
 
 // 3. TARMOQ
 bot.action("menu_network", async (ctx) => {
@@ -419,16 +417,35 @@ bot.on('text', async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
 
-        // A. ID TASDIQLASH
+        // A. ID TASDIQLASH VA TEKSHIRUV (10 XONALI RAQAM)
         if (ctx.session.step === 'await_id') {
-            await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: ctx.message.text });
+            const inputId = ctx.message.text.trim();
+            const idRegex = /^\d{10}$/; 
+
+            if (!idRegex.test(inputId)) {
+                return ctx.reply("❌ Xato! ID faqat 10 ta raqamdan iborat bo'lishi kerak va harf qatnashmasligi shart.\n\nNamuna: 1234567890\n\nQaytadan kiriting:");
+            }
+
+            const platform = ctx.session.selectedApp || "Noma'lum";
+
+            await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: inputId });
             
-            bot.telegram.sendMessage(ADMIN_ID, `🆔 <b>YANGI ID SO'ROVI</b>\n\nFoydalanuvchi: ${ctx.from.first_name}\nID: <code>${ctx.from.id}</code>\nGame ID: <code>${ctx.message.text}</code>`, {
+            const adminMsg = `🆔 <b>YANGI ID SO'ROVI</b>\n\n` +
+                             `👤 Foydalanuvchi: <a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a>\n` +
+                             `🔑 User ID: <code>${ctx.from.id}</code>\n` +
+                             `🎮 <b>Platforma: ${platform}</b>\n` +
+                             `🆔 Game ID: <code>${inputId}</code>`;
+
+            bot.telegram.sendMessage(ADMIN_ID, adminMsg, {
                 parse_mode: 'HTML',
-                ...Markup.inlineKeyboard([[Markup.button.callback("✅ TASDIQLASH", `approve_${ctx.from.id}`)]])
+                ...Markup.inlineKeyboard([
+                    [Markup.button.callback("✅ TASDIQLASH", `approve_${ctx.from.id}`)],
+                    [Markup.button.callback("❌ RAD ETISH", `reject_${ctx.from.id}`)]
+                ])
             });
+
             ctx.session.step = null;
-            return ctx.reply("⏳ Yuborildi! Admin tasdiqlashini kuting.");
+            return ctx.reply(`⏳ Muvaffaqiyatli qabul qilindi!\n\nPlatforma: <b>${platform}</b>\nID: <b>${inputId}</b>\n\nAdmin tasdiqlashini kuting.`, { parse_mode: 'HTML' });
         } 
         
         // B. SUPPORT ARIZA YUBORISH
@@ -463,7 +480,9 @@ bot.on('text', async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
+// ==========================================
 // ADMIN CALLBACKS
+// ==========================================
 bot.action(/^reply_to_(\d+)$/, (ctx) => {
     initSession(ctx);
     const targetUserId = ctx.match[1];
@@ -477,6 +496,16 @@ bot.action(/^approve_(\d+)$/, async (ctx) => {
         await User.findOneAndUpdate({ userId: targetId }, { isVerified: true });
         bot.telegram.sendMessage(targetId, "✅ Tabriklaymiz! ID raqamingiz tasdiqlandi. KONSOL ochildi.");
         return ctx.answerCbQuery("Tasdiqlandi!");
+    } catch (error) { console.error(error); }
+});
+
+bot.action(/^reject_(\d+)$/, async (ctx) => {
+    try {
+        const targetId = ctx.match[1];
+        // Rad etilganda gameId ni yana tozalab qoyishimiz mumkin (ixtiyoriy)
+        await User.findOneAndUpdate({ userId: targetId }, { gameId: "Kiritilmagan", isVerified: false });
+        bot.telegram.sendMessage(targetId, "❌ Kechirasiz, siz yuborgan ID raqam admin tomonidan tasdiqlanmadi. Iltimos tekshirib qayta yuboring.");
+        return ctx.answerCbQuery("Rad etildi!");
     } catch (error) { console.error(error); }
 });
 
