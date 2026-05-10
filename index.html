@@ -2,269 +2,269 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 HACKER HUB PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RICHI28 HACK PORTAL</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        :root { --neon: #00ff41; --bg: #050505; --red: #ff003c; }
-        body { background-color: var(--bg); color: var(--neon); font-family: 'JetBrains Mono', monospace; overflow: hidden; user-select: none; }
-        canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.15; }
-        .hacker-card { background: rgba(0, 255, 65, 0.05); border: 1px solid var(--neon); transition: 0.3s; cursor: pointer; position: relative; overflow: hidden; }
-        .hacker-card:active { background: var(--neon); color: black; }
-        #grid-wrapper { max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column-reverse; padding: 20px 0; scrollbar-width: none; }
-        #grid-wrapper::-webkit-scrollbar { display: none; }
-        .row-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; transition: 0.4s; opacity: 0.3; }
-        .row-container.active-row { opacity: 1; transform: scale(1.02); }
-        .cell { width: 52px; height: 52px; border: 1px solid rgba(0, 255, 65, 0.3); background: rgba(0, 20, 0, 0.7); display: flex; align-items: center; justify-content: center; font-size: 10px; position: relative; }
-        .cell.hack-active { background: var(--neon); color: black; box-shadow: 0 0 25px var(--neon); border: none; font-size: 24px; }
-        .kf-badge { font-size: 10px; color: #fff; background: rgba(0, 0, 0, 0.8); padding: 4px; border-radius: 4px; min-width: 50px; text-align: center; border: 1px solid var(--neon); }
-        .fixed-bottom { position: fixed; bottom: 20px; left: 5%; width: 90%; z-index: 100; }
-        .btn-main { background: black; border: 2px solid var(--neon); width: 100%; font-weight: bold; letter-spacing: 2px; }
-        .live-win { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0, 255, 65, 0.1); font-size: 9px; padding: 8px; text-align: center; border-bottom: 1px solid var(--neon); z-index: 150; }
-        .health-bar { height: 4px; background: #222; border-radius: 2px; margin-top: 4px; overflow: hidden; }
-        .health-fill { height: 100%; background: var(--red); width: 25%; animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .bottom-warning { font-size: 8px; color: #ff003c; text-align: center; margin-bottom: 10px; line-height: 1.2; text-transform: uppercase; border: 1px solid rgba(255, 0, 60, 0.2); padding: 6px; background: rgba(255, 0, 60, 0.05); }
-        .hacker-border { border: 1px solid var(--neon); position: relative; overflow: hidden; }
-        .hacker-border::before { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent); animation: scan 3s infinite; }
-        @keyframes scan { 100% { left: 100%; } }
+        :root {
+            --neon-green: #00ff41;
+            --dark-bg: #0a0a0a;
+            --warning-red: #ff3131;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 1. BOOT SEQUENCE */
+        #boot-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .glitch {
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .loader-bar {
+            width: 250px;
+            height: 20px;
+            border: 1px solid var(--neon-green);
+            margin-top: 20px;
+            position: relative;
+        }
+
+        #progress {
+            width: 0%;
+            height: 100%;
+            background: var(--neon-green);
+            transition: width 0.3s;
+        }
+
+        /* 2. LOBBY AREA */
+        #lobby {
+            display: none;
+            width: 95%;
+            max-width: 500px;
+            padding-top: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .game-card {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid var(--neon-green);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .game-card:active { transform: scale(0.95); background: rgba(0, 255, 65, 0.2); }
+
+        .game-card h3 { margin: 5px 0; font-size: 0.9rem; }
+        .kf { color: #fff; font-size: 0.8rem; opacity: 0.8; }
+
+        /* 3. GAME VIEW */
+        #game-view {
+            display: none;
+            width: 100%;
+            text-align: center;
+            padding-top: 50px;
+        }
+
+        .signal-btn {
+            background: transparent;
+            color: var(--neon-green);
+            border: 2px solid var(--neon-green);
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        .result-box {
+            margin-top: 40px;
+            font-size: 3rem;
+            min-height: 100px;
+        }
+
+        .warning-footer {
+            color: var(--warning-red);
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 49, 49, 0.3);
+            margin-top: 20px;
+        }
+
+        .back-btn { align-self: flex-start; cursor: pointer; margin-bottom: 20px; }
     </style>
 </head>
-<body class="flex flex-col items-center">
-    <canvas id="matrix"></canvas>
-    <div class="live-win" id="live-win-box">> INITIALIZING SECURE CONNECTION...</div>
+<body>
 
-    <div id="loader" class="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-6 text-center text-[#00ff41]">
-        <h1 class="text-3xl font-bold mb-8 tracking-[10px]">RICHI28</h1>
-        <div class="w-full max-w-xs h-1 bg-gray-900 border border-[#00ff41] overflow-hidden">
-            <div id="bar" class="h-full bg-[#00ff41] w-0"></div>
-        </div>
-        <p id="loader-text" class="mt-4 text-[10px] animate-pulse">> BYPASSING ENCRYPTION...</p>
-        <div class="mt-12 p-4 border border-red-900 bg-red-950/20 rounded-lg max-w-xs">
-            <p id="warning-text" class="text-[9px] text-red-500 leading-relaxed uppercase italic"></p>
-        </div>
+    <div id="boot-screen">
+        <div class="glitch">RICHI28 HACK</div>
+        <div id="status-text">Analysing database...</div>
+        <div class="loader-bar"><div id="progress"></div></div>
     </div>
 
-    <div id="menu" class="hidden w-full p-5 flex flex-col items-center z-10 h-screen pt-16 overflow-y-auto pb-40">
-        <div class="w-full grid grid-cols-2 gap-4 mb-6">
-            <div class="p-2 border border-red-500 bg-red-900/10">
-                <span class="text-[8px] text-red-500 uppercase" id="safety-label">Account Safety</span>
-                <div class="health-bar"><div class="health-fill"></div></div>
-                <span class="text-[9px] text-red-500 font-bold" id="safety-status">25% - CRITICAL</span>
+    <div id="lobby">
+        <div class="header">
+            <span>TERMINAL v4.0</span>
+            <select id="lang-select" onchange="changeLang()">
+                <option value="uz">UZ</option>
+                <option value="ru">RU</option>
+                <option value="en">EN</option>
+            </select>
+        </div>
+
+        <div class="game-grid" id="game-list">
             </div>
-            <div class="p-2 border border-yellow-500 bg-yellow-900/10">
-                <span class="text-[8px] text-yellow-500 uppercase" id="expire-label">Exploit Expire</span>
-                <div class="text-[10px] text-yellow-500 font-bold" id="expire-timer">02:44:50</div>
-            </div>
-        </div>
 
-        <div class="w-full p-4 mb-6 hacker-border bg-black/80">
-            <div class="flex justify-between items-center">
-                <div class="flex flex-col">
-                    <span class="text-[10px] opacity-60 uppercase" id="user-label">Xaker ID</span>
-                    <span class="text-xs font-bold text-white" id="display-id">ID: ########</span>
-                </div>
-                <div class="text-right">
-                    <span class="text-[10px] opacity-60 uppercase" id="rank-label">Daraja</span><br>
-                    <span class="text-[10px] font-bold" id="user-rank" style="color: #ff003c;">NEWBIE</span>
-                </div>
-            </div>
+        <div class="warning-footer" id="warning-text">
+            ⚠️ DIQQAT: Agar siz RICHI28 promokodidan o‘tmagan bo‘lsangiz yoki hisobingizda minimal 60,000 UZS depozit bo‘lmasa, tizim noto‘g‘ri signal berishi mumkin!
         </div>
-
-        <div class="w-full p-3 border border-[#00ff41] bg-black/80 mb-6 text-[10px]">
-            > STATUS: <span class="text-white uppercase">Encrypted</span><br>
-            > BYPASS: <span class="text-white uppercase">Stable v4.2</span>
-        </div>
-
-        <div class="grid grid-cols-1 gap-3 w-full pb-10" id="game-list"></div>
-    </div>
-
-    <div id="game-ui" class="hidden w-full p-4 flex flex-col items-center z-10 h-screen pt-12">
-        <div class="w-full flex justify-between items-center mb-4">
-            <span id="exit-btn" onclick="location.reload()" class="text-[10px] underline text-[#00f3ff] cursor-pointer uppercase font-bold"></span>
-            <span id="game-name" class="text-[10px] font-bold text-white uppercase tracking-widest text-center"></span>
-            <span id="restart-btn" onclick="resetGameProgression()" class="text-[10px] border border-yellow-500 px-2 py-1 text-yellow-500 cursor-pointer uppercase font-bold"></span>
-        </div>
-        <div class="flex justify-between w-full text-[8px] mb-2 opacity-50 px-2">
-            <span>LATENCY: 42ms | DB: 1X_MAIN_PRO</span>
-            <span class="text-green-500 font-bold" id="prob-label"></span>
-        </div>
-        <div id="grid-wrapper" class="w-full"></div>
         
-        <div class="fixed-bottom">
-            <div id="bottom-info" class="bottom-warning"></div>
-            <button id="hack-btn" class="btn-main py-4 text-sm" onclick="stepHack()"></button>
-            <div id="cooldown" class="mt-2 text-[10px] text-red-500 hidden text-center italic"><span id="wait-label"></span>: <span id="sec">2</span>s</div>
+        <div style="text-align:center; font-size: 0.8rem; opacity: 0.5; margin-top:10px;" onclick="sendSupport()">
+            [ 💡 TAKLIF VA MUROJAAT ]
         </div>
     </div>
 
-    <audio id="audio-click" src="https://www.soundjay.com/buttons/sounds/button-29.mp3"></audio>
-    <audio id="audio-success" src="https://www.soundjay.com/communication/sounds/digital-camera-shutter-1.mp3"></audio>
+    <div id="game-view">
+        <div class="back-btn" onclick="showLobby()">⬅️ ORTGA</div>
+        <h2 id="current-game-title">GAME</h2>
+        <div id="hack-animation" style="font-size: 0.8rem; height: 40px;"></div>
+        <div class="result-box" id="signal-result">?</div>
+        <button class="signal-btn" onclick="getSignal()">⚡️ GET SIGNAL</button>
+    </div>
 
     <script>
-        const tg = window.Telegram.WebApp; tg.expand();
-        const urlParams = new URLSearchParams(window.location.search);
-        const lang = urlParams.get('lang') || 'uz';
-        const userId = urlParams.get('id') || '45829103';
-        const userRefs = parseInt(urlParams.get('refs')) || 0;
-
-        const translations = {
-            uz: {
-                injecting: "> TIZIM YUKLANMOQDA...", safety: "HISOB XAVFSIZLIGI", expire: "EXPLOIT MUDDATI",
-                exit: "CHIQISH", restart: "QAYTA BOSHLASH", get_signal: "SIGNAL OLISH", wait: "KUTING",
-                analyzing: "TAHLIL QILINMOQDA...", bottom_note: "PROMOKODDAN O'TMAGAN YOKI DEPOZIT QILMAGANLARGA TIZIM SIGNAL BERMAYDI!",
-                win_text: "o'yinida yutib oldi", user_label: "Xaker ID", rank_label: "Daraja", prob: "EHTIMOL"
-            },
-            ru: {
-                injecting: "> ЗАГРУЗКА СИСТЕМЫ...", safety: "БЕЗОПАСНОСТЬ", expire: "СРОК ЭКСПЛОЙТА",
-                exit: "ВЫХОД", restart: "СБРОС", get_signal: "ПОЛУЧИТЬ СИГНАЛ", wait: "ЖДИТЕ",
-                analyzing: "АНАЛИЗ ДАННЫХ...", bottom_note: "БЕЗ ПРОМОКОДА ИЛИ ДЕПОЗИТА СИСТЕМА НЕ ДАЕТ СИГНАЛОВ!",
-                win_text: "выиграл в", user_label: "Хакер ID", rank_label: "Ранг", prob: "ВЕРОЯТНОСТЬ"
-            },
-            en: {
-                injecting: "> SYSTEM LOADING...", safety: "ACCOUNT SAFETY", expire: "EXPLOIT EXPIRE",
-                exit: "EXIT", restart: "RESTART", get_signal: "GET SIGNAL", wait: "WAIT",
-                analyzing: "ANALYZING...", bottom_note: "SYSTEM WILL NOT WORK WITHOUT PROMOCODE OR DEPOSIT!",
-                win_text: "won in", user_label: "Hacker ID", rank_label: "Rank", prob: "PROBABILITY"
-            }
-        };
-
-        const t = translations[lang];
-        document.getElementById('loader-text').innerText = t.injecting;
-        document.getElementById('warning-text').innerText = t.bottom_note;
-        document.getElementById('exit-btn').innerText = t.exit;
-        document.getElementById('restart-btn').innerText = t.restart;
-        document.getElementById('hack-btn').innerText = t.get_signal;
-        document.getElementById('wait-label').innerText = t.wait;
-        document.getElementById('bottom-info').innerText = t.bottom_note;
-        document.getElementById('safety-label').innerText = t.safety;
-        document.getElementById('expire-label').innerText = t.expire;
-        document.getElementById('user-label').innerText = t.user_label;
-        document.getElementById('rank-label').innerText = t.rank_label;
-        document.getElementById('prob-label').innerText = `${t.prob}: 98.4%`;
-        document.getElementById('display-id').innerText = `ID: ${userId}`;
-
-        // RANK SYSTEM
-        const rankEl = document.getElementById('user-rank');
-        if(userRefs >= 10) { rankEl.innerText = "ELITE"; rankEl.style.color = "#FFD700"; }
-        else if(userRefs >= 3) { rankEl.innerText = "PRO"; rankEl.style.color = "#00f3ff"; }
-        else { rankEl.innerText = "NEWBIE"; rankEl.style.color = "#ff003c"; }
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
         const games = [
-            { id: 'apple', name: 'Apple Of Fortune', c: 5, r: 10, icon: '🍎', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
-            { id: 'kamikaze', name: 'Kamikaze', c: 5, r: 12, icon: '🛩', kfs: [1.2, 1.5, 2, 3, 5, 10, 20, 50, 100, 250, 500, 1000] },
-            { id: 'dragon', name: 'Dragon\'s Gold', c: 5, r: 10, icon: '🪙', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
-            { id: 'eastern', name: 'Eastern Nights', c: 5, r: 10, icon: '🪔', kfs: [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.99, 69.93, 349.68] },
-            { id: 'wild', name: 'Wild West Gold', c: 3, r: 10, icon: '💰', kfs: [3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049] },
-            { id: 'swamp', name: 'Swamp Land', c: 5, r: 4, icon: '🐸', kfs: [1.3, 2.17, 5.43, 27.16] }
+            { name: "Apple of Fortune", logo: "🍎", kf: "x1.23 - x349", signal: "🍎" },
+            { name: "Crash", logo: "🚀", kf: "x1.00 - x100+", signal: "🛑 STOP x2.54" },
+            { name: "Gems & Mines", logo: "💣", kf: "x1.05 - x1,000+", signal: "💎 💎 💣" },
+            { name: "Thimbles", logo: "🥤", kf: "x1.45 - x2.91", signal: "⚪️" },
+            { name: "Kamikaze", logo: "✈️", kf: "x1.21 - x15.4", signal: "✈️" }
         ];
 
-        let state = { current: 0, activeGame: null };
-        const list = document.getElementById('game-list');
-        games.forEach(g => {
-            list.innerHTML += `
-                <div class="hacker-card p-4 flex items-center justify-between mb-2" onclick="initGame('${g.id}')">
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold uppercase text-white">${g.name}</span>
-                        <span class="text-[8px] opacity-60">STABILITY: 98%</span>
-                    </div>
-                    <span class="text-2xl">${g.icon}</span>
-                </div>`;
+        // 1. Boot Sequence
+        let width = 0;
+        const progress = document.getElementById('progress');
+        const bootScreen = document.getElementById('boot-screen');
+        const lobby = document.getElementById('lobby');
+
+        const interval = setInterval(() => {
+            if (width >= 100) {
+                clearInterval(interval);
+                bootScreen.style.display = 'none';
+                lobby.style.display = 'block';
+            } else {
+                width += Math.random() * 10;
+                progress.style.width = width + '%';
+            }
+        }, 200);
+
+        // 2. Render Games
+        const gameList = document.getElementById('game-list');
+        games.forEach(game => {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = `<div>${game.logo}</div><h3>${game.name}</h3><div class="kf">${game.kf}</div>`;
+            card.onclick = () => openGame(game);
+            gameList.appendChild(card);
         });
 
-        function initGame(gid) {
-            document.getElementById('audio-click').play();
-            state.activeGame = games.find(x => x.id === gid); state.current = 0;
-            document.getElementById('menu').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'flex';
-            document.getElementById('game-name').innerText = state.activeGame.name;
-            renderGrid();
+        // 3. Logic Functions
+        let selectedGame = null;
+
+        function openGame(game) {
+            selectedGame = game;
+            lobby.style.display = 'none';
+            document.getElementById('game-view').style.display = 'block';
+            document.getElementById('current-game-title').innerText = game.name;
+            document.getElementById('signal-result').innerText = '?';
         }
 
-        function renderGrid() {
-            const wrapper = document.getElementById('grid-wrapper'); wrapper.innerHTML = '';
-            for (let i = 0; i < state.activeGame.r; i++) {
-                const row = document.createElement('div');
-                row.className = 'row-container'; row.id = `r-${i}`;
-                let cells = '';
-                for (let j = 0; j < state.activeGame.c; j++) cells += `<div class="cell" id="c-${i}-${j}">0x${Math.floor(Math.random()*16).toString(16).toUpperCase()}</div>`;
-                row.innerHTML = cells + `<div class="kf-badge">x${state.activeGame.kfs[i]}</div>`;
-                wrapper.appendChild(row);
+        function showLobby() {
+            document.getElementById('game-view').style.display = 'none';
+            lobby.style.display = 'block';
+        }
+
+        function getSignal() {
+            const anim = document.getElementById('hack-animation');
+            const res = document.getElementById('signal-result');
+            res.innerText = "⏳";
+            
+            const steps = ["Bypassing security...", "Scanning grid...", "Infecting server...", "Signal Ready!"];
+            let i = 0;
+            const stepInterval = setInterval(() => {
+                anim.innerText = steps[i];
+                i++;
+                if(i >= steps.length) {
+                    clearInterval(stepInterval);
+                    res.innerText = selectedGame.signal;
+                    anim.innerText = "";
+                }
+            }, 600);
+        }
+
+        function changeLang() {
+            const lang = document.getElementById('lang-select').value;
+            const warn = document.getElementById('warning-text');
+            if(lang === 'en') {
+                warn.innerText = "⚠️ ATTENTION: If you haven't used RICHI28 promo or have less than $5 deposit, the system may fail!";
+            } else if(lang === 'ru') {
+                warn.innerText = "⚠️ ВНИМАНИЕ: Если вы не ввели промокод RICHI28 или у вас меньше 500 RUB, система может ошибиться!";
+            } else {
+                warn.innerText = "⚠️ DIQQAT: Agar siz RICHI28 promokodidan o‘tmagan bo‘lsangiz yoki hisobingizda minimal 60,000 UZS depozit bo‘lmasa, tizim noto‘g‘ri signal berishi mumkin!";
             }
         }
 
-        function resetGameProgression() { 
-            document.getElementById('audio-click').play();
-            state.current = 0; renderGrid(); 
+        function sendSupport() {
+            const msg = prompt("Murojaatingizni yozing:");
+            if(msg) {
+                tg.sendData(JSON.stringify({type: 'support', text: msg}));
+                alert("Yuborildi!");
+            }
         }
-
-        function stepHack() {
-            if (state.current >= state.activeGame.r) { resetGameProgression(); return; }
-            const btn = document.getElementById('hack-btn'); const cd = document.getElementById('cooldown');
-            btn.disabled = true; btn.innerText = t.analyzing;
-            tg.HapticFeedback.impactOccurred('heavy');
-            
-            setTimeout(() => {
-                document.getElementById('audio-success').play();
-                const rowIdx = state.current;
-                const randCol = Math.floor(Math.random() * state.activeGame.c);
-                const rowEl = document.getElementById(`r-${rowIdx}`);
-                const cellEl = document.getElementById(`c-${rowIdx}-${randCol}`);
-                rowEl.classList.add('active-row');
-                cellEl.classList.add('hack-active');
-                cellEl.innerHTML = state.activeGame.icon;
-                rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                tg.HapticFeedback.notificationOccurred('success');
-                state.current++;
-                btn.style.display = 'none'; cd.style.display = 'block';
-                let s = 2; document.getElementById('sec').innerText = s;
-                const timer = setInterval(() => {
-                    s--; document.getElementById('sec').innerText = s;
-                    if(s <= 0) {
-                        clearInterval(timer); btn.style.display = 'block'; btn.disabled = false;
-                        btn.innerText = (state.current >= state.activeGame.r) ? t.restart : t.get_signal;
-                        cd.style.display = 'none';
-                    }
-                }, 1000);
-            }, 800);
-        }
-
-        // MATRIX
-        const canvas = document.getElementById('matrix'); const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const drops = Array.from({length: 40}).fill(1);
-        function drawMatrix() {
-            ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = "#0F0"; ctx.font = "12px monospace";
-            drops.forEach((y, i) => {
-                ctx.fillText(Math.random() > 0.5 ? "1" : "0", i*12, y*12);
-                if(y*12 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            });
-        }
-        setInterval(drawMatrix, 40);
-
-        // LIVE WIN
-        const nList = ["User 441***", "User 902***", "User 115***", "User 678***", "User 332***"];
-        setInterval(() => {
-            const rN = nList[Math.floor(Math.random()*nList.length)];
-            const rG = games[Math.floor(Math.random()*6)].name.split(' ')[0];
-            document.getElementById('live-win-box').innerText = `> ${rN} ${t.win_text} ${rG} x${(Math.random()*4 + 1).toFixed(2)}`;
-        }, 4000);
-
-        // TAYMER
-        let eh=2, em=44, es=50;
-        setInterval(() => {
-            es--; if(es<0){es=59; em--;} if(em<0){em=59; eh--;}
-            document.getElementById('expire-timer').innerText = `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}:${String(es).padStart(2,'0')}`;
-        }, 1000);
-
-        let p = 0; const itv = setInterval(() => {
-            p += 1.5; document.getElementById('bar').style.width = p + "%";
-            if(p >= 100){ clearInterval(itv); document.getElementById('loader').style.display = 'none'; document.getElementById('menu').style.display = 'flex'; }
-        }, 60);
     </script>
 </body>
 </html>
