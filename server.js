@@ -13,7 +13,7 @@ const UserSchema = new mongoose.Schema({
     userId: { type: Number, unique: true },
     firstName: String,
     lang: { type: String, default: "uz" },
-    isVerified: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false }, // Admin ruxsati uchun
     gameId: { type: String, default: "Kiritilmagan" },
     balance: { type: Number, default: 0 },
     referrals: { type: Number, default: 0 },
@@ -92,7 +92,7 @@ const getMainMenu = (lang, isAdmin) => {
     return Markup.inlineKeyboard(btns);
 };
 
-// Obunani va Zayafkani tekshiruvchi funksiya
+// Obunani va Zayafkani tekshiruvchi qat'iy funksiya
 const checkSubscription = async (ctx, user) => {
     if (ctx.from.id === ADMIN_ID) return true;
     const channels = await Config.find({ key: 'channel' });
@@ -100,34 +100,53 @@ const checkSubscription = async (ctx, user) => {
     
     for (const chan of channels) {
         try {
-            // Agar foydalanuvchi avval zayafka yuborgan bo'lsa, o'tkazib yuboramiz
+            // Agar foydalanuvchi zayafka yuborgan bo'lsa, obuna bo'lgan deb hisoblaymiz
             if (user && user.requestedChannels && user.requestedChannels.includes(chan.chatId)) {
                 continue; 
             }
-            // Obunani tekshiramiz
+            // Aks holda obunani tekshiramiz
             const member = await ctx.telegram.getChatMember(chan.chatId, ctx.from.id);
             if (['left', 'kicked'].includes(member.status)) return false;
         } catch (e) {
-            return false; // Kanal topilmasa yoki huquq bo'lmasa o'tkazmaydi
+            return false;
         }
     }
     return true;
 };
 
-// Zayafka (Join Request) tashlanganda ishlaydigan hodisa
+// ==========================================
+// ZAYAFKA YUBORILGANDA AVTOMATIK MENYU BERISH
+// ==========================================
 bot.on('chat_join_request', async (ctx) => {
     try {
         const userId = ctx.from.id;
         const chatId = ctx.chat.id.toString();
-        // Zayafka yuborgan kanalni bazaga saqlab qolamiz
-        await User.findOneAndUpdate(
+        
+        let user = await User.findOne({ userId: userId });
+        if (!user) {
+            user = await User.create({ userId: userId, firstName: ctx.from.first_name });
+        }
+
+        // Zayafkani bazaga saqlaymiz
+        user = await User.findOneAndUpdate(
             { userId: userId },
             { $addToSet: { requestedChannels: chatId } },
-            { upsert: true }
+            { new: true }
         );
-        // Ixtiyoriy: Avtomatik qabul qilib yuborish uchun pastdagi kodni ochishingiz mumkin
-        // await ctx.approveChatJoinRequest(userId).catch(()=>null);
-    } catch (error) { console.error(error); }
+
+        // Ariza qabul qilinganini aytib, darhol menyuni yuboramiz!
+        const lang = user.lang || "uz";
+        const s = strings[lang] || strings.uz;
+        
+        await bot.telegram.sendMessage(
+            userId, 
+            `✅ <b>Arizangiz qabul qilindi!</b>\n\n${s.welcome}`, 
+            { 
+                parse_mode: 'HTML', 
+                ...getMainMenu(lang, userId === ADMIN_ID) 
+            }
+        );
+    } catch (error) { console.error("Zayafka xatosi:", error); }
 });
 
 // ==========================================
@@ -187,19 +206,19 @@ bot.action("home", async (ctx) => {
 // 6. SECTIONS & LOGIC
 // ==========================================
 
-// 1. KONSOL (WEB APP) - QAT'IY TEKSHIRUV BILAN
+// 1. KONSOL (WEB APP) - QAT'IY TASDIQLASH BILAN
 bot.action("open_console", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
         const s = strings[user.lang] || strings.uz;
         
-        // Agar foydalanuvchi hali tasdiqlanmagan bo'lsa (ID yuborib rad etilgan yoki hali yubormagan)
+        // Agar admin foydalanuvchini tasdiqlamagan bo'lsa
         if (!user.isVerified) {
             const alertText = `⚠️ <b>RUXSAT ETILMAGAN!</b>\n\n` +
-                              `Web App (Konsol) dan foydalanish uchun siz quyidagi shartlarni bajarishingiz shart:\n\n` +
+                              `Web App (Konsol) dan foydalanish uchun quyidagi shartlarni bajarishingiz shart:\n\n` +
                               `1️⃣ <b>RICHI28</b> promokodi bilan platformada yangi ro'yxatdan o'tish.\n` +
                               `2️⃣ Hisobga <b>minimal depozit</b> tushirish.\n` +
-                              `3️⃣ O'z ID raqamingizni yuborib admin orqali tasdiqlatish.\n\n` +
+                              `3️⃣ O'z ID raqamingizni bizga yuborib, admin orqali tasdiqlatish.\n\n` +
                               `👇 Iltimos, shartlarni bajarish uchun <b>"🚀 SIGNALLAR"</b> bo'limiga o'ting!`;
 
             return ctx.editMessageText(alertText, {
@@ -211,7 +230,7 @@ bot.action("open_console", async (ctx) => {
             });
         }
         
-        // Agar admin tasdiqlagan bo'lsa, konsol ochiladi
+        // Agar admin ruxsat bergan bo'lsa
         return ctx.editMessageText("🟢 TERMINAL IS ACTIVE\n\nQuyidagi tugma orqali Web App konsolga ulanishingiz mumkin:", Markup.inlineKeyboard([
             [Markup.button.webApp("🚀 KONSOLNI OCHISH", process.env.WEB_APP_URL || "https://google.com")],
             [Markup.button.callback(s.back, "home")]
@@ -219,7 +238,7 @@ bot.action("open_console", async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
-// 2. SIGNALLAR VA PLATFORMALAR
+// 2. SIGNALLAR VA PLATFORMALAR (ID YUBORISH)
 bot.action("menu_signals", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
@@ -262,10 +281,10 @@ bot.action(/^view_app_(.+)$/, async (ctx) => {
         // PROMO KOD VA DEPOZIT HAQIDA QAT'IY XABAR
         const text = `🎰 <b>${name}</b> platformasi\n\n` +
                      `❗️ <b>DIQQAT! KONSOLDAN FOYDALANISH SHARTLARI:</b>\n\n` +
-                     `1️⃣ Quyidagi maxsus link orqali kiring va <b>RICHI28</b> promokodini yozib ro'yxatdan o'ting!\n` +
-                     `2️⃣ Hisobingizni ishlashi uchun minimal depozit (pul) kiriting.\n` +
-                     `3️⃣ Ro'yxatdan o'tganingizdan so'ng, "🆔 ID TASDIQLASH" tugmasini bosib, o'z ID raqamingizni bizga yuboring.\n\n` +
-                     `<i>⚠️ Promokodiz va depozitsiz ID raqamlar admin tomonidan RAD ETILADI va Web App ochilmaydi!</i>`;
+                     `1️⃣ Quyidagi link orqali kiring va <b>RICHI28</b> promokodini yozib ro'yxatdan o'ting!\n` +
+                     `2️⃣ Hisobingiz ishlashi uchun minimal depozit (pul) kiriting.\n` +
+                     `3️⃣ "🆔 ID TASDIQLASH" tugmasini bosib, yangi ID raqamingizni yuboring.\n\n` +
+                     `<i>⚠️ Promokodsiz va depozitsiz ID raqamlar admin tomonidan qat'iyan RAD ETILADI!</i>`;
 
         return ctx.editMessageText(text, {
             parse_mode: 'HTML',
@@ -282,10 +301,10 @@ bot.action(/^view_app_(.+)$/, async (ctx) => {
 bot.action("verify_id_start", async (ctx) => {
     initSession(ctx); 
     ctx.session.step = 'await_id';
-    return ctx.reply("📝 Platformadagi ID raqamingizni kiriting:\n\n❗️ Faqat 10 ta raqamdan iborat bo'lishi shart.\n\n(Bekor qilish uchun /start)");
+    return ctx.reply("📝 Platformadagi ID raqamingizni kiriting:\n\n❗️ Faqat 10 ta raqamdan iborat bo'lishi shart.\n\n(Bekor qilish uchun /start ni bosing)");
 });
 
-// QOLGAN MENYULAR (Tarmoq, Hamyon, Sozlamalar va h.k.)
+// QOLGAN MENYULAR
 bot.action("menu_network", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
@@ -299,7 +318,7 @@ bot.action("menu_wallet", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
         const s = strings[user.lang] || strings.uz;
-        return ctx.editMessageText(s.wallet_title(user.balance), { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("💸 Withdraw", "withdraw_start")], [Markup.button.callback(s.back, "home")]]) });
+        return ctx.editMessageText(s.wallet_title(user.balance), { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("💸 Puli Yechish", "withdraw_start")], [Markup.button.callback(s.back, "home")]]) });
     } catch (error) { console.error(error); }
 });
 
@@ -320,7 +339,7 @@ bot.action("menu_guide", async (ctx) => {
         const user = await User.findOne({ userId: ctx.from.id });
         const s = strings[user.lang] || strings.uz;
         const guide = await Config.findOne({ key: 'guide' });
-        return ctx.editMessageText(`${s.guide_title}\n\n${guide ? guide.content : "..."}`, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(s.back, "home")]]) });
+        return ctx.editMessageText(`${s.guide_title}\n\n${guide ? guide.content : "Tez kunda..."}`, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(s.back, "home")]]) });
     } catch (error) { console.error(error); }
 });
 
@@ -347,14 +366,14 @@ bot.action("menu_support", async (ctx) => {
 });
 
 // ==========================================
-// 7. TEXT HANDLERS (LOGIKA)
+// 7. TEXT HANDLERS (ID VA MA'LUMOT YUBORISH)
 // ==========================================
 bot.on('text', async (ctx) => {
     initSession(ctx);
     if (!ctx.session.step) return;
 
     try {
-        // A. ID TASDIQLASH
+        // A. ID TASDIQLASH UCHUN ADMINGA YUBORISH
         if (ctx.session.step === 'await_id') {
             const inputId = ctx.message.text.trim();
             const idRegex = /^\d{10}$/; 
@@ -366,22 +385,24 @@ bot.on('text', async (ctx) => {
             const platform = ctx.session.selectedApp || "Noma'lum";
             await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: inputId });
             
+            // Adminga tekshirish uchun barcha ma'lumot boradi
             const adminMsg = `🆔 <b>YANGI ID SO'ROVI</b>\n\n` +
                              `👤 Foydalanuvchi: <a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a>\n` +
                              `🔑 User ID: <code>${ctx.from.id}</code>\n` +
                              `🎮 <b>Platforma: ${platform}</b>\n` +
-                             `🆔 Game ID: <code>${inputId}</code>`;
+                             `🆔 Game ID: <code>${inputId}</code>\n\n` +
+                             `<i>⚠️ Diqqat: Bu ID RICHI28 promokodi va depozit bilan kiritilganligini tekshirib, keyin tasdiqlang!</i>`;
 
             bot.telegram.sendMessage(ADMIN_ID, adminMsg, {
                 parse_mode: 'HTML',
                 ...Markup.inlineKeyboard([
-                    [Markup.button.callback("✅ TASDIQLASH", `approve_${ctx.from.id}`)],
-                    [Markup.button.callback("❌ RAD ETISH", `reject_${ctx.from.id}`)]
+                    [Markup.button.callback("✅ TASDIQLASH (Web App ochiladi)", `approve_${ctx.from.id}`)],
+                    [Markup.button.callback("❌ RAD ETISH (Bloklanadi)", `reject_${ctx.from.id}`)]
                 ])
             });
 
             ctx.session.step = null;
-            return ctx.reply(`⏳ Muvaffaqiyatli qabul qilindi!\n\nPlatforma: <b>${platform}</b>\nID: <b>${inputId}</b>\n\nAdmin sizning RICHI28 orqali ro'yxatdan o'tganingizni va depozitingizni tekshirgach, ruxsat beradi. Kuting.`, { parse_mode: 'HTML' });
+            return ctx.reply(`⏳ Arizangiz ko'rib chiqish uchun adminga yuborildi!\n\nPlatforma: <b>${platform}</b>\nID: <b>${inputId}</b>\n\nAdmin sizning RICHI28 promokodi orqali ro'yxatdan o'tganingizni va hisobingizda depozit borligini tekshirgach ruxsat beradi. Iltimos, kuting...`, { parse_mode: 'HTML' });
         } 
         
         // B. SUPPORT
@@ -411,7 +432,7 @@ bot.on('text', async (ctx) => {
 });
 
 // ==========================================
-// ADMIN CALLBACKS (TASDIQLASH/RAD ETISH)
+// ADMIN CALLBACKS (ID TASDIQLASH / RAD ETISH)
 // ==========================================
 bot.action(/^reply_to_(\d+)$/, (ctx) => {
     initSession(ctx);
@@ -423,20 +444,24 @@ bot.action(/^reply_to_(\d+)$/, (ctx) => {
 bot.action(/^approve_(\d+)$/, async (ctx) => {
     try {
         const targetId = ctx.match[1];
-        // Tasdiqlanganda isVerified: true ga o'zgaradi va konsol ochiladi
+        // Tasdiqlanganda isVerified = true bo'ladi va KONSOL ochiladi
         await User.findOneAndUpdate({ userId: targetId }, { isVerified: true });
-        bot.telegram.sendMessage(targetId, "✅ <b>TABRIKLAYMIZ!</b>\n\nSizning ID raqamingiz tasdiqlandi. Endi KONSOL (Web App) dan to'liq foydalanishingiz mumkin.", { parse_mode: 'HTML' });
-        return ctx.answerCbQuery("Tasdiqlandi va Konsol ochildi!");
+        
+        bot.telegram.sendMessage(targetId, "✅ <b>TABRIKLAYMIZ!</b>\n\nSizning ID raqamingiz muvaffaqiyatli tasdiqlandi. Endi Asosiy menyudan KONSOL (Web App) ni to'liq ishlatishingiz mumkin.", { parse_mode: 'HTML' });
+        
+        return ctx.editMessageText("✅ Foydalanuvchi tasdiqlandi va unga ruxsat berildi!");
     } catch (error) { console.error(error); }
 });
 
 bot.action(/^reject_(\d+)$/, async (ctx) => {
     try {
         const targetId = ctx.match[1];
-        // Rad etilganda ruxsat olib tashlanadi
+        // Rad etilganda ruxsat bekor qilinadi
         await User.findOneAndUpdate({ userId: targetId }, { gameId: "Rad etilgan", isVerified: false });
-        bot.telegram.sendMessage(targetId, "❌ <b>ID RAD ETILDI!</b>\n\nKechirasiz, ID raqamingiz tasdiqlanmadi. Bunga sabab quyidagilar bo'lishi mumkin:\n\n1. Siz RICHI28 promokodi bilan ro'yxatdan o'tmagansiz.\n2. Hisobingizga minimal depozit kiritilmagan.\n\nIltimos, shartlarni to'liq bajarib, qaytadan urinib ko'ring.", { parse_mode: 'HTML' });
-        return ctx.answerCbQuery("Rad etildi!");
+        
+        bot.telegram.sendMessage(targetId, "❌ <b>ID RAD ETILDI!</b>\n\nKechirasiz, sizning ID raqamingiz tasdiqlanmadi. Bunga sabab quyidagilardan biri bo'lishi mumkin:\n\n1. Siz RICHI28 promokodi bilan ro'yxatdan o'tmagansiz.\n2. Hisobingizga hali minimal depozit kiritilmagan.\n\nIltimos, shartlarni to'liq bajarib, yana qaytadan ID yuboring.", { parse_mode: 'HTML' });
+        
+        return ctx.editMessageText("❌ Foydalanuvchi arizasi rad etildi!");
     } catch (error) { console.error(error); }
 });
 
