@@ -10,6 +10,7 @@
             --neon-green: #00ff41;
             --dark-bg: #0a0a0a;
             --warning-red: #ff3131;
+            --glass: rgba(0, 255, 65, 0.1);
         }
 
         body {
@@ -17,13 +18,14 @@
             color: var(--neon-green);
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
+            user-select: none;
         }
 
-        /* 1. BOOT SEQUENCE */
+        /* 1. TERMINAL BOOT SEQUENCE */
         #boot-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -36,235 +38,316 @@
         }
 
         .glitch {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: bold;
-            text-transform: uppercase;
-            animation: pulse 1.5s infinite;
+            text-shadow: 0 0 10px var(--neon-green);
+            animation: pulse 1s infinite;
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.98); }
         }
 
         .loader-bar {
-            width: 250px;
-            height: 20px;
+            width: 280px;
+            height: 12px;
             border: 1px solid var(--neon-green);
-            margin-top: 20px;
-            position: relative;
+            margin-top: 25px;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
         #progress {
             width: 0%;
             height: 100%;
             background: var(--neon-green);
-            transition: width 0.3s;
+            transition: width 0.4s ease;
         }
 
-        /* 2. LOBBY AREA */
+        /* 2. MAIN LOBBY */
         #lobby {
             display: none;
-            width: 95%;
-            max-width: 500px;
-            padding-top: 20px;
+            width: 90%;
+            max-width: 450px;
+            padding: 20px 0;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
-            width: 100%;
-            margin-bottom: 20px;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--neon-green);
+            padding-bottom: 10px;
         }
 
         .game-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 12px;
         }
 
         .game-card {
-            background: rgba(0, 255, 65, 0.05);
-            border: 1px solid var(--neon-green);
-            padding: 15px;
+            background: var(--glass);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            padding: 15px 10px;
             text-align: center;
+            border-radius: 8px;
+            transition: 0.2s;
             cursor: pointer;
-            transition: 0.3s;
         }
 
-        .game-card:active { transform: scale(0.95); background: rgba(0, 255, 65, 0.2); }
+        .game-card:active {
+            background: rgba(0, 255, 65, 0.2);
+            transform: translateY(2px);
+        }
 
-        .game-card h3 { margin: 5px 0; font-size: 0.9rem; }
-        .kf { color: #fff; font-size: 0.8rem; opacity: 0.8; }
+        .game-card h3 { margin: 8px 0 4px; font-size: 0.85rem; color: #fff; }
+        .kf { font-size: 0.75rem; color: var(--neon-green); opacity: 0.8; }
 
         /* 3. GAME VIEW */
         #game-view {
             display: none;
-            width: 100%;
+            width: 90%;
+            max-width: 450px;
             text-align: center;
-            padding-top: 50px;
+            padding-top: 40px;
+        }
+
+        .back-btn {
+            background: none;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 5px 15px;
+            cursor: pointer;
+            float: left;
+            border-radius: 4px;
         }
 
         .signal-btn {
-            background: transparent;
-            color: var(--neon-green);
-            border: 2px solid var(--neon-green);
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            margin-top: 30px;
-            box-shadow: 0 0 15px var(--neon-green);
-        }
-
-        .result-box {
+            background: var(--neon-green);
+            color: #000;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
             margin-top: 40px;
-            font-size: 3rem;
-            min-height: 100px;
+            border-radius: 50px;
+            box-shadow: 0 0 20px var(--neon-green);
+            width: 100%;
         }
 
-        .warning-footer {
+        .result-display {
+            margin: 50px auto;
+            width: 200px;
+            height: 120px;
+            border: 2px dashed var(--neon-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            background: rgba(0,0,0,0.5);
+        }
+
+        /* FOOTER & WARNING */
+        .warning-box {
             color: var(--warning-red);
-            font-size: 0.7rem;
-            text-align: center;
-            padding: 20px;
-            border-top: 1px solid rgba(255, 49, 49, 0.3);
-            margin-top: 20px;
+            font-size: 0.75rem;
+            margin-top: 30px;
+            padding: 15px;
+            border: 1px solid var(--warning-red);
+            background: rgba(255, 49, 49, 0.05);
+            line-height: 1.4;
         }
 
-        .back-btn { align-self: flex-start; cursor: pointer; margin-bottom: 20px; }
+        .support-link {
+            margin-top: 25px;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        select {
+            background: #000;
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            padding: 4px;
+        }
     </style>
 </head>
 <body>
 
     <div id="boot-screen">
         <div class="glitch">RICHI28 HACK</div>
-        <div id="status-text">Analysing database...</div>
+        <div id="boot-status" style="margin-top:10px; font-size:0.8rem;">INITIALIZING...</div>
         <div class="loader-bar"><div id="progress"></div></div>
     </div>
 
     <div id="lobby">
         <div class="header">
-            <span>TERMINAL v4.0</span>
-            <select id="lang-select" onchange="changeLang()">
+            <span id="label-terminal">TERMINAL v4.2</span>
+            <select id="lang-select" onchange="updateLanguage()">
                 <option value="uz">UZ</option>
                 <option value="ru">RU</option>
                 <option value="en">EN</option>
             </select>
         </div>
 
-        <div class="game-grid" id="game-list">
-            </div>
+        <div class="game-grid" id="game-list"></div>
 
-        <div class="warning-footer" id="warning-text">
-            ⚠️ DIQQAT: Agar siz RICHI28 promokodidan o‘tmagan bo‘lsangiz yoki hisobingizda minimal 60,000 UZS depozit bo‘lmasa, tizim noto‘g‘ri signal berishi mumkin!
-        </div>
+        <div class="warning-box" id="warning-text"></div>
         
-        <div style="text-align:center; font-size: 0.8rem; opacity: 0.5; margin-top:10px;" onclick="sendSupport()">
-            [ 💡 TAKLIF VA MUROJAAT ]
-        </div>
+        <center>
+            <div class="support-link" onclick="sendSupport()" id="label-support">[ 💡 TAKLIF VA MUROJAAT ]</div>
+        </center>
     </div>
 
     <div id="game-view">
-        <div class="back-btn" onclick="showLobby()">⬅️ ORTGA</div>
-        <h2 id="current-game-title">GAME</h2>
-        <div id="hack-animation" style="font-size: 0.8rem; height: 40px;"></div>
-        <div class="result-box" id="signal-result">?</div>
-        <button class="signal-btn" onclick="getSignal()">⚡️ GET SIGNAL</button>
+        <button class="back-btn" onclick="showLobby()">⬅️</button>
+        <h2 id="game-title">GAME</h2>
+        <div id="status-anim" style="font-size: 0.7rem; height: 20px; margin-top: 20px;"></div>
+        <div class="result-display" id="signal-box">?</div>
+        <button class="signal-btn" onclick="generateSignal()" id="btn-signal">⚡️ GET SIGNAL</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        const translations = {
+            uz: {
+                warning: "⚠️ DIQQAT: Agar siz RICHI28 promokodidan o‘tmagan bo‘lsangiz yoki hisobingizda minimal 60,000 UZS depozit bo‘lmasa, tizim noto‘g‘ri signal berishi va hisobingizni bloklashi mumkin!",
+                support: "[ 💡 TAKLIF VA MUROJAAT ]",
+                terminal: "TERMINAL v4.2",
+                get_signal: "⚡️ SIGNAL OLISH",
+                scanning: ["Server bypass...", "Scanning grid...", "Analysing algorithms...", "Signal topildi!"],
+                back: "ORTGA"
+            },
+            ru: {
+                warning: "⚠️ ВНИМАНИЕ: Если вы не использовали промокод RICHI28 или ваш депозит меньше 500 RUB, система может выдать неверный сигнал и заблокировать ваш счет!",
+                support: "[ 💡 ПРЕДЛОЖЕНИЯ И СВЯЗЬ ]",
+                terminal: "ТЕРМИНАЛ v4.2",
+                get_signal: "⚡️ ПОЛУЧИТЬ СИГНАЛ",
+                scanning: ["Обход сервера...", "Сканирование...", "Анализ данных...", "Сигнал готов!"],
+                back: "НАЗАД"
+            },
+            en: {
+                warning: "⚠️ ATTENTION: If you haven't used the RICHI28 promo code or your deposit is less than $5, the system may provide false signals and block your account!",
+                support: "[ 💡 FEEDBACK & SUPPORT ]",
+                terminal: "TERMINAL v4.2",
+                get_signal: "⚡️ GET SIGNAL",
+                scanning: ["Server bypass...", "Scanning grid...", "Data analysis...", "Signal found!"],
+                back: "BACK"
+            }
+        };
+
         const games = [
-            { name: "Apple of Fortune", logo: "🍎", kf: "x1.23 - x349", signal: "🍎" },
-            { name: "Crash", logo: "🚀", kf: "x1.00 - x100+", signal: "🛑 STOP x2.54" },
-            { name: "Gems & Mines", logo: "💣", kf: "x1.05 - x1,000+", signal: "💎 💎 💣" },
-            { name: "Thimbles", logo: "🥤", kf: "x1.45 - x2.91", signal: "⚪️" },
-            { name: "Kamikaze", logo: "✈️", kf: "x1.21 - x15.4", signal: "✈️" }
+            { id: 1, name: "Apple of Fortune", icon: "🍎", kf: "x1.23 - x349", signals: ["🍎", "🍎 🍎", "🍎 🍎 🍎"] },
+            { id: 2, name: "Crash", icon: "🚀", kf: "x1.00 - x100+", signals: ["x2.54", "x1.88", "x3.12", "x1.45"] },
+            { id: 3, name: "Kamikaze", icon: "✈️", kf: "x1.21 - x15.4", signals: ["✈️", "✈️ ✈️"] },
+            { id: 4, name: "Eastern Nights", icon: "🪔", kf: "x1.18 - x349", signals: ["🪔"] },
+            { id: 5, name: "Wild West Gold", icon: "💰", kf: "x2.00 - x3.00", signals: ["💰"] },
+            { id: 6, name: "Dragon's Gold", icon: "🪙", kf: "x1.23 - x349", signals: ["🪙"] },
+            { id: 7, name: "Swamp Land", icon: "🐸", kf: "x1.20 - x14.5", signals: ["🐸"] },
+            { id: 8, name: "Under/Over 7", icon: "🎲", kf: "x2.3 - x5.8", signals: ["🎲 7", "🎲 LOW", "🎲 HIGH"] },
+            { id: 9, name: "Gems & Mines", icon: "💣", kf: "x1.05 - x1,000+", signals: ["💎", "💎 💎", "💎 💣"] },
+            { id: 10, name: "Thimbles", icon: "🥤", kf: "x1.45 - x2.91", signals: ["⚪️ LEFT", "⚪️ MIDDLE", "⚪️ RIGHT"] }
         ];
 
-        // 1. Boot Sequence
-        let width = 0;
-        const progress = document.getElementById('progress');
-        const bootScreen = document.getElementById('boot-screen');
-        const lobby = document.getElementById('lobby');
+        let currentLang = 'uz';
+        let activeGame = null;
 
-        const interval = setInterval(() => {
-            if (width >= 100) {
-                clearInterval(interval);
-                bootScreen.style.display = 'none';
-                lobby.style.display = 'block';
-            } else {
-                width += Math.random() * 10;
-                progress.style.width = width + '%';
-            }
-        }, 200);
+        // Boot loader
+        function initBoot() {
+            let p = 0;
+            const bar = document.getElementById('progress');
+            const status = document.getElementById('boot-status');
+            
+            const timer = setInterval(() => {
+                p += Math.floor(Math.random() * 15);
+                if (p >= 100) {
+                    p = 100;
+                    clearInterval(timer);
+                    setTimeout(() => {
+                        document.getElementById('boot-screen').style.display = 'none';
+                        document.getElementById('lobby').style.display = 'block';
+                    }, 500);
+                }
+                bar.style.width = p + '%';
+                status.innerText = p + "% ANALYSING DATABASE...";
+            }, 150);
+        }
 
-        // 2. Render Games
-        const gameList = document.getElementById('game-list');
-        games.forEach(game => {
-            const card = document.createElement('div');
-            card.className = 'game-card';
-            card.innerHTML = `<div>${game.logo}</div><h3>${game.name}</h3><div class="kf">${game.kf}</div>`;
-            card.onclick = () => openGame(game);
-            gameList.appendChild(card);
-        });
+        // Render Lobby
+        function renderGames() {
+            const container = document.getElementById('game-list');
+            container.innerHTML = '';
+            games.forEach(g => {
+                const div = document.createElement('div');
+                div.className = 'game-card';
+                div.innerHTML = `<div>${g.icon}</div><h3>${g.name}</h3><div class="kf">${g.kf}</div>`;
+                div.onclick = () => openGame(g);
+                container.appendChild(div);
+            });
+        }
 
-        // 3. Logic Functions
-        let selectedGame = null;
+        function updateLanguage() {
+            currentLang = document.getElementById('lang-select').value;
+            const t = translations[currentLang];
+            document.getElementById('warning-text').innerText = t.warning;
+            document.getElementById('label-support').innerText = t.support;
+            document.getElementById('label-terminal').innerText = t.terminal;
+            document.getElementById('btn-signal').innerText = t.get_signal;
+        }
 
         function openGame(game) {
-            selectedGame = game;
-            lobby.style.display = 'none';
+            activeGame = game;
+            document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-view').style.display = 'block';
-            document.getElementById('current-game-title').innerText = game.name;
-            document.getElementById('signal-result').innerText = '?';
+            document.getElementById('game-title').innerText = game.name.toUpperCase();
+            document.getElementById('signal-box').innerText = '?';
         }
 
         function showLobby() {
             document.getElementById('game-view').style.display = 'none';
-            lobby.style.display = 'block';
+            document.getElementById('lobby').style.display = 'block';
         }
 
-        function getSignal() {
-            const anim = document.getElementById('hack-animation');
-            const res = document.getElementById('signal-result');
-            res.innerText = "⏳";
+        function generateSignal() {
+            const statusDiv = document.getElementById('status-anim');
+            const box = document.getElementById('signal-box');
+            const t = translations[currentLang];
             
-            const steps = ["Bypassing security...", "Scanning grid...", "Infecting server...", "Signal Ready!"];
-            let i = 0;
-            const stepInterval = setInterval(() => {
-                anim.innerText = steps[i];
-                i++;
-                if(i >= steps.length) {
-                    clearInterval(stepInterval);
-                    res.innerText = selectedGame.signal;
-                    anim.innerText = "";
-                }
-            }, 600);
-        }
+            box.innerText = "⌛";
+            let step = 0;
 
-        function changeLang() {
-            const lang = document.getElementById('lang-select').value;
-            const warn = document.getElementById('warning-text');
-            if(lang === 'en') {
-                warn.innerText = "⚠️ ATTENTION: If you haven't used RICHI28 promo or have less than $5 deposit, the system may fail!";
-            } else if(lang === 'ru') {
-                warn.innerText = "⚠️ ВНИМАНИЕ: Если вы не ввели промокод RICHI28 или у вас меньше 500 RUB, система может ошибиться!";
-            } else {
-                warn.innerText = "⚠️ DIQQAT: Agar siz RICHI28 promokodidan o‘tmagan bo‘lsangiz yoki hisobingizda minimal 60,000 UZS depozit bo‘lmasa, tizim noto‘g‘ri signal berishi mumkin!";
-            }
+            const interval = setInterval(() => {
+                statusDiv.innerText = t.scanning[step];
+                step++;
+                if (step >= t.scanning.length) {
+                    clearInterval(interval);
+                    const randomSignal = activeGame.signals[Math.floor(Math.random() * activeGame.signals.length)];
+                    box.innerText = randomSignal;
+                    setTimeout(() => { statusDiv.innerText = ""; }, 2000);
+                }
+            }, 700);
         }
 
         function sendSupport() {
-            const msg = prompt("Murojaatingizni yozing:");
-            if(msg) {
-                tg.sendData(JSON.stringify({type: 'support', text: msg}));
-                alert("Yuborildi!");
+            const msg = prompt(currentLang === 'uz' ? "Murojaatingizni yozing:" : "Введите ваше сообщение:");
+            if (msg) {
+                tg.sendData(JSON.stringify({ action: 'support', message: msg }));
+                alert(currentLang === 'uz' ? "Xabar yuborildi!" : "Сообщение отправлено!");
             }
         }
+
+        // Start
+        initBoot();
+        renderGames();
+        updateLanguage();
+
     </script>
 </body>
 </html>
