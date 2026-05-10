@@ -2,286 +2,338 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RICHI28 HACK PORTAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RICHI28 HACK TERMINAL</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --neon-green: #00ff41;
             --dark-bg: #000000;
             --warning-red: #ff3131;
+            --matrix-color: rgba(0, 255, 65, 0.15);
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body, html {
-            margin: 0; padding: 0;
+            margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: var(--dark-bg);
             color: var(--neon-green);
-            font-family: 'Courier New', monospace;
-            overflow-x: hidden;
-            height: 100%;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
         }
 
-        /* MATRIX RAIN CANVAS */
+        /* MATRIX BACKGROUND */
         #matrix-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            z-index: -1;
-            opacity: 0.3;
+            position: fixed; top: 0; left: 0; z-index: -1;
+            width: 100%; height: 100%;
         }
 
         /* 1. BOOT SEQUENCE */
         #boot-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: black;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
-        .loader-bar {
-            width: 250px;
-            height: 10px;
-            border: 1px solid var(--neon-green);
-            margin-top: 20px;
+        .terminal-loader { width: 80%; max-width: 300px; }
+        .progress-container {
+            width: 100%; height: 4px; border: 1px solid var(--neon-green);
+            margin-top: 15px; position: relative;
+        }
+        #progress-bar { width: 0%; height: 100%; background: var(--neon-green); transition: 0.2s; }
+
+        /* 2. MAIN INTERFACE */
+        #app-interface { display: none; height: 100vh; overflow-y: auto; padding: 15px; }
+
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--neon-green); padding-bottom: 10px; margin-bottom: 20px;
         }
 
-        #progress { width: 0%; height: 100%; background: var(--neon-green); }
-
-        /* 2. LOBBY */
-        #lobby {
-            display: none;
-            padding: 20px;
-            max-width: 500px;
-            margin: 0 auto;
+        /* GAME GRID */
+        .game-list {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px;
         }
-
-        .header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid var(--neon-green); padding-bottom: 10px; }
-
-        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
         .game-card {
-            border: 1px solid var(--neon-green);
-            padding: 15px;
-            text-align: center;
-            background: rgba(0, 255, 65, 0.1);
-            cursor: pointer;
-        }
-
-        /* 3. SIGNAL AREA (MAKSIMAL REALISTIK) */
-        #game-view {
-            display: none;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 5px;
-            margin: 20px auto;
-            max-width: 300px;
             background: rgba(0, 255, 65, 0.05);
-            padding: 10px;
             border: 1px solid var(--neon-green);
+            padding: 15px 5px; text-align: center; border-radius: 4px;
+            transition: 0.3s; cursor: pointer;
         }
 
-        .cell {
-            aspect-ratio: 1;
-            border: 1px solid rgba(0, 255, 65, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
+        .game-card:active { background: var(--neon-green); color: black; }
+        .game-card .icon { font-size: 1.5rem; display: block; margin-bottom: 5px; }
+        .game-card h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; }
+        .game-card .kf { font-size: 0.7rem; opacity: 0.7; }
+
+        /* 3. GAME VIEW */
+        #game-view { display: none; text-align: center; animation: fadeIn 0.5s; }
+
+        .signal-container {
+            min-height: 250px; background: rgba(0, 20, 0, 0.8);
+            border: 2px solid var(--neon-green); margin: 20px 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
         }
 
-        .signal-btn {
-            background: transparent;
-            color: var(--neon-green);
-            border: 2px solid var(--neon-green);
-            padding: 15px 30px;
-            font-weight: bold;
-            box-shadow: 0 0 10px var(--neon-green);
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
+        /* SPECIFIC GAME GRIDS */
+        .apple-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 10px; }
+        .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 10px; }
+        .cell { width: 40px; height: 40px; border: 1px solid rgba(0,255,65,0.2); display: flex; align-items: center; justify-content: center; }
+
+        .btn-action {
+            background: transparent; color: var(--neon-green);
+            border: 2px solid var(--neon-green); padding: 15px 0; width: 100%;
+            font-weight: bold; font-family: 'Courier New', monospace;
+            box-shadow: 0 0 15px rgba(0,255,65,0.3); margin-top: 10px;
         }
 
-        .warning { color: var(--warning-red); font-size: 0.7rem; margin-top: 20px; text-align: center; }
+        /* 4. FOOTER */
+        .warning-text {
+            color: var(--warning-red); font-size: 0.75rem; text-align: center;
+            padding: 15px; border: 1px solid var(--warning-red); margin-top: 20px;
+        }
 
-        .back-btn { float: left; cursor: pointer; border: 1px solid var(--neon-green); padding: 5px 10px; margin-bottom: 10px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <canvas id="matrix-canvas"></canvas>
+<canvas id="matrix-canvas"></canvas>
 
-    <div id="boot-screen">
-        <h1 style="letter-spacing: 5px;">RICHI28 HACK</h1>
-        <div id="boot-text">System loading...</div>
-        <div class="loader-bar"><div id="progress"></div></div>
+<div id="boot-screen">
+    <div class="terminal-loader">
+        <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">RICHI28_HACK_v4.5</div>
+        <div id="status-text" style="font-size: 0.7rem;">Initializing kernel...</div>
+        <div class="progress-container"><div id="progress-bar"></div></div>
+    </div>
+</div>
+
+<div id="app-interface">
+    <div class="top-bar">
+        <span>ROOT@RICHI28:~#</span>
+        <select id="lang" onchange="changeLang()" style="background:transparent; color:var(--neon-green); border:1px solid var(--neon-green);">
+            <option value="uz">UZ</option>
+            <option value="ru">RU</option>
+            <option value="en">EN</option>
+        </select>
     </div>
 
     <div id="lobby">
-        <div class="header">
-            <span>TERMINAL v4.5</span>
-            <select id="lang-select" onchange="updateLang()" style="background: black; color: var(--neon-green); border: 1px solid var(--neon-green);">
-                <option value="uz">UZ</option>
-                <option value="ru">RU</option>
-                <option value="en">EN</option>
-            </select>
-        </div>
-
-        <div class="game-grid" id="game-list"></div>
-
-        <div class="warning" id="warning-text"></div>
-        <div style="text-align:center; margin-top:20px; opacity:0.5; font-size:0.8rem;" onclick="sendSupport()">[ 💡 TAKLIF VA MUROJAAT ]</div>
+        <div class="game-list" id="game-list">
+            </div>
+        <div class="warning-text" id="warn-msg"></div>
+        <div style="text-align:center; padding: 20px; opacity:0.5; font-size:0.8rem;" onclick="sendSupport()">[ 💡 FEEDBACK & SUPPORT ]</div>
     </div>
 
     <div id="game-view">
-        <div class="back-btn" onclick="showLobby()">⬅️ ORTGA</div>
-        <h2 id="game-title" style="clear:both;">GAME</h2>
-        
-        <div id="signal-area">
-            </div>
-
-        <button class="signal-btn" onclick="getSignal()">⚡️ GET SIGNAL</button>
+        <div onclick="backToLobby()" style="text-align:left; cursor:pointer; color:white;">[← BACK_TO_MENU]</div>
+        <h2 id="active-game-name" style="margin: 20px 0; text-shadow: 0 0 10px var(--neon-green);"></h2>
+        <div id="hack-log" style="font-size: 0.6rem; height: 15px; color: white;"></div>
+        <div class="signal-container" id="signal-box">
+            <div style="opacity: 0.3;">AWAITING COMMAND...</div>
+        </div>
+        <button class="btn-action" onclick="generateHack()" id="btn-hack">⚡ RUN SIGNAL HACK</button>
     </div>
+</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-        // 1. MATRIX EFFECT
-        const canvas = document.getElementById('matrix-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*";
-        const fontSize = 16;
-        const columns = canvas.width / fontSize;
-        const drops = Array(Math.floor(columns)).fill(1);
+    // 1. MATRIX RAIN ENGINE
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@%";
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
 
-        function drawMatrix() {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#0f0";
-            ctx.font = fontSize + "px monospace";
-            for (let i = 0; i < drops.length; i++) {
-                const text = letters.charAt(Math.floor(Math.random() * letters.length));
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            }
+    function drawMatrix() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#0F0";
+        ctx.font = fontSize + "px monospace";
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars.charAt(Math.floor(Math.random() * chars.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
         }
-        setInterval(drawMatrix, 33);
+    }
+    setInterval(drawMatrix, 35);
 
-        // 2. GAMES DATA
-        const games = [
-            { id: 'apple', name: "Apple of Fortune", logo: "🍎", kf: "x1.23 - x349" },
-            { id: 'crash', name: "Crash", logo: "🚀", kf: "x1.00 - x100+" },
-            { id: 'mines', name: "Gems & Mines", logo: "💣", kf: "x1.05 - x1,000+" },
-            { id: 'thimbles', name: "Thimbles", logo: "🥤", kf: "x1.45 - x2.91" },
-            { id: 'kamikaze', name: "Kamikaze", logo: "✈️", kf: "x1.21 - x15.4" },
-            { id: 'over7', name: "Under/Over 7", logo: "🎲", kf: "x2.3 - x5.8" },
-            { id: 'nights', name: "Eastern Nights", logo: "🪔", kf: "x1.18 - x349" },
-            { id: 'dragons', name: "Dragon's Gold", icon: "🪙", kf: "x1.23 - x349" },
-            { id: 'wildwest', name: "Wild West Gold", icon: "💰", kf: "x2.00 - x3.00" },
-            { id: 'swamp', name: "Swamp Land", icon: "🐸", kf: "x1.20 - x14.5" }
-        ];
+    // 2. DATA & TRANSLATIONS
+    const games = [
+        { id: 'apple', name: "Apple of Fortune", icon: "🍎", kf: "x1.23-x349" },
+        { id: 'crash', name: "Crash", icon: "🚀", kf: "x1.00-x100+" },
+        { id: 'kamikaze', name: "Kamikaze", icon: "✈️", kf: "x1.21-x15.4" },
+        { id: 'nights', name: "Eastern Nights", icon: "🪔", kf: "x1.18-x349" },
+        { id: 'wildwest', name: "Wild West Gold", icon: "💰", kf: "x2.00-x3.00" },
+        { id: 'dragons', name: "Dragon's Gold", icon: "🪙", kf: "x1.23-x349" },
+        { id: 'swamp', name: "Swamp Land", icon: "🐸", kf: "x1.20-x14.5" },
+        { id: 'underover', name: "Under/Over 7", icon: "🎲", kf: "x2.3-x5.8" },
+        { id: 'mines', name: "Gems & Mines", icon: "💣", kf: "x1.05-x1,000+" },
+        { id: 'thimbles', name: "Thimbles", icon: "🥤", kf: "x1.45-x2.91" }
+    ];
 
-        // 3. LOGIC
-        let activeGame = null;
+    const langData = {
+        uz: "⚠️ DIQQAT: Agar siz RICHI28 promokodidan o‘tmagan bo‘lsangiz yoki hisobingizda minimal 60,000 UZS bo‘lmasa, tizim noto‘g‘ri signal berishi mumkin!",
+        ru: "⚠️ ВНИМАНИЕ: Если вы не использовали промокод RICHI28 или у вас меньше 60,000 UZS, система может дать неверный сигнал!",
+        en: "⚠️ WARNING: If you haven't used RICHI28 promo or balance < 60,000 UZS, signals might be incorrect!"
+    };
 
-        function init() {
-            let p = 0;
-            const interval = setInterval(() => {
-                p += Math.random() * 10;
-                document.getElementById('progress').style.width = p + '%';
-                if(p >= 100) {
-                    clearInterval(interval);
+    let activeGameId = null;
+
+    // 3. CORE FUNCTIONS
+    function init() {
+        let progress = 0;
+        const bar = document.getElementById('progress-bar');
+        const status = document.getElementById('status-text');
+        
+        const load = setInterval(() => {
+            progress += Math.floor(Math.random() * 8);
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(load);
+                setTimeout(() => {
                     document.getElementById('boot-screen').style.display = 'none';
-                    document.getElementById('lobby').style.display = 'block';
+                    document.getElementById('app-interface').style.display = 'block';
+                }, 500);
+            }
+            bar.style.width = progress + '%';
+            status.innerText = `Loading modules: ${progress}%`;
+        }, 120);
+
+        renderLobby();
+        changeLang();
+    }
+
+    function renderLobby() {
+        const container = document.getElementById('game-list');
+        games.forEach(g => {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = `<span class="icon">${g.icon}</span><h3>${g.name}</h3><span class="kf">${g.kf}</span>`;
+            card.onclick = () => openGame(g);
+            container.appendChild(card);
+        });
+    }
+
+    function changeLang() {
+        const l = document.getElementById('lang').value;
+        document.getElementById('warn-msg').innerText = langData[l];
+    }
+
+    function openGame(game) {
+        activeGameId = game.id;
+        document.getElementById('lobby').style.display = 'none';
+        document.getElementById('game-view').style.display = 'block';
+        document.getElementById('active-game-name').innerText = game.name;
+        document.getElementById('signal-box').innerHTML = `<div style="opacity:0.3">SYSTEM_READY</div>`;
+    }
+
+    function backToLobby() {
+        document.getElementById('game-view').style.display = 'none';
+        document.getElementById('lobby').style.display = 'block';
+    }
+
+    // 4. THE HACK LOGIC (SPECIFIC FOR EACH GAME)
+    function generateHack() {
+        const box = document.getElementById('signal-box');
+        const log = document.getElementById('hack-log');
+        const btn = document.getElementById('btn-hack');
+        
+        btn.disabled = true;
+        box.innerHTML = `<div class="glitch" style="font-size:1.5rem">SCANNING...</div>`;
+        
+        const logs = ["Connecting to server...", "Bypassing SSL...", "Extracting hash...", "Signal found!"];
+        let i = 0;
+        const logInterval = setInterval(() => {
+            log.innerText = logs[i];
+            i++;
+            if(i >= logs.length) {
+                clearInterval(logInterval);
+                displayResult(activeGameId, box);
+                btn.disabled = false;
+            }
+        }, 600);
+    }
+
+    function displayResult(id, container) {
+        container.innerHTML = "";
+        
+        switch(id) {
+            case 'apple':
+                let appleHtml = '<div class="apple-grid">';
+                for(let r=0; r<10; r++) { // 10 rows
+                    let safeIdx = Math.floor(Math.random() * 5);
+                    for(let c=0; c<5; c++) {
+                        appleHtml += `<div class="cell">${c === safeIdx ? '🍎' : ''}</div>`;
+                    }
                 }
-            }, 150);
+                container.innerHTML = appleHtml + '</div>';
+                break;
 
-            const list = document.getElementById('game-list');
-            games.forEach(g => {
-                const card = document.createElement('div');
-                card.className = 'game-card';
-                card.innerHTML = `<div>${g.logo || g.icon}</div><h3>${g.name}</h3><div style="font-size:0.7rem">${g.kf}</div>`;
-                card.onclick = () => openGame(g);
-                list.appendChild(card);
-            });
-            updateLang();
-        }
+            case 'crash':
+                const crashVal = (Math.random() * 2.5 + 1.1).toFixed(2);
+                container.innerHTML = `<div style="font-size:1.2rem">AUTO_STOP:</div><div style="font-size:4rem; color:white;">x${crashVal}</div><div style="font-size:3rem">🛑</div>`;
+                break;
 
-        function openGame(game) {
-            activeGame = game;
-            document.getElementById('lobby').style.display = 'none';
-            document.getElementById('game-view').style.display = 'block';
-            document.getElementById('game-title').innerText = game.name;
-            document.getElementById('signal-area').innerHTML = `<div style="padding:40px; border:1px dashed var(--neon-green)">READY TO SCAN</div>`;
-        }
-
-        function showLobby() {
-            document.getElementById('game-view').style.display = 'none';
-            document.getElementById('lobby').style.display = 'block';
-        }
-
-        function getSignal() {
-            const area = document.getElementById('signal-area');
-            area.innerHTML = `<div style="font-size:0.8rem">BYPASSING...<br>ANALYZING DATABASE...</div>`;
-            
-            setTimeout(() => {
-                renderSignalLogic(activeGame.id, area);
-            }, 1500);
-        }
-
-        function renderSignalLogic(id, container) {
-            container.innerHTML = "";
-            
-            if (id === 'apple' || id === 'mines' || id === 'dragons' || id === 'wildwest') {
-                const grid = document.createElement('div');
-                grid.className = 'grid-container';
-                const icon = id === 'apple' ? '🍎' : (id === 'mines' ? '💎' : (id === 'dragons' ? '🪙' : '💰'));
+            case 'mines':
+                let mineHtml = '<div class="mines-grid">';
+                let bombCount = 0;
                 for(let i=0; i<25; i++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    if(Math.random() > 0.7) cell.innerText = icon;
-                    grid.appendChild(cell);
+                    let isSafe = Math.random() > 0.4 && bombCount < 3;
+                    if(!isSafe) bombCount++;
+                    mineHtml += `<div class="cell">${isSafe ? '💎' : '💣'}</div>`;
                 }
-                container.appendChild(grid);
-            } 
-            else if (id === 'crash') {
-                const val = (Math.random() * 3 + 1).toFixed(2);
-                container.innerHTML = `<div style="font-size:1.5rem">STOP AT:</div><div style="font-size:4rem; color:white">x${val}</div><div style="font-size:3rem">🛑</div>`;
-            }
-            else if (id === 'thimbles') {
-                const pos = Math.floor(Math.random() * 3);
-                let t = `<div style="display:flex; justify-content:center; gap:20px; font-size:3rem">`;
-                for(let i=0; i<3; i++) t += `<div>${i === pos ? '⚪️' : '🥤'}</div>`;
-                container.innerHTML = t + `</div>`;
-            }
-            else {
-                container.innerHTML = `<div style="font-size:3rem">🎯</div><div style="font-size:1.5rem">SIGNAL SECURED</div>`;
-            }
-        }
+                container.innerHTML = mineHtml + '</div>';
+                break;
 
-        function updateLang() {
-            const l = document.getElementById('lang-select').value;
-            const w = document.getElementById('warning-text');
-            const texts = {
-                uz: "⚠️ DIQQAT: Hisobingizda minimal 60,000 UZS bo'lmasa, bloklanish xavfi bor!",
-                ru: "⚠️ ВНИМАНИЕ: Если на счету менее 500 RUB, возможна блокировка!",
-                en: "⚠️ WARNING: Minimum 5 USD required to avoid account block!"
-            };
-            w.innerText = texts[l];
-        }
+            case 'thimbles':
+                const tPos = Math.floor(Math.random() * 3);
+                container.innerHTML = `<div style="display:flex; gap:15px; font-size:3rem;">
+                    <div>${tPos===0?'⚪️':'🥤'}</div><div>${tPos===1?'⚪️':'🥤'}</div><div>${tPos===2?'⚪️':'🥤'}</div>
+                </div><div style="margin-top:10px">BALL IS HERE</div>`;
+                break;
 
-        init();
-    </script>
+            case 'underover':
+                const res = Math.random() > 0.5 ? 'UNDER 7' : 'OVER 7';
+                container.innerHTML = `<div style="font-size:3rem">🎲</div><div style="font-size:2rem; color:white">${res}</div>`;
+                break;
+
+            case 'kamikaze':
+                let kamiHtml = '<div class="apple-grid">';
+                for(let r=0; r<5; r++) {
+                    let safe = Math.floor(Math.random() * 5);
+                    for(let c=0; c<5; c++) kamiHtml += `<div class="cell">${c===safe?'✈️':''}</div>`;
+                }
+                container.innerHTML = kamiHtml + '</div>';
+                break;
+            
+            case 'nights':
+                container.innerHTML = `<div class="apple-grid">`;
+                for(let i=0; i<15; i++) container.innerHTML += `<div class="cell">${Math.random()>0.7?'🪔':''}</div>`;
+                container.innerHTML += `</div>`;
+                break;
+
+            default:
+                container.innerHTML = `<div style="font-size:4rem">🎯</div><div style="font-size:1.2rem">SIGNAL_READY</div>`;
+        }
+    }
+
+    function sendSupport() {
+        const m = prompt("Message to Admin:");
+        if(m) tg.sendData(JSON.stringify({action:"support", text:m}));
+    }
+
+    init();
+</script>
+
 </body>
 </html>
