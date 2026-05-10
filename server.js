@@ -202,7 +202,6 @@ bot.start(async (ctx) => {
             if (refId && refId !== ctx.from.id) {
                 await User.findOneAndUpdate({ userId: refId }, { $inc: { balance: 1000, referrals: 1 } });
             }
-            // 1. Yangi kirgan odamga til tanlash chiqariladi
             return ctx.reply(strings.uz.lang_select, Markup.inlineKeyboard([
                 [Markup.button.callback("🇺🇿 O'zbekcha", "setlang_uz")],
                 [Markup.button.callback("🇷🇺 Русский", "setlang_ru")],
@@ -210,7 +209,6 @@ bot.start(async (ctx) => {
             ]));
         }
 
-        // Eski foydalanuvchini darhol ichkariga kiritamiz (obunasi bo'lsa)
         if (await checkSubscription(ctx, user)) {
             return ctx.reply(strings[user.lang].welcome, getMainMenu(user.lang, ctx.from.id === ADMIN_ID));
         } else {
@@ -219,7 +217,6 @@ bot.start(async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
-// Birinchi marta til tanlaganda
 bot.action(/^setlang_(uz|ru|en)$/, async (ctx) => {
     try {
         const lang = ctx.match[1];
@@ -235,17 +232,14 @@ bot.action(/^setlang_(uz|ru|en)$/, async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
-// Sozlamalardan tilni almashtirganda (2-qadam)
 bot.action(/^updatelang_(uz|ru|en)$/, async (ctx) => {
     try {
         const lang = ctx.match[1];
         const user = await User.findOneAndUpdate({ userId: ctx.from.id }, { lang }, { new: true });
         const s = strings[lang];
         
-        // Tepada alert xabar beramiz
         await ctx.answerCbQuery(s.lang_changed, { show_alert: true });
         
-        // Darhol sozlamalar menyusini yangi tilda yuklaymiz
         return ctx.editMessageText(s.settings_menu, {
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
@@ -261,6 +255,7 @@ bot.action(/^updatelang_(uz|ru|en)$/, async (ctx) => {
 bot.action("check_sub", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return ctx.answerCbQuery("Botni yangilang: /start", { show_alert: true });
         if (await checkSubscription(ctx, user)) {
             return ctx.editMessageText(strings[user.lang].welcome, getMainMenu(user.lang, ctx.from.id === ADMIN_ID));
         }
@@ -271,6 +266,7 @@ bot.action("check_sub", async (ctx) => {
 bot.action("home", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return ctx.answerCbQuery("Botni yangilang: /start", { show_alert: true });
         return ctx.editMessageText(strings[user.lang].welcome, getMainMenu(user.lang, ctx.from.id === ADMIN_ID));
     } catch (error) { console.error(error); }
 });
@@ -279,10 +275,10 @@ bot.action("home", async (ctx) => {
 // 6. SECTIONS & LOGIC
 // ==========================================
 
-// KONSOL
 bot.action("open_console", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return ctx.answerCbQuery("Botni yangilang: /start", { show_alert: true });
         const s = strings[user.lang] || strings.uz;
         
         if (!user.isVerified) {
@@ -302,37 +298,53 @@ bot.action("open_console", async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
-// SIGNALLAR
+// SIGNALLAR (Xatolik tuzatilgan qism)
 bot.action("menu_signals", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return ctx.answerCbQuery("Botni yangilang: /start", { show_alert: true });
         const s = strings[user.lang] || strings.uz;
         const apps = await Config.find({ key: 'app' });
         const btns = [];
         
-        apps.forEach(a => btns.push([Markup.button.callback(`🚀 ${a.name}`, `view_app_${a._id}`)]));
+        // Bu yerda callback tugmalari app_ formati orqali to'g'rilandi
+        apps.forEach(a => btns.push([Markup.button.callback(`🚀 ${a.name}`, `app_${a._id}`)]));
         if(apps.length === 0) {
-            btns.push([Markup.button.callback("🎰 1XBET", "view_app_default_1xbet")]);
-            btns.push([Markup.button.callback("🟢 LINEBET", "view_app_default_linebet")]);
+            btns.push([Markup.button.callback("🎰 1XBET", "app_1xbet")]);
+            btns.push([Markup.button.callback("🟢 LINEBET", "app_linebet")]);
         }
         btns.push([Markup.button.callback(s.back, "home")]);
+        
         return ctx.editMessageText(s.signals_title, Markup.inlineKeyboard(btns));
     } catch (error) { console.error(error); }
 });
 
-bot.action(/^view_app_(.+)$/, async (ctx) => {
+// Ilova ustiga bosilgandagi holat
+bot.action(/^app_(.+)$/, async (ctx) => {
     try {
         initSession(ctx);
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return ctx.answerCbQuery("Botni yangilang: /start", { show_alert: true });
+        
         const s = strings[user.lang];
         const appId = ctx.match[1];
         let name = "Platforma", regLink = "https://1xbet.com", dlLink = "https://t.me/richi28_apk";
 
-        if (appId === "default_1xbet") { name = "1XBET"; } 
-        else if (appId === "default_linebet") { name = "LINEBET"; regLink = "https://linebet.com"; } 
-        else {
-            const appInfo = await Config.findById(appId);
-            if (appInfo) { name = appInfo.name; regLink = appInfo.url; dlLink = appInfo.content; }
+        // Mongoose error berishini oldini olish uchun xavfsiz tekshiruv
+        if (appId === "1xbet") { 
+            name = "1XBET"; 
+        } else if (appId === "linebet") { 
+            name = "LINEBET"; 
+            regLink = "https://linebet.com"; 
+        } else {
+            if (mongoose.Types.ObjectId.isValid(appId)) {
+                const appInfo = await Config.findById(appId);
+                if (appInfo) { 
+                    name = appInfo.name || name; 
+                    regLink = appInfo.url || regLink; 
+                    dlLink = appInfo.content || dlLink; 
+                }
+            }
         }
 
         ctx.session.selectedApp = name;
@@ -345,12 +357,15 @@ bot.action(/^view_app_(.+)$/, async (ctx) => {
                 [Markup.button.callback(s.back, "menu_signals")]
             ])
         });
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error("App click error:", error); 
+        ctx.answerCbQuery("Xatolik yuz berdi!", { show_alert: true });
+    }
 });
 
 bot.action("verify_id_start", async (ctx) => {
     initSession(ctx); ctx.session.step = 'await_id';
-    return ctx.reply("📝 ID:"); // Buni ham tarjima qilish mumkin, qisqa qoldirdim
+    return ctx.reply("📝 ID:"); 
 });
 
 // ==========================================
@@ -359,6 +374,7 @@ bot.action("verify_id_start", async (ctx) => {
 bot.action("menu_settings", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return ctx.answerCbQuery("Botni yangilang: /start", { show_alert: true });
         const s = strings[user.lang];
         return ctx.editMessageText(s.settings_menu, {
             parse_mode: 'HTML',
@@ -375,6 +391,7 @@ bot.action("menu_settings", async (ctx) => {
 bot.action("settings_lang", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return ctx.answerCbQuery("Botni yangilang: /start", { show_alert: true });
         const s = strings[user.lang];
         return ctx.editMessageText(s.lang_select, Markup.inlineKeyboard([
             [Markup.button.callback("🇺🇿 O'zbekcha", "updatelang_uz")],
@@ -388,6 +405,7 @@ bot.action("settings_lang", async (ctx) => {
 bot.action("settings_notif", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return;
         user.notifications = !user.notifications;
         await user.save();
         const s = strings[user.lang];
@@ -407,6 +425,7 @@ bot.action("settings_notif", async (ctx) => {
 bot.action("settings_profile", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return;
         const s = strings[user.lang];
         return ctx.editMessageText(s.profile_title(user.userId, user.isVerified), {
             parse_mode: 'HTML',
@@ -415,10 +434,10 @@ bot.action("settings_profile", async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
-// QOLGAN BO'LIMLAR
 bot.action("menu_network", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return;
         const s = strings[user.lang];
         const link = `https://t.me/${ctx.botInfo.username}?start=${ctx.from.id}`;
         return ctx.editMessageText(s.ref_title(user.referrals, link), { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(s.back, "home")]]) });
@@ -428,6 +447,7 @@ bot.action("menu_network", async (ctx) => {
 bot.action("menu_wallet", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return;
         const s = strings[user.lang];
         return ctx.editMessageText(s.wallet_title(user.balance), { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("💸 Withdraw", "withdraw_start")], [Markup.button.callback(s.back, "home")]]) });
     } catch (error) { console.error(error); }
@@ -438,15 +458,17 @@ bot.action("withdraw_start", (ctx) => { initSession(ctx); ctx.session.step = 'wi
 bot.action("menu_guide", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return;
         const s = strings[user.lang];
         const guide = await Config.findOne({ key: 'guide' });
-        return ctx.editMessageText(`${s.guide_title}\n\n${guide ? guide.content : "..."}`, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(s.back, "home")]]) });
+        return ctx.editMessageText(`${s.guide_title}\n\n${guide ? guide.content : "Tez orada kiritiladi."}`, { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(s.back, "home")]]) });
     } catch (error) { console.error(error); }
 });
 
 bot.action("menu_wins", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return;
         const s = strings[user.lang];
         let wins = `${s.wins_title}\n\n`;
         for(let i=0; i<10; i++) {
@@ -461,6 +483,7 @@ bot.action("menu_wins", async (ctx) => {
 bot.action("menu_support", async (ctx) => {
     try {
         const user = await User.findOne({ userId: ctx.from.id });
+        if (!user) return;
         initSession(ctx); ctx.session.step = 'support';
         return ctx.editMessageText(strings[user.lang].support_msg, Markup.inlineKeyboard([[Markup.button.callback(strings[user.lang].back, "home")]]));
     } catch (error) { console.error(error); }
