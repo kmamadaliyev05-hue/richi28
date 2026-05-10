@@ -8,24 +8,28 @@
     <style>
         :root {
             --neon-green: #00ff41;
-            --dark-bg: #0a0a0a;
+            --dark-bg: #000000;
             --warning-red: #ff3131;
-            --glass: rgba(0, 255, 65, 0.1);
         }
 
-        body {
+        body, html {
+            margin: 0; padding: 0;
             background-color: var(--dark-bg);
             color: var(--neon-green);
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            user-select: none;
+            font-family: 'Courier New', monospace;
+            overflow-x: hidden;
+            height: 100%;
         }
 
-        /* 1. TERMINAL BOOT SEQUENCE */
+        /* MATRIX RAIN CANVAS */
+        #matrix-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* 1. BOOT SEQUENCE */
         #boot-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -34,161 +38,96 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-        }
-
-        .glitch {
-            font-size: 2.2rem;
-            font-weight: bold;
-            text-shadow: 0 0 10px var(--neon-green);
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.98); }
+            z-index: 2000;
         }
 
         .loader-bar {
-            width: 280px;
-            height: 12px;
+            width: 250px;
+            height: 10px;
             border: 1px solid var(--neon-green);
-            margin-top: 25px;
-            border-radius: 6px;
-            overflow: hidden;
+            margin-top: 20px;
         }
 
-        #progress {
-            width: 0%;
-            height: 100%;
-            background: var(--neon-green);
-            transition: width 0.4s ease;
-        }
+        #progress { width: 0%; height: 100%; background: var(--neon-green); }
 
-        /* 2. MAIN LOBBY */
+        /* 2. LOBBY */
         #lobby {
             display: none;
-            width: 90%;
-            max-width: 450px;
-            padding: 20px 0;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            border-bottom: 1px solid var(--neon-green);
-            padding-bottom: 10px;
-        }
+        .header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid var(--neon-green); padding-bottom: 10px; }
 
-        .game-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
         .game-card {
-            background: var(--glass);
-            border: 1px solid rgba(0, 255, 65, 0.3);
-            padding: 15px 10px;
+            border: 1px solid var(--neon-green);
+            padding: 15px;
             text-align: center;
-            border-radius: 8px;
-            transition: 0.2s;
+            background: rgba(0, 255, 65, 0.1);
             cursor: pointer;
         }
 
-        .game-card:active {
-            background: rgba(0, 255, 65, 0.2);
-            transform: translateY(2px);
-        }
-
-        .game-card h3 { margin: 8px 0 4px; font-size: 0.85rem; color: #fff; }
-        .kf { font-size: 0.75rem; color: var(--neon-green); opacity: 0.8; }
-
-        /* 3. GAME VIEW */
+        /* 3. SIGNAL AREA (MAKSIMAL REALISTIK) */
         #game-view {
             display: none;
-            width: 90%;
-            max-width: 450px;
+            padding: 20px;
             text-align: center;
-            padding-top: 40px;
         }
 
-        .back-btn {
-            background: none;
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin: 20px auto;
+            max-width: 300px;
+            background: rgba(0, 255, 65, 0.05);
+            padding: 10px;
             border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            padding: 5px 15px;
-            cursor: pointer;
-            float: left;
-            border-radius: 4px;
         }
 
-        .signal-btn {
-            background: var(--neon-green);
-            color: #000;
-            border: none;
-            padding: 18px 40px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-top: 40px;
-            border-radius: 50px;
-            box-shadow: 0 0 20px var(--neon-green);
-            width: 100%;
-        }
-
-        .result-display {
-            margin: 50px auto;
-            width: 200px;
-            height: 120px;
-            border: 2px dashed var(--neon-green);
+        .cell {
+            aspect-ratio: 1;
+            border: 1px solid rgba(0, 255, 65, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
-            background: rgba(0,0,0,0.5);
+            font-size: 1.2rem;
         }
 
-        /* FOOTER & WARNING */
-        .warning-box {
-            color: var(--warning-red);
-            font-size: 0.75rem;
-            margin-top: 30px;
-            padding: 15px;
-            border: 1px solid var(--warning-red);
-            background: rgba(255, 49, 49, 0.05);
-            line-height: 1.4;
-        }
-
-        .support-link {
-            margin-top: 25px;
-            font-size: 0.8rem;
-            opacity: 0.6;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        select {
-            background: #000;
+        .signal-btn {
+            background: transparent;
             color: var(--neon-green);
-            border: 1px solid var(--neon-green);
-            padding: 4px;
+            border: 2px solid var(--neon-green);
+            padding: 15px 30px;
+            font-weight: bold;
+            box-shadow: 0 0 10px var(--neon-green);
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
         }
+
+        .warning { color: var(--warning-red); font-size: 0.7rem; margin-top: 20px; text-align: center; }
+
+        .back-btn { float: left; cursor: pointer; border: 1px solid var(--neon-green); padding: 5px 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
+    <canvas id="matrix-canvas"></canvas>
+
     <div id="boot-screen">
-        <div class="glitch">RICHI28 HACK</div>
-        <div id="boot-status" style="margin-top:10px; font-size:0.8rem;">INITIALIZING...</div>
+        <h1 style="letter-spacing: 5px;">RICHI28 HACK</h1>
+        <div id="boot-text">System loading...</div>
         <div class="loader-bar"><div id="progress"></div></div>
     </div>
 
     <div id="lobby">
         <div class="header">
-            <span id="label-terminal">TERMINAL v4.2</span>
-            <select id="lang-select" onchange="updateLanguage()">
+            <span>TERMINAL v4.5</span>
+            <select id="lang-select" onchange="updateLang()" style="background: black; color: var(--neon-green); border: 1px solid var(--neon-green);">
                 <option value="uz">UZ</option>
                 <option value="ru">RU</option>
                 <option value="en">EN</option>
@@ -197,117 +136,94 @@
 
         <div class="game-grid" id="game-list"></div>
 
-        <div class="warning-box" id="warning-text"></div>
-        
-        <center>
-            <div class="support-link" onclick="sendSupport()" id="label-support">[ 💡 TAKLIF VA MUROJAAT ]</div>
-        </center>
+        <div class="warning" id="warning-text"></div>
+        <div style="text-align:center; margin-top:20px; opacity:0.5; font-size:0.8rem;" onclick="sendSupport()">[ 💡 TAKLIF VA MUROJAAT ]</div>
     </div>
 
     <div id="game-view">
-        <button class="back-btn" onclick="showLobby()">⬅️</button>
-        <h2 id="game-title">GAME</h2>
-        <div id="status-anim" style="font-size: 0.7rem; height: 20px; margin-top: 20px;"></div>
-        <div class="result-display" id="signal-box">?</div>
-        <button class="signal-btn" onclick="generateSignal()" id="btn-signal">⚡️ GET SIGNAL</button>
+        <div class="back-btn" onclick="showLobby()">⬅️ ORTGA</div>
+        <h2 id="game-title" style="clear:both;">GAME</h2>
+        
+        <div id="signal-area">
+            </div>
+
+        <button class="signal-btn" onclick="getSignal()">⚡️ GET SIGNAL</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const translations = {
-            uz: {
-                warning: "⚠️ DIQQAT: Agar siz RICHI28 promokodidan o‘tmagan bo‘lsangiz yoki hisobingizda minimal 60,000 UZS depozit bo‘lmasa, tizim noto‘g‘ri signal berishi va hisobingizni bloklashi mumkin!",
-                support: "[ 💡 TAKLIF VA MUROJAAT ]",
-                terminal: "TERMINAL v4.2",
-                get_signal: "⚡️ SIGNAL OLISH",
-                scanning: ["Server bypass...", "Scanning grid...", "Analysing algorithms...", "Signal topildi!"],
-                back: "ORTGA"
-            },
-            ru: {
-                warning: "⚠️ ВНИМАНИЕ: Если вы не использовали промокод RICHI28 или ваш депозит меньше 500 RUB, система может выдать неверный сигнал и заблокировать ваш счет!",
-                support: "[ 💡 ПРЕДЛОЖЕНИЯ И СВЯЗЬ ]",
-                terminal: "ТЕРМИНАЛ v4.2",
-                get_signal: "⚡️ ПОЛУЧИТЬ СИГНАЛ",
-                scanning: ["Обход сервера...", "Сканирование...", "Анализ данных...", "Сигнал готов!"],
-                back: "НАЗАД"
-            },
-            en: {
-                warning: "⚠️ ATTENTION: If you haven't used the RICHI28 promo code or your deposit is less than $5, the system may provide false signals and block your account!",
-                support: "[ 💡 FEEDBACK & SUPPORT ]",
-                terminal: "TERMINAL v4.2",
-                get_signal: "⚡️ GET SIGNAL",
-                scanning: ["Server bypass...", "Scanning grid...", "Data analysis...", "Signal found!"],
-                back: "BACK"
-            }
-        };
+        // 1. MATRIX EFFECT
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*";
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
 
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#0f0";
+            ctx.font = fontSize + "px monospace";
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters.charAt(Math.floor(Math.random() * letters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 33);
+
+        // 2. GAMES DATA
         const games = [
-            { id: 1, name: "Apple of Fortune", icon: "🍎", kf: "x1.23 - x349", signals: ["🍎", "🍎 🍎", "🍎 🍎 🍎"] },
-            { id: 2, name: "Crash", icon: "🚀", kf: "x1.00 - x100+", signals: ["x2.54", "x1.88", "x3.12", "x1.45"] },
-            { id: 3, name: "Kamikaze", icon: "✈️", kf: "x1.21 - x15.4", signals: ["✈️", "✈️ ✈️"] },
-            { id: 4, name: "Eastern Nights", icon: "🪔", kf: "x1.18 - x349", signals: ["🪔"] },
-            { id: 5, name: "Wild West Gold", icon: "💰", kf: "x2.00 - x3.00", signals: ["💰"] },
-            { id: 6, name: "Dragon's Gold", icon: "🪙", kf: "x1.23 - x349", signals: ["🪙"] },
-            { id: 7, name: "Swamp Land", icon: "🐸", kf: "x1.20 - x14.5", signals: ["🐸"] },
-            { id: 8, name: "Under/Over 7", icon: "🎲", kf: "x2.3 - x5.8", signals: ["🎲 7", "🎲 LOW", "🎲 HIGH"] },
-            { id: 9, name: "Gems & Mines", icon: "💣", kf: "x1.05 - x1,000+", signals: ["💎", "💎 💎", "💎 💣"] },
-            { id: 10, name: "Thimbles", icon: "🥤", kf: "x1.45 - x2.91", signals: ["⚪️ LEFT", "⚪️ MIDDLE", "⚪️ RIGHT"] }
+            { id: 'apple', name: "Apple of Fortune", logo: "🍎", kf: "x1.23 - x349" },
+            { id: 'crash', name: "Crash", logo: "🚀", kf: "x1.00 - x100+" },
+            { id: 'mines', name: "Gems & Mines", logo: "💣", kf: "x1.05 - x1,000+" },
+            { id: 'thimbles', name: "Thimbles", logo: "🥤", kf: "x1.45 - x2.91" },
+            { id: 'kamikaze', name: "Kamikaze", logo: "✈️", kf: "x1.21 - x15.4" },
+            { id: 'over7', name: "Under/Over 7", logo: "🎲", kf: "x2.3 - x5.8" },
+            { id: 'nights', name: "Eastern Nights", logo: "🪔", kf: "x1.18 - x349" },
+            { id: 'dragons', name: "Dragon's Gold", icon: "🪙", kf: "x1.23 - x349" },
+            { id: 'wildwest', name: "Wild West Gold", icon: "💰", kf: "x2.00 - x3.00" },
+            { id: 'swamp', name: "Swamp Land", icon: "🐸", kf: "x1.20 - x14.5" }
         ];
 
-        let currentLang = 'uz';
+        // 3. LOGIC
         let activeGame = null;
 
-        // Boot loader
-        function initBoot() {
+        function init() {
             let p = 0;
-            const bar = document.getElementById('progress');
-            const status = document.getElementById('boot-status');
-            
-            const timer = setInterval(() => {
-                p += Math.floor(Math.random() * 15);
-                if (p >= 100) {
-                    p = 100;
-                    clearInterval(timer);
-                    setTimeout(() => {
-                        document.getElementById('boot-screen').style.display = 'none';
-                        document.getElementById('lobby').style.display = 'block';
-                    }, 500);
+            const interval = setInterval(() => {
+                p += Math.random() * 10;
+                document.getElementById('progress').style.width = p + '%';
+                if(p >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('boot-screen').style.display = 'none';
+                    document.getElementById('lobby').style.display = 'block';
                 }
-                bar.style.width = p + '%';
-                status.innerText = p + "% ANALYSING DATABASE...";
             }, 150);
-        }
 
-        // Render Lobby
-        function renderGames() {
-            const container = document.getElementById('game-list');
-            container.innerHTML = '';
+            const list = document.getElementById('game-list');
             games.forEach(g => {
-                const div = document.createElement('div');
-                div.className = 'game-card';
-                div.innerHTML = `<div>${g.icon}</div><h3>${g.name}</h3><div class="kf">${g.kf}</div>`;
-                div.onclick = () => openGame(g);
-                container.appendChild(div);
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.innerHTML = `<div>${g.logo || g.icon}</div><h3>${g.name}</h3><div style="font-size:0.7rem">${g.kf}</div>`;
+                card.onclick = () => openGame(g);
+                list.appendChild(card);
             });
-        }
-
-        function updateLanguage() {
-            currentLang = document.getElementById('lang-select').value;
-            const t = translations[currentLang];
-            document.getElementById('warning-text').innerText = t.warning;
-            document.getElementById('label-support').innerText = t.support;
-            document.getElementById('label-terminal').innerText = t.terminal;
-            document.getElementById('btn-signal').innerText = t.get_signal;
+            updateLang();
         }
 
         function openGame(game) {
             activeGame = game;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-view').style.display = 'block';
-            document.getElementById('game-title').innerText = game.name.toUpperCase();
-            document.getElementById('signal-box').innerText = '?';
+            document.getElementById('game-title').innerText = game.name;
+            document.getElementById('signal-area').innerHTML = `<div style="padding:40px; border:1px dashed var(--neon-green)">READY TO SCAN</div>`;
         }
 
         function showLobby() {
@@ -315,39 +231,57 @@
             document.getElementById('lobby').style.display = 'block';
         }
 
-        function generateSignal() {
-            const statusDiv = document.getElementById('status-anim');
-            const box = document.getElementById('signal-box');
-            const t = translations[currentLang];
+        function getSignal() {
+            const area = document.getElementById('signal-area');
+            area.innerHTML = `<div style="font-size:0.8rem">BYPASSING...<br>ANALYZING DATABASE...</div>`;
             
-            box.innerText = "⌛";
-            let step = 0;
-
-            const interval = setInterval(() => {
-                statusDiv.innerText = t.scanning[step];
-                step++;
-                if (step >= t.scanning.length) {
-                    clearInterval(interval);
-                    const randomSignal = activeGame.signals[Math.floor(Math.random() * activeGame.signals.length)];
-                    box.innerText = randomSignal;
-                    setTimeout(() => { statusDiv.innerText = ""; }, 2000);
-                }
-            }, 700);
+            setTimeout(() => {
+                renderSignalLogic(activeGame.id, area);
+            }, 1500);
         }
 
-        function sendSupport() {
-            const msg = prompt(currentLang === 'uz' ? "Murojaatingizni yozing:" : "Введите ваше сообщение:");
-            if (msg) {
-                tg.sendData(JSON.stringify({ action: 'support', message: msg }));
-                alert(currentLang === 'uz' ? "Xabar yuborildi!" : "Сообщение отправлено!");
+        function renderSignalLogic(id, container) {
+            container.innerHTML = "";
+            
+            if (id === 'apple' || id === 'mines' || id === 'dragons' || id === 'wildwest') {
+                const grid = document.createElement('div');
+                grid.className = 'grid-container';
+                const icon = id === 'apple' ? '🍎' : (id === 'mines' ? '💎' : (id === 'dragons' ? '🪙' : '💰'));
+                for(let i=0; i<25; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if(Math.random() > 0.7) cell.innerText = icon;
+                    grid.appendChild(cell);
+                }
+                container.appendChild(grid);
+            } 
+            else if (id === 'crash') {
+                const val = (Math.random() * 3 + 1).toFixed(2);
+                container.innerHTML = `<div style="font-size:1.5rem">STOP AT:</div><div style="font-size:4rem; color:white">x${val}</div><div style="font-size:3rem">🛑</div>`;
+            }
+            else if (id === 'thimbles') {
+                const pos = Math.floor(Math.random() * 3);
+                let t = `<div style="display:flex; justify-content:center; gap:20px; font-size:3rem">`;
+                for(let i=0; i<3; i++) t += `<div>${i === pos ? '⚪️' : '🥤'}</div>`;
+                container.innerHTML = t + `</div>`;
+            }
+            else {
+                container.innerHTML = `<div style="font-size:3rem">🎯</div><div style="font-size:1.5rem">SIGNAL SECURED</div>`;
             }
         }
 
-        // Start
-        initBoot();
-        renderGames();
-        updateLanguage();
+        function updateLang() {
+            const l = document.getElementById('lang-select').value;
+            const w = document.getElementById('warning-text');
+            const texts = {
+                uz: "⚠️ DIQQAT: Hisobingizda minimal 60,000 UZS bo'lmasa, bloklanish xavfi bor!",
+                ru: "⚠️ ВНИМАНИЕ: Если на счету менее 500 RUB, возможна блокировка!",
+                en: "⚠️ WARNING: Minimum 5 USD required to avoid account block!"
+            };
+            w.innerText = texts[l];
+        }
 
+        init();
     </script>
 </body>
 </html>
