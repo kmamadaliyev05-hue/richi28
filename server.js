@@ -741,7 +741,8 @@ bot.on('message', async (ctx) => {
         }
     }
         }
-
+     
+    
         // USER TEXT STATES
         if (step === 'await_id') {
             if (!/^\d{10}$/.test(text)) return ctx.reply("❌ Xato! 10 ta raqam bo'lishi kerak.");
