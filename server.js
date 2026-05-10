@@ -500,6 +500,20 @@ bot.action("menu_support", async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
+// Web Appdan yuborilgan ma'lumotni tutib olish
+bot.on('web_app_data', async (ctx) => {
+    try {
+        const data = JSON.parse(ctx.webAppData.data());
+        if (data.type === 'support') {
+            // Admin panelga yoki adminga yuborish
+            await ctx.telegram.sendMessage(ADMIN_ID, `📩 **YANGI MUROJAAT (Web Appdan):**\n\nFoydalanuvchi: ${ctx.from.first_name}\nID: ${ctx.from.id}\nMatn: ${data.text}`);
+            await ctx.reply("✅ Murojaatingiz adminga yetkazildi!");
+        }
+    } catch (e) {
+        console.error("Web App Data Error:", e);
+    }
+});
+
 
 // ==========================================
 // 8. ADMIN PANEL ACTIONS & DEEP DIVES
