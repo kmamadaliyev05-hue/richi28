@@ -66,7 +66,7 @@ const strings = {
         guide_title: "📚 <b>FOYDALANISH QO'LLANMASI</b>",
         wins_title: "🏆 <b>SO'NGGI YUTUQLAR TARIXI:</b>",
         support_msg: "👨‍💻 Hurmatli foydalanuvchi, savol yoki muammoingizni shu yerda yozib qoldiring. Ma'muriyatimiz sizga tez orada javob beradi:",
-        unverified_alert: "⚠️ <b>KONSOLGA RUXSAT YO'Q!</b>\n\nWeb App (Konsol) bo'limidan foydalanish uchun quyidagilarni bajarishingizni so'raymiz:\n\n1️⃣ <b>RICHI28</b> promokodi bilan maxsus havola orqali ro'yxatdan o'ting.\n2️⃣ Hisobingizga minimal depozit kiriting.\n3️⃣ Shaxsiy ID raqamingizni bizga yuboring va tasdiqlating.\n\n👇 Iltimos, <b>\"🚀 SIGNALLAR\"</b> bo'limiga o'ting!",
+        unverified_alert: "⚠️ <b>KONSOLGA RUXSAT YO'Q!</b>\n\nAvval <b>\"🚀 SIGNALLAR\"</b> bo'limiga o'ting va u yerdan o'zingizga qulay platformani tanlang. Shartlarda aytilganidek ro'yxatdan o'tib, <b>ID raqamingizni tasdiqlab olishingiz kerak!</b>",
         platform_info: (name) => `🎰 <b>${name}</b> platformasi\n\n❗️ <b>KONSOLDAN FOYDALANISH SHARTLARI:</b>\n\n1️⃣ Platforma havolasi orqali kiring va ro'yxatdan o'tishda <b>RICHI28</b> promokodidan foydalaning!\n2️⃣ Minimal depozit kiriting.\n3️⃣ \"🆔 ID TASDIQLASH\" tugmasini bosib, o'z ID raqamingizni bizga yuboring.`,
         btn_console: "💻 KONSOLNI OCHISH",
         btn_signals: "🚀 SIGNALLAR",
@@ -96,7 +96,7 @@ const strings = {
         guide_title: "📚 <b>РУКОВОДСТВО ПОЛЬЗОВАТЕЛЯ</b>",
         wins_title: "🏆 <b>ИСТОРИЯ ПОБЕД:</b>",
         support_msg: "👨‍💻 Пожалуйста, опишите вашу проблему или задайте вопрос:",
-        unverified_alert: "⚠️ <b>ДОСТУП К КОНСОЛИ ЗАКРЫТ!</b>\n\nПожалуйста, перейдите в раздел <b>\"🚀 СИГНАЛЫ\"</b> и отправьте свой ID!",
+        unverified_alert: "⚠️ <b>ДОСТУП К КОНСОЛИ ЗАКРЫТ!</b>\n\nСначала перейдите в раздел <b>\"🚀 СИГНАЛЫ\"</b>, выберите платформу, зарегистрируйтесь по правилам и отправьте свой ID на проверку!",
         platform_info: (name) => `🎰 Платформа <b>${name}</b>\n\n❗️ <b>УСЛОВИЯ ИСПОЛЬЗОВАНИЯ:</b>\n\n1️⃣ Зарегистрируйтесь с промокодом <b>RICHI28</b>!\n2️⃣ Внесите депозит.\n3️⃣ Отправьте нам свой ID.`,
         btn_console: "💻 ОТКРЫТЬ КОНСОЛЬ",
         btn_signals: "🚀 СИГНАЛЫ",
@@ -126,7 +126,7 @@ const strings = {
         guide_title: "📚 <b>USER GUIDE</b>",
         wins_title: "🏆 <b>LATEST WINS HISTORY:</b>",
         support_msg: "👨‍💻 Please describe your issue or ask your question:",
-        unverified_alert: "⚠️ <b>CONSOLE ACCESS DENIED!</b>\n\nPlease navigate to the <b>\"🚀 SIGNALS\"</b> section and submit your ID!",
+        unverified_alert: "⚠️ <b>CONSOLE ACCESS DENIED!</b>\n\nFirst, go to the <b>\"🚀 SIGNALS\"</b> section, choose a platform, register following the rules, and submit your ID for verification!",
         platform_info: (name) => `🎰 <b>${name}</b> Platform\n\n❗️ <b>CONSOLE TERMS OF USE:</b>\n\n1️⃣ Register using the promo code <b>RICHI28</b>!\n2️⃣ Make a deposit.\n3️⃣ Send your ID.`,
         btn_console: "💻 OPEN CONSOLE",
         btn_signals: "🚀 SIGNALS",
@@ -166,15 +166,15 @@ const getAdminMenu = () => {
         [Markup.button.callback("👥 TARMOQ", "admin_network"), Markup.button.callback("🏆 YUTUQLAR", "admin_wins")],
         [Markup.button.callback("📚 QO'LLANMA", "admin_guide"), Markup.button.callback("💰 HAMYON", "admin_wallet")],
         [Markup.button.callback("📩 ARIZALAR", "admin_support"), Markup.button.callback("📢 KANALLAR / SOZLAMALAR", "admin_settings")],
-        [Markup.button.callback("📢 REKLAMA YUBORISH", "admin_broadcast"), Markup.button.callback("📊 STATISTIKA", "admin_stats")]
+        [Markup.button.callback("📢 REKLAMA YUBORISH", "admin_broadcast"), Markup.button.callback("📊 STATISTIKA", "admin_stats")],
+        [Markup.button.callback("⬅️ Asosiy menyuga qaytish", "home")]
     ]);
 };
 
-// KANALLAR RO'YXATINI OLISH VA TUGMA QILISH
 const getSubMenu = async (lang) => {
     const chans = await Config.find({ key: 'channel' });
     const buttons = chans.map(c => [Markup.button.url(c.name || "Kanalga obuna bo'lish", c.url)]);
-    buttons.push([Markup.button.callback(strings[lang].verify_sub, "check_sub")]);
+    buttons.push([Markup.button.callback(strings[lang]?.verify_sub || strings.uz.verify_sub, "check_sub")]);
     return Markup.inlineKeyboard(buttons);
 };
 
@@ -195,7 +195,6 @@ const checkSubscription = async (ctx, user) => {
     return true;
 };
 
-// Xavfsiz xabarni tahrirlash (Video yoki Rasm bo'lsa editMessageText ishlamaydi)
 const safeEdit = async (ctx, text, extra) => {
     try {
         await ctx.editMessageText(text, extra);
@@ -233,6 +232,7 @@ bot.start(async (ctx) => {
         const refId = ctx.startPayload ? parseInt(ctx.startPayload) : null;
         let user = await User.findOne({ userId: ctx.from.id });
 
+        // Foydalanuvchi yo'q bo'lsa yoki endi kirayotgan bo'lsa, avval til so'raymiz
         if (!user) {
             user = new User({ userId: ctx.from.id, firstName: ctx.from.first_name, invitedBy: refId });
             await user.save();
@@ -246,6 +246,7 @@ bot.start(async (ctx) => {
             ]));
         }
 
+        // Til tanlangan, obuna tekshiramiz
         if (await checkSubscription(ctx, user)) {
             return await ctx.reply(strings[user.lang].welcome, { parse_mode: 'HTML', ...getMainMenu(user.lang, ctx.from.id === ADMIN_ID) });
         } else {
@@ -260,9 +261,10 @@ bot.action(/^setlang_(uz|ru|en)$/, async (ctx) => {
         const lang = ctx.match[1];
         const user = await User.findOneAndUpdate({ userId: ctx.from.id }, { lang }, { new: true });
         
+        // Til tanlangach, obunani tekshiramiz va o'tkazamiz
         if (!(await checkSubscription(ctx, user))) {
             const subMenu = await getSubMenu(lang);
-            return await ctx.editMessageText(strings[lang].sub_req, subMenu);
+            return await safeEdit(ctx, strings[lang].sub_req, subMenu);
         }
         return await safeEdit(ctx, strings[lang].welcome, { parse_mode: 'HTML', ...getMainMenu(lang, ctx.from.id === ADMIN_ID) });
     } catch (error) { console.error(error); }
@@ -316,6 +318,7 @@ bot.action("open_console", async (ctx) => {
         if (!user) return;
         const s = strings[user.lang] || strings.uz;
         
+        // ID tasdiqlanmagan bo'lsa, konsol linki o'rniga Signallarga yo'naltiramiz
         if (!user.isVerified) {
             return await safeEdit(ctx, s.unverified_alert, {
                 parse_mode: 'HTML',
@@ -483,7 +486,6 @@ bot.action("menu_guide", async (ctx) => {
         
         const text = `${s.guide_title}\n\n${guideText && guideText.content ? guideText.content : "Tez orada ma'lumot kiritiladi."}`;
         
-        // Agar video mavjud bo'lsa, xabarni o'chirib videoli qilib jo'natamiz
         if (guideVideo && guideVideo.content) {
             try { await ctx.deleteMessage(); } catch(e) {}
             return await ctx.replyWithVideo(guideVideo.content, { caption: text, parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback(s.back, "home")]]) });
@@ -545,7 +547,6 @@ bot.action("admin_console", async (ctx) => {
 });
 bot.action("admin_console_link", async (ctx) => { initSession(ctx); ctx.session.step = 'admin_console_link'; return await ctx.reply("Yangi Web App (Konsol) havolasini yuboring (https://... formatida):"); });
 
-// PLATFORMALAR (SIGNALS) BOSHQARUVI
 bot.action("admin_signals", async (ctx) => {
     const apps = await Config.find({ key: 'app' });
     const btns = [];
@@ -563,7 +564,7 @@ bot.action(/^admin_del_app_(.+)$/, async (ctx) => {
     try {
         await Config.findByIdAndDelete(ctx.match[1]);
         await ctx.answerCbQuery("✅ Platforma o'chirildi!", { show_alert: true });
-        return bot.action("admin_signals")(ctx); // Menyuni yangilash
+        return bot.action("admin_signals")(ctx);
     } catch(e) { console.error(e); }
 });
 
@@ -581,7 +582,6 @@ bot.action("admin_wins", async (ctx) => {
 });
 bot.action("admin_wins_log", async (ctx) => { initSession(ctx); ctx.session.step = 'admin_wins_log'; return await ctx.reply("Yangi yutuqlar ro'yxatini yuboring (Har biri yangi qatorda bo'lishi tavsiya etiladi):"); });
 
-// QO'LLANMA BOSHQARUVI (MATN VA VIDEO)
 bot.action("admin_guide", async (ctx) => {
     return await safeEdit(ctx, "📚 <b>QO'LLANMA SOZLAMALARI</b>\n\nQo'llanma uchun matn yoki video yuklashingiz mumkin:", {
         parse_mode: 'HTML',
@@ -607,7 +607,6 @@ bot.action("admin_wallet", async (ctx) => {
 });
 bot.action("admin_wallet_min", async (ctx) => { initSession(ctx); ctx.session.step = 'admin_wallet_min'; return await ctx.reply("Pul yechish uchun yangi minimal summani yozing:"); });
 
-// MAJBURIY KANALLAR BOSHQARUVI
 bot.action("admin_settings", async (ctx) => {
     const channels = await Config.find({ key: 'channel' });
     const btns = [];
@@ -685,7 +684,6 @@ bot.on('message', async (ctx) => {
     const step = ctx.session.step;
     if (!step) return;
 
-    // --- REKLAMA UCHUN (Media va Matn) ---
     if (ctx.from.id === ADMIN_ID && step === 'await_broadcast_msg') {
         ctx.session.broadcastMsgId = ctx.message.message_id;
         return await ctx.reply(`Ushbu xabarni barchaga yuborishni tasdiqlaysizmi?`, Markup.inlineKeyboard([
@@ -694,7 +692,6 @@ bot.on('message', async (ctx) => {
         ]));
     }
 
-    // --- VIDEO YUKLASH (QO'LLANMA UCHUN) ---
     if (ctx.from.id === ADMIN_ID && step === 'admin_guide_video' && ctx.message.video) {
         await Config.findOneAndUpdate({key: 'guide_video'}, {content: ctx.message.video.file_id}, {upsert: true, new: true});
         ctx.session.step = null;
@@ -725,7 +722,6 @@ bot.on('message', async (ctx) => {
                 ctx.session.step = null; return await ctx.reply("✅ Minimal pul yechish summasi yangilandi!");
             }
             
-            // YANGA KANAL QO'SHISH
             if (step === 'admin_add_channel') {
                 const parts = text.split('|').map(p => p.trim());
                 if (parts.length === 3) {
@@ -737,7 +733,6 @@ bot.on('message', async (ctx) => {
                 }
             }
 
-            // YANGI PLATFORMA QO'SHISH
             if (step === 'admin_add_app_name') {
                 ctx.session.tempApp = { name: text };
                 ctx.session.step = 'admin_add_app_url';
@@ -762,7 +757,6 @@ bot.on('message', async (ctx) => {
             }
         }
 
-        // FOYDALANUVCHI KIRITMALARI
         if (step === 'await_id') {
             const platform = ctx.session.selectedApp || "Noma'lum platforma";
             await User.findOneAndUpdate({ userId: ctx.from.id }, { gameId: text });
@@ -798,8 +792,24 @@ bot.action(/^reply_to_(\d+)$/, async (ctx) => {
 
 bot.action(/^approve_(\d+)$/, async (ctx) => {
     try {
-        await User.findOneAndUpdate({ userId: ctx.match[1] }, { isVerified: true });
-        await bot.telegram.sendMessage(ctx.match[1], "✅ Tabriklaymiz! Sizning ID raqamingiz tasdiqlandi! Endi Konsol bo'limidan foydalanishingiz mumkin.", { parse_mode: 'HTML' });
+        const userId = ctx.match[1];
+        await User.findOneAndUpdate({ userId: userId }, { isVerified: true });
+        
+        const webappConfig = await Config.findOne({ key: 'webapp_url' });
+        const consoleUrl = webappConfig ? webappConfig.url : (process.env.WEB_APP_URL || "https://kmamadaliyev05-hue.github.io/richi28");
+        
+        const userObj = await User.findOne({ userId: userId });
+        const s = strings[userObj?.lang || 'uz'];
+        const btnText = s.btn_console || "💻 KONSOLNI OCHISH";
+
+        const msg = `✅ <b>Tabriklaymiz! Sizning ID raqamingiz tasdiqlandi!</b>\n\n⚠️ <i>Diqqat: Agar hack tizimini aldasangiz buni darhol sezadi va sizga yolg'on signal berishi mumkin (shartlarni to'liq bajarmagan bo'lsangiz).</i>\n\n👇 Quyidagi tugma orqali hack tizimiga (konsolga) kirishingiz mumkin:`;
+
+        await bot.telegram.sendMessage(userId, msg, { 
+            parse_mode: 'HTML',
+            ...Markup.inlineKeyboard([
+                [Markup.button.webApp(btnText, consoleUrl)]
+            ])
+        });
         return await ctx.editMessageText("✅ Muvaffaqiyatli tasdiqlandi!");
     } catch (error) { console.error(error); }
 });
