@@ -75,8 +75,7 @@
             <p id="warning-text" class="text-[9px] text-danger leading-relaxed font-bold text-center uppercase"></p>
         </div>
 
-        <div class="grid grid-cols-2 gap-3" id="games-container">
-            </div>
+        <div class="grid grid-cols-2 gap-3" id="games-container"></div>
 
         <div class="mt-8 mb-4 text-center">
             <button onclick="sendSupport()" class="text-[10px] text-neon/60 underline hover:text-neon transition" id="support-text">[ 💡 TAKLIF VA MUROJAAT ]</button>
@@ -87,7 +86,8 @@
         <div class="flex justify-between items-center mb-6">
             <button onclick="goBack()" class="border border-neon text-neon px-3 py-1 rounded text-[10px] hover:bg-neon hover:text-black transition" id="btn-back">⬅️ ORTGA</button>
             <h2 id="active-game-title" class="text-sm font-bold tracking-[4px] uppercase text-white shadow-neon-glow"></h2>
-            <div class="w-16"></div> </div>
+            <div class="w-16"></div>
+        </div>
 
         <div class="w-full text-center h-4 mb-2">
             <p id="hack-log" class="text-[9px] opacity-70 italic uppercase tracking-wider"></p>
@@ -95,7 +95,7 @@
 
         <div id="signal-container" class="w-full flex-1 bg-black/60 border border-neon/30 rounded-lg flex flex-col items-center justify-center relative overflow-hidden mb-6 p-4">
             <div class="scan-line" id="scanline"></div>
-            <div id="signal-render-area" class="w-full flex justify-center items-center h-full text-center">
+            <div id="signal-render-area" class="w-full flex flex-col justify-center items-center h-full text-center">
                 <span class="text-[10px] opacity-30 tracking-widest">[ AWAITING COMMAND ]</span>
             </div>
         </div>
@@ -114,6 +114,7 @@
         // Data & State
         let currentLang = 'uz';
         let activeGame = null;
+        let crashCooldownTime = 0; // Crash uchun 30s timer
 
         const translations = {
             uz: {
@@ -121,6 +122,7 @@
                 support: "[ 💡 TAKLIF VA MUROJAAT ]",
                 back: "ORTGA",
                 get_signal: "⚡️ SIGNAL OLISH",
+                crash_wait: "KUTING! KEYINGI SIGNALGACHA:",
                 logs: ["Server bypass...", "Scanning grid...", "Injecting payload...", "Decrypting hash...", "Signal topildi!"]
             },
             ru: {
@@ -128,6 +130,7 @@
                 support: "[ 💡 ПРЕДЛОЖЕНИЯ И СВЯЗЬ ]",
                 back: "НАЗАД",
                 get_signal: "⚡️ ПОЛУЧИТЬ СИГНАЛ",
+                crash_wait: "ОЖИДАЙТЕ! ДО СЛЕДУЮЩЕГО СИГНАЛА:",
                 logs: ["Обход сервера...", "Сканирование...", "Внедрение кода...", "Дешифровка...", "Сигнал найден!"]
             },
             en: {
@@ -135,6 +138,7 @@
                 support: "[ 💡 FEEDBACK & SUPPORT ]",
                 back: "BACK",
                 get_signal: "⚡️ GET SIGNAL",
+                crash_wait: "WAIT! NEXT SIGNAL IN:",
                 logs: ["Server bypass...", "Scanning grid...", "Injecting payload...", "Decrypting hash...", "Signal found!"]
             }
         };
@@ -144,7 +148,7 @@
             { id: 'crash', name: 'Crash', icon: '🚀', kf: 'x1.00 - x100+', type: 'multiplier' },
             { id: 'kamikaze', name: 'Kamikaze', icon: '✈️', kf: 'x1.21 - x15.4', grid: {cols: 5, rows: 10} },
             { id: 'nights', name: 'Eastern Nights', icon: '🪔', kf: 'x1.18 - x349', grid: {cols: 5, rows: 10} },
-            { id: 'wild', name: 'Wild West Gold', icon: '💰', kf: 'x2.00 - x3.00', grid: {cols: 5, rows: 10} },
+            { id: 'wild', name: 'Wild West Gold', icon: '💰', kf: 'x2.00 - x3.00', grid: {cols: 3, rows: 10} },
             { id: 'dragon', name: 'Dragon\'s Gold', icon: '🪙', kf: 'x1.23 - x349', grid: {cols: 5, rows: 10} },
             { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.20 - x14.5', grid: {cols: 5, rows: 5} },
             { id: 'dice', name: 'Under/Over 7', icon: '🎲', kf: 'x2.3 - x5.8', type: 'dice' },
@@ -253,6 +257,17 @@
             const scanline = document.getElementById('scanline');
             const t = translations[currentLang];
 
+            // 1. Crash uchun 30s kutish vaqti tekshiruvi
+            if(activeGame.id === 'crash') {
+                const now = Date.now();
+                if(now - crashCooldownTime < 30000) {
+                    const timeLeft = Math.ceil((30000 - (now - crashCooldownTime)) / 1000);
+                    alert(`${t.crash_wait} ${timeLeft}s`);
+                    return;
+                }
+                crashCooldownTime = now;
+            }
+
             btn.disabled = true;
             scanline.style.display = 'block';
             area.innerHTML = `<span class="text-3xl animate-pulse filter grayscale opacity-50">${activeGame.icon}</span>`;
@@ -266,38 +281,52 @@
                 if(step >= t.logs.length) {
                     clearInterval(logTimer);
                     scanline.style.display = 'none';
-                    btn.disabled = false;
-                    renderSignalResult();
-                    tg.HapticFeedback.notificationOccurred('success');
+                    renderSignalResult(btn);
                 }
             }, 600);
         }
 
-        function renderSignalResult() {
+        function renderSignalResult(btn) {
             const area = document.getElementById('signal-render-area');
             let html = '';
 
-            // 1. Grid Climbers (Apple, Kamikaze, etc) - 10 rows
+            // 1. Narvon (Step-by-step) O'yinlari (Apple, Kamikaze, etc)
             if(activeGame.grid) {
                 const cols = activeGame.grid.cols;
                 const rows = activeGame.grid.rows;
-                // Flex column-reverse so row 0 is at bottom
-                html = `<div class="flex flex-col-reverse gap-1 w-full max-w-[200px]">`;
                 
+                html = `<div class="flex flex-col-reverse gap-1 w-full max-w-[200px]" id="ladder-grid">`;
                 for(let r = 0; r < rows; r++) {
-                    const safeCol = Math.floor(Math.random() * cols);
-                    html += `<div class="grid grid-cols-${cols} gap-1">`;
+                    html += `<div class="grid gap-1 w-full" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
                     for(let c = 0; c < cols; c++) {
-                        if(c === safeCol) {
-                            html += `<div class="game-cell active-signal h-10 w-full">${activeGame.icon}</div>`;
-                        } else {
-                            html += `<div class="game-cell h-10 w-full opacity-30"></div>`;
-                        }
+                        html += `<div class="game-cell h-10 w-full opacity-30 transition-all duration-300" id="cell-${r}-${c}"></div>`;
                     }
                     html += `</div>`;
                 }
                 html += `</div>`;
+                area.innerHTML = html;
+
+                // Animatsiyali ravishda pastdan tepaga chiqarish
+                let currentRow = 0;
+                const climbTimer = setInterval(() => {
+                    if(currentRow >= rows) {
+                        clearInterval(climbTimer);
+                        btn.disabled = false;
+                        tg.HapticFeedback.notificationOccurred('success');
+                        return;
+                    }
+                    const safeCol = Math.floor(Math.random() * cols);
+                    const targetCell = document.getElementById(`cell-${currentRow}-${safeCol}`);
+                    if(targetCell) {
+                        targetCell.className = "game-cell active-signal h-10 w-full";
+                        targetCell.innerHTML = activeGame.icon;
+                        tg.HapticFeedback.impactOccurred('light');
+                    }
+                    currentRow++;
+                }, 400); // Har bir qator uchun 400ms
+                return; // Return so we don't enable the button immediately
             } 
+            
             // 2. Crash
             else if(activeGame.type === 'multiplier') {
                 const val = (Math.random() * 4 + 1.05).toFixed(2);
@@ -308,31 +337,47 @@
                     </div>
                 `;
             } 
-            // 3. Mines (25 cells: 3 Bombs, rest Diamonds)
+            
+            // 3. Mines (5 dan 10 gacha xavfsiz joylar)
             else if(activeGame.type === 'mines') {
                 html = `<div class="grid grid-cols-5 gap-1 w-full max-w-[220px]">`;
-                let cells = Array(25).fill('💎');
-                let bombCount = 0;
-                while(bombCount < 3) {
+                const safeCount = Math.floor(Math.random() * 6) + 5; // 5 dan 10 gacha
+                let safes = [];
+                while(safes.length < safeCount) {
                     let r = Math.floor(Math.random() * 25);
-                    if(cells[r] !== '💣') { cells[r] = '💣'; bombCount++; }
+                    if(!safes.includes(r)) safes.push(r);
                 }
-                cells.forEach(c => {
-                    if(c === '💎') html += `<div class="game-cell h-10 active-signal !text-xl">${c}</div>`;
-                    else html += `<div class="game-cell h-10 opacity-40 !text-xl">${c}</div>`;
-                });
+
+                for(let i=0; i<25; i++) {
+                    if(safes.includes(i)) {
+                        html += `<div class="game-cell h-10 active-signal !text-xl">💎</div>`;
+                    } else {
+                        html += `<div class="game-cell h-10 opacity-20 !text-xl"></div>`; // Qolganlari yopiq
+                    }
+                }
                 html += `</div>`;
             } 
-            // 4. Thimbles (3 Cups)
+            
+            // 4. Thimbles (1-ta yoki 2-ta koptok)
             else if(activeGame.type === 'thimbles') {
-                const pos = Math.floor(Math.random() * 3);
-                html = `<div class="flex gap-4">`;
-                for(let i=0; i<3; i++) {
-                    if(i === pos) html += `<div class="game-cell w-16 h-20 active-signal !text-4xl">⚪️</div>`;
-                    else html += `<div class="game-cell w-16 h-20 !text-4xl opacity-50">🥤</div>`;
+                const ballCount = Math.random() > 0.5 ? 1 : 2; // 50% ehtimollik bilan 1 yoki 2
+                let ballPositions = [];
+                while(ballPositions.length < ballCount) {
+                    let r = Math.floor(Math.random() * 3);
+                    if(!ballPositions.includes(r)) ballPositions.push(r);
                 }
-                html += `</div>`;
+
+                html = `<div class="flex flex-col items-center"><div class="flex gap-4 mb-4">`;
+                for(let i=0; i<3; i++) {
+                    if(ballPositions.includes(i)) {
+                        html += `<div class="game-cell w-16 h-20 active-signal !text-4xl">⚪️</div>`;
+                    } else {
+                        html += `<div class="game-cell w-16 h-20 !text-4xl opacity-50">🥤</div>`;
+                    }
+                }
+                html += `</div><span class="text-[10px] text-neon uppercase border border-neon px-2 py-1 rounded">Mode: ${ballCount} Ball(s)</span></div>`;
             } 
+            
             // 5. Under/Over 7
             else if(activeGame.type === 'dice') {
                 const res = ["UNDER 7", "EXACT 7", "OVER 7"][Math.floor(Math.random() * 3)];
@@ -345,6 +390,8 @@
             }
 
             area.innerHTML = html;
+            btn.disabled = false;
+            tg.HapticFeedback.notificationOccurred('success');
         }
 
         // Support Integration
