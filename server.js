@@ -301,7 +301,7 @@ bot.action("open_console", async (ctx) => {
         }
         
         const webappConfig = await Config.findOne({ key: 'webapp_url' });
-        const consoleUrl = webappConfig ? webappConfig.url : (process.env.WEB_APP_URL || "https://google.com");
+        const consoleUrl = webappConfig ? webappConfig.url : (process.env.WEB_APP_URL || "https://kmamadaliyev05-hue.github.io/richi28");
 
         return ctx.editMessageText("🟢 TERMINAL IS ACTIVE", Markup.inlineKeyboard([
             [Markup.button.webApp(s.btn_console, consoleUrl)],
