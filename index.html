@@ -12,9 +12,9 @@
                 extend: {
                     colors: { 
                         gold: '#FFD700', 
-                        darkbg: '#0a0a0a', 
+                        darkbg: '#000000', /* Fon qop-qora qilindi */
                         danger: '#ff3131',
-                        panel: '#111111'
+                        panel: '#0a0a0a'
                     },
                     fontFamily: { mono: ['"Courier New"', 'Courier', 'monospace'] },
                     boxShadow: { 
@@ -32,12 +32,14 @@
             font-family: theme('fontFamily.mono'); overflow: hidden; 
             user-select: none; -webkit-tap-highlight-color: transparent; 
         }
-        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.15; }
+        
+        /* Matritsa kodlar yomg'iri ko'rinishi kuchaytirildi */
+        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.4; }
         
         /* Glassmorphism VIP Cards */
         .glass-card { 
-            background: linear-gradient(145deg, rgba(20,20,20,0.9) 0%, rgba(0,0,0,0.8) 100%);
-            backdrop-filter: blur(10px); border: 1px solid rgba(255, 215, 0, 0.2); 
+            background: linear-gradient(145deg, rgba(15,15,15,0.95) 0%, rgba(0,0,0,0.9) 100%);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255, 215, 0, 0.3); 
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
         }
         .glass-card:active { 
@@ -52,11 +54,11 @@
         /* Game Grid Cells */
         .game-cell { 
             display: flex; align-items: center; justify-content: center; 
-            background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(255, 215, 0, 0.15); 
+            background: rgba(10, 10, 10, 0.9); border: 1px solid rgba(255, 215, 0, 0.2); 
             border-radius: 8px; font-size: 1.5rem; transition: 0.4s ease; 
         }
         .game-cell.active-signal { 
-            background: rgba(255, 215, 0, 0.15); border-color: theme('colors.gold'); 
+            background: rgba(255, 215, 0, 0.2); border-color: theme('colors.gold'); 
             box-shadow: theme('boxShadow.inner-gold'); font-size: 2.2rem; 
             text-shadow: 0 0 15px #FFD700; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
         }
@@ -67,7 +69,7 @@
         .glitch { text-shadow: 2px 2px 0px rgba(255, 215, 0, 0.5), -2px -2px 0px rgba(255, 255, 255, 0.3); animation: glitch-anim 1.5s infinite alternate-reverse; }
         @keyframes glitch-anim { 0% { text-shadow: 2px 2px 0 rgba(255,215,0,0.5), -2px -2px 0 rgba(255,255,255,0.3); } 100% { text-shadow: -2px -2px 0 rgba(255,215,0,0.5), 2px 2px 0 rgba(255,255,255,0.3); } }
 
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: theme('colors.gold'); box-shadow: 0 0 15px theme('colors.gold'); animation: scan 1.5s ease-in-out infinite; opacity: 0.7; pointer-events: none; display: none; z-index: 50; }
+        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: theme('colors.gold'); box-shadow: 0 0 15px theme('colors.gold'); animation: scan 1.5s ease-in-out infinite; opacity: 0.8; pointer-events: none; display: none; z-index: 50; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
     </style>
 </head>
@@ -105,19 +107,19 @@
         <div class="grid grid-cols-2 gap-4" id="games-container"></div>
 
         <div class="mt-8 mb-4 text-center">
-            <button onclick="sendSupport()" class="text-[10px] text-gold/60 hover:text-gold transition border border-gold/20 px-6 py-3 rounded-lg bg-black/50 tracking-widest uppercase" id="support-text"></button>
+            <button onclick="sendSupport()" class="text-[10px] text-gold/60 hover:text-gold transition border border-gold/20 px-6 py-3 rounded-lg bg-black/80 tracking-widest uppercase" id="support-text"></button>
         </div>
     </div>
 
     <div id="game-view" class="hidden w-full h-full flex-col p-4 relative z-10 max-w-2xl mx-auto">
         
-        <div class="flex justify-between items-center mb-4 bg-panel/80 p-3 rounded-xl border border-gold/20 backdrop-blur-md">
-            <button onclick="goBack()" class="text-gold border border-gold/30 px-4 py-1.5 text-[10px] hover:bg-gold hover:text-black rounded-md transition font-bold tracking-wider" id="btn-back">⬅️</button>
+        <div class="flex justify-between items-center mb-4 bg-panel/90 p-3 rounded-xl border border-gold/30 backdrop-blur-md">
+            <button onclick="goBack()" class="text-gold border border-gold/40 px-4 py-1.5 text-[10px] hover:bg-gold hover:text-black rounded-md transition font-bold tracking-wider" id="btn-back">⬅️</button>
             <h2 id="active-game-title" class="text-sm font-bold tracking-[5px] uppercase text-white shadow-gold-glow"></h2>
             <div class="w-12"></div>
         </div>
 
-        <div class="border border-danger/40 bg-black/80 p-3 rounded-lg mb-4 shadow-[0_0_15px_rgba(255,0,60,0.15)] flex items-center gap-3">
+        <div class="border border-danger/40 bg-black/90 p-3 rounded-lg mb-4 shadow-[0_0_15px_rgba(255,0,60,0.15)] flex items-center gap-3">
             <span class="text-danger text-2xl animate-pulse">⚠️</span>
             <p id="warning-text-game" class="text-[8px] text-white/80 leading-relaxed font-bold text-left uppercase tracking-wide"></p>
         </div>
@@ -126,11 +128,12 @@
             <p id="hack-log" class="text-[10px] text-gold italic uppercase tracking-widest"></p>
         </div>
 
-        <div id="signal-container" class="w-full flex-1 bg-[#0a0a0a] border border-gold/30 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden mb-6 p-2 shadow-gold-glow">
+        <div id="signal-container" class="w-full flex-1 bg-[#050505] border border-gold/30 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden mb-6 p-2 shadow-gold-glow">
             <div class="scan-line" id="scanline"></div>
             
-            <div id="signal-render-area" class="w-full h-full flex flex-col justify-center items-center text-center overflow-y-auto scrollable-y pb-4 pt-4 px-2">
-                </div>
+            <!-- TO'G'RILANGAN QISM: justify-center olib tashlandi, endi qatorlar yuqoridan kesilmaydi -->
+            <div id="signal-render-area" class="w-full h-full flex flex-col items-center text-center overflow-y-auto scrollable-y pb-4 pt-4 px-2">
+            </div>
         </div>
 
         <button id="btn-hack" onclick="executeHack()" class="w-full bg-gradient-to-r from-[#FFD700] to-[#B8860B] text-black font-extrabold text-lg py-5 rounded-xl shadow-gold-glow uppercase tracking-[4px] active:scale-[0.97] transition-all disabled:opacity-40 disabled:cursor-not-allowed mb-2">
@@ -194,22 +197,29 @@
             { id: 'thimbles', name: 'Thimbles', icon: '🥤', kf: 'x1.45 - x2.91', type: 'thimbles' }
         ];
 
-        // --- GOLD MATRIX RAIN ---
+        // --- YAXSHILANGAN MATRITSA KODLAR YOMG'IRI ---
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@*";
-        const fontSize = 14;
+        const fontSize = 16;
         const columns = canvas.width / fontSize;
         const drops = Array.from({length: Math.floor(columns)}).fill(1);
 
         function drawMatrix() {
-            ctx.fillStyle = "rgba(5, 5, 5, 0.1)";
+            ctx.fillStyle = "rgba(0, 0, 0, 0.15)"; // Orqa fonni asta qoraytirish
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#FFD700"; // Tillarang Matrix
             ctx.font = fontSize + "px monospace";
             for (let i = 0; i < drops.length; i++) {
                 const text = chars[Math.floor(Math.random() * chars.length)];
+                
+                // Ba'zi kodlar oq bo'lib yonib o'chishi uchun (realistik effekt)
+                if (Math.random() > 0.95) {
+                    ctx.fillStyle = "#FFFFFF"; 
+                } else {
+                    ctx.fillStyle = "#FFD700"; // Tillarang
+                }
+                
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
                 if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
@@ -286,12 +296,13 @@
             document.getElementById('hack-log').innerText = '';
             
             ladderCurrentStep = 0; 
-            applyLanguage(); // Tugma textini yangilash
+            applyLanguage(); 
 
             if(activeGame.type === 'ladder') {
                 renderEmptyGrid();
             } else {
-                document.getElementById('signal-render-area').innerHTML = `<span class="text-[12px] opacity-30 tracking-widest text-white">[ SYSTEM READY ]</span>`;
+                // MARKAZLASHTIRISH UCHUN mt-auto qO'SHILDI
+                document.getElementById('signal-render-area').innerHTML = `<span class="text-[12px] opacity-30 tracking-widest text-white mt-auto mb-auto">[ SYSTEM READY ]</span>`;
             }
             tg.HapticFeedback.impactOccurred('light');
         }
@@ -308,8 +319,8 @@
             const cols = activeGame.grid.cols;
             const rows = activeGame.grid.rows;
             
-            // flex-col-reverse (0-qator pastda bo'ladi)
-            let html = `<div class="flex flex-col-reverse gap-[8px] w-full max-w-[250px] mx-auto py-4" id="ladder-grid">`;
+            // TO'G'RILANGAN QISM: mt-auto mb-auto qo'shildi - shunda ro'yxat ekrandan tepaga o'tib ketmaydi
+            let html = `<div class="flex flex-col-reverse gap-[8px] w-full max-w-[250px] mx-auto py-4 mt-auto mb-auto" id="ladder-grid">`;
             for(let r = 0; r < rows; r++) {
                 html += `<div class="grid gap-[8px] w-full" id="row-${r}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
                 for(let c = 0; c < cols; c++) {
@@ -350,7 +361,7 @@
                     const cols = activeGame.grid.cols;
                     const safeCol = Math.floor(Math.random() * cols);
                     
-                    // Oldingi qatorlarni biroz xiralashtirish (fokus yangi qatorda bo'lishi uchun)
+                    // Oldingi qatorlarni biroz xiralashtirish
                     for(let i=0; i<ladderCurrentStep; i++) {
                         const oldRow = document.getElementById(`row-${i}`);
                         if(oldRow) oldRow.style.opacity = '0.6';
@@ -365,9 +376,9 @@
                         targetCell.innerHTML = activeGame.icon;
                     }
                     
-                    // EKRANNI YURGIZISH (SCROLL INTO VIEW)
+                    // EKRANNI YURGIZISH (SCROLL INTO VIEW) - muammosiz ishlashi uchun to'g'rilandi
                     if(targetRow) {
-                        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                     
                     ladderCurrentStep++;
@@ -420,15 +431,15 @@
             if(activeGame.type === 'multiplier') {
                 const val = (Math.random() * 4 + 1.10).toFixed(2);
                 html = `
-                    <div class="flex flex-col items-center animate-pulse">
+                    <div class="flex flex-col items-center animate-pulse mt-auto mb-auto">
                         <span class="text-[90px] font-bold text-white drop-shadow-[0_0_25px_#FFD700]">x${val}</span>
                         <span class="text-3xl mt-4 text-black font-black tracking-widest border-2 border-danger px-8 py-2 rounded-xl bg-danger shadow-danger-glow">STOP</span>
                     </div>
                 `;
             } 
             else if(activeGame.type === 'mines') {
-                html = `<div class="grid grid-cols-5 gap-2 w-full max-w-[280px] mx-auto py-4">`;
-                const safeCount = Math.floor(Math.random() * 5) + 5; // 5 to 9 safes
+                html = `<div class="grid grid-cols-5 gap-2 w-full max-w-[280px] mx-auto py-4 mt-auto mb-auto">`;
+                const safeCount = Math.floor(Math.random() * 5) + 5; 
                 let safes = [];
                 while(safes.length < safeCount) {
                     let r = Math.floor(Math.random() * 25);
@@ -451,7 +462,7 @@
                     if(!ballPositions.includes(r)) ballPositions.push(r);
                 }
 
-                html = `<div class="flex flex-col items-center"><div class="flex gap-6 mb-8">`;
+                html = `<div class="flex flex-col items-center mt-auto mb-auto"><div class="flex gap-6 mb-8">`;
                 for(let i=0; i<3; i++) {
                     if(ballPositions.includes(i)) {
                         html += `<div class="game-cell w-20 h-24 active-signal !text-5xl">⚪️</div>`;
@@ -464,7 +475,7 @@
             else if(activeGame.type === 'dice') {
                 const res = ["UNDER 7", "EXACT 7", "OVER 7"][Math.floor(Math.random() * 3)];
                 html = `
-                    <div class="flex flex-col items-center">
+                    <div class="flex flex-col items-center mt-auto mb-auto">
                         <span class="text-[80px] mb-6 animate-bounce filter drop-shadow-[0_0_15px_#fff]">🎲</span>
                         <div class="bg-gradient-to-r from-gold to-yellow-600 text-black font-black text-3xl px-8 py-3 rounded-xl shadow-gold-glow">${res}</div>
                     </div>
