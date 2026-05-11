@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 VIP HACK</title>
+    <title>RICHI28 VIP HACK 4K</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,15 +12,17 @@
                 extend: {
                     colors: { 
                         gold: '#FFD700', 
-                        darkbg: '#050400', /* Qora-oltin fon uchun zamin */
-                        danger: '#ff3131',
-                        panel: '#0a0a0a'
+                        darkgold: '#B8860B',
+                        darkbg: '#030200',
+                        danger: '#ff2a2a',
+                        panel: '#0a0805'
                     },
                     fontFamily: { mono: ['"Courier New"', 'Courier', 'monospace'] },
                     boxShadow: { 
-                        'gold-glow': '0 0 15px rgba(255, 215, 0, 0.4)', 
-                        'danger-glow': '0 0 15px rgba(255, 0, 60, 0.4)',
-                        'inner-gold': 'inset 0 0 15px rgba(255, 215, 0, 0.3)'
+                        'gold-glow': '0 0 20px rgba(255, 215, 0, 0.5)', 
+                        'gold-glow-intense': '0 0 30px rgba(255, 215, 0, 0.8)',
+                        'danger-glow': '0 0 20px rgba(255, 42, 42, 0.5)',
+                        'inner-gold': 'inset 0 0 20px rgba(255, 215, 0, 0.2)'
                     }
                 }
             }
@@ -28,123 +30,137 @@
     </script>
     <style>
         body { 
-            /* Qora va to'q oltin rangli zamonaviy gradient fon */
-            background: radial-gradient(circle at center, #1f1700 0%, #000000 100%); 
+            background: #000000; 
             color: theme('colors.gold'); 
-            font-family: theme('fontFamily.mono'); overflow: hidden; 
-            user-select: none; -webkit-tap-highlight-color: transparent; 
+            font-family: theme('fontFamily.mono'); 
+            overflow: hidden; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent; 
             margin: 0; padding: 0;
             min-height: 100vh;
         }
         
-        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.5; }
+        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.6; }
         
-        /* Glassmorphism VIP Cards */
+        /* 4K Ultra VIP Cards */
         .glass-card { 
-            background: linear-gradient(145deg, rgba(20,15,0,0.95) 0%, rgba(0,0,0,0.9) 100%);
-            backdrop-filter: blur(10px); border: 1px solid rgba(255, 215, 0, 0.3); 
+            background: linear-gradient(145deg, rgba(15,10,0,0.95) 0%, rgba(5,3,0,0.95) 100%);
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 215, 0, 0.25); 
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
         .glass-card:active { 
-            transform: scale(0.95); border-color: theme('colors.gold'); 
+            transform: scale(0.96); 
+            border-color: theme('colors.gold'); 
             box-shadow: theme('boxShadow.gold-glow'); 
         }
         
         /* Custom Scrollbar */
-        .scrollable-y { overflow-y: auto; scrollbar-width: none; }
+        .scrollable-y { overflow-y: auto; scrollbar-width: none; scroll-behavior: smooth; }
         .scrollable-y::-webkit-scrollbar { display: none; }
 
-        /* MUKAMMAL KATAKLAR (GAME CELLS) - Ajralib turadigan qilindi */
+        /* Premium Game Cells */
         .game-cell { 
             display: flex; align-items: center; justify-content: center; 
-            background: rgba(30, 20, 0, 0.7); /* To'q qora-tillarang fon */
-            border: 2px solid rgba(255, 215, 0, 0.3); /* Ajralib turadigan qalinroq rom */
-            border-radius: 10px; font-size: 1.5rem; transition: 0.4s ease; 
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8); /* Ichki soya hajmi */
+            background: rgba(15, 10, 0, 0.85); 
+            border: 1px solid rgba(255, 215, 0, 0.2); 
+            border-radius: 8px; font-size: 1.8rem; transition: 0.4s ease; 
+            box-shadow: inset 0 0 15px rgba(0,0,0,1); 
         }
         
-        /* YONIB TURGAN (FAOL) KATAKLAR */
+        /* Active Signal Highlight */
         .game-cell.active-signal { 
-            background: rgba(255, 215, 0, 0.25); border-color: theme('colors.gold'); 
-            box-shadow: 0 0 15px rgba(255,215,0,0.5), inset 0 0 15px rgba(255, 215, 0, 0.4); 
-            font-size: 2.2rem; 
-            text-shadow: 0 0 15px #FFD700; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+            background: rgba(255, 215, 0, 0.2); 
+            border-color: theme('colors.gold'); 
+            box-shadow: 0 0 25px rgba(255,215,0,0.6), inset 0 0 20px rgba(255, 215, 0, 0.4); 
+            font-size: 2.5rem; 
+            color: #FFF;
+            text-shadow: 0 0 15px #FFD700, 0 0 30px #FFD700; 
+            animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
             z-index: 10;
         }
         
-        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes pop { 0% { transform: scale(0.6); opacity: 0; filter: brightness(2); } 100% { transform: scale(1); opacity: 1; filter: brightness(1); } }
         
-        /* Glitch & Scanner Effects */
-        .glitch { text-shadow: 2px 2px 0px rgba(255, 215, 0, 0.5), -2px -2px 0px rgba(255, 255, 255, 0.3); animation: glitch-anim 1.5s infinite alternate-reverse; }
-        @keyframes glitch-anim { 0% { text-shadow: 2px 2px 0 rgba(255,215,0,0.5), -2px -2px 0 rgba(255,255,255,0.3); } 100% { text-shadow: -2px -2px 0 rgba(255,215,0,0.5), 2px 2px 0 rgba(255,255,255,0.3); } }
+        /* Cyberpunk Glitch & Scan */
+        .glitch { text-shadow: 3px 3px 0px rgba(255, 215, 0, 0.5), -3px -3px 0px rgba(255, 255, 255, 0.2); animation: glitch-anim 2s infinite alternate-reverse; }
+        @keyframes glitch-anim { 0% { text-shadow: 3px 3px 0 rgba(255,215,0,0.5), -3px -3px 0 rgba(255,255,255,0.2); } 100% { text-shadow: -3px -3px 0 rgba(255,215,0,0.5), 3px 3px 0 rgba(255,255,255,0.2); } }
 
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: theme('colors.gold'); box-shadow: 0 0 15px theme('colors.gold'); animation: scan 1.5s ease-in-out infinite; opacity: 0.8; pointer-events: none; display: none; z-index: 50; }
+        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: theme('colors.gold'); box-shadow: 0 0 20px theme('colors.gold'), 0 0 40px theme('colors.gold'); animation: scan 1.2s ease-in-out infinite; opacity: 0.9; pointer-events: none; display: none; z-index: 50; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        /* Mode Toggle Buttons */
+        .mode-btn {
+            border: 1px solid rgba(255,215,0,0.4); color: rgba(255,215,0,0.6); 
+            padding: 6px 20px; border-radius: 8px; font-size: 11px; font-weight: 800; 
+            text-transform: uppercase; transition: all 0.3s; background: rgba(0,0,0,0.5);
+            letter-spacing: 1px;
+        }
+        .active-mode {
+            background: rgba(255,215,0,0.25); color: #FFD700; border-color: #FFD700; 
+            box-shadow: 0 0 15px rgba(255,215,0,0.4);
+        }
     </style>
 </head>
 <body class="flex flex-col items-center h-screen w-full relative">
 
     <canvas id="matrix-canvas"></canvas>
 
-    <div id="boot-screen" class="absolute inset-0 z-50 bg-[#020202] flex flex-col items-center justify-center p-6 text-center">
-        <h1 class="text-4xl font-bold mb-2 tracking-[8px] glitch text-gold">RICHI28 VIP</h1>
-        <p class="text-[12px] mb-8 opacity-50 text-white">SECURE CONNECTION ESTABLISHING...</p>
-        <div class="w-full max-w-[280px] h-[6px] bg-gray-900 border border-gold/50 rounded-full overflow-hidden">
-            <div id="boot-bar" class="h-full bg-gold w-0 shadow-gold-glow transition-all duration-100 rounded-full"></div>
+    <div id="boot-screen" class="absolute inset-0 z-50 bg-[#000000] flex flex-col items-center justify-center p-6 text-center">
+        <h1 class="text-5xl font-extrabold mb-3 tracking-[10px] glitch text-gold">RICHI28 VIP</h1>
+        <p class="text-[13px] mb-8 opacity-60 text-white tracking-widest">SECURE 4K CONNECTION ESTABLISHING...</p>
+        <div class="w-full max-w-[300px] h-[8px] bg-[#111] border border-gold/40 rounded-full overflow-hidden shadow-gold-glow">
+            <div id="boot-bar" class="h-full bg-gold w-0 shadow-gold-glow-intense transition-all duration-100 rounded-full"></div>
         </div>
-        <p id="boot-text" class="mt-5 text-[10px] animate-pulse uppercase tracking-[3px] text-gold/80">Connecting to server...</p>
+        <p id="boot-text" class="mt-6 text-[11px] animate-pulse uppercase tracking-[4px] text-gold/90 font-bold">Connecting to root...</p>
     </div>
 
     <div id="lobby" class="hidden w-full h-full flex-col px-4 pt-4 pb-8 scrollable-y relative z-10 max-w-2xl mx-auto">
-        <div class="flex justify-between items-center border-b border-gold/30 pb-4 mb-5 sticky top-0 bg-transparent backdrop-blur-md z-20">
-            <div class="text-[10px] font-bold tracking-widest text-white">
-                <span class="opacity-40">USER:</span> <span class="text-gold">VIP_ROOT</span><br>
-                <span class="opacity-40">STATUS:</span> <span class="text-green-500 animate-pulse">CONNECTED</span>
+        <div class="flex justify-between items-center border-b border-gold/30 pb-4 mb-5 sticky top-0 bg-[#000000]/80 backdrop-blur-lg z-20">
+            <div class="text-[11px] font-bold tracking-widest text-white">
+                <span class="opacity-50">USER:</span> <span class="text-gold text-[12px] drop-shadow-[0_0_5px_#FFD700]">VIP_ROOT_4K</span><br>
+                <span class="opacity-50">STATUS:</span> <span class="text-green-500 animate-pulse">CONNECTED</span>
             </div>
-            <select id="lang-selector" onchange="switchLanguage()" class="bg-[#111] border border-gold/50 text-gold text-[10px] py-1 px-3 rounded outline-none cursor-pointer focus:border-gold transition">
+            <select id="lang-selector" onchange="switchLanguage()" class="bg-[#050400] border border-gold/50 text-gold font-bold text-[11px] py-1.5 px-4 rounded-md outline-none cursor-pointer focus:border-gold transition shadow-[0_0_10px_rgba(255,215,0,0.2)]">
                 <option value="uz">UZB</option>
                 <option value="ru">RUS</option>
                 <option value="en">ENG</option>
             </select>
         </div>
 
-        <div class="border border-danger/50 bg-[#1a0505] p-4 rounded-xl mb-6 shadow-danger-glow relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-1 h-full bg-danger"></div>
-            <p id="warning-text-lobby" class="text-[10px] text-white/90 leading-relaxed font-bold text-center uppercase tracking-wider"></p>
+        <div class="border border-danger/60 bg-[#120000]/90 p-4 rounded-xl mb-6 shadow-danger-glow relative overflow-hidden backdrop-blur-sm">
+            <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a]"></div>
+            <p id="warning-text-lobby" class="text-[11px] text-white/90 leading-relaxed font-bold text-center uppercase tracking-wider"></p>
         </div>
 
         <div class="grid grid-cols-2 gap-4" id="games-container"></div>
 
         <div class="mt-8 mb-4 text-center">
-            <button onclick="sendSupport()" class="text-[10px] text-gold/60 hover:text-gold transition border border-gold/20 px-6 py-3 rounded-lg bg-black/80 tracking-widest uppercase" id="support-text"></button>
+            <button onclick="sendSupport()" class="text-[11px] text-gold/70 hover:text-gold transition border border-gold/30 px-6 py-3 rounded-lg bg-[#050400]/90 tracking-widest uppercase font-bold shadow-[0_0_15px_rgba(255,215,0,0.1)]" id="support-text"></button>
         </div>
     </div>
 
     <div id="game-view" class="hidden w-full h-full flex-col p-4 relative z-10 max-w-2xl mx-auto">
         
-        <div class="flex justify-between items-center mb-4 bg-panel/80 p-3 rounded-xl border border-gold/30 backdrop-blur-md">
-            <button onclick="goBack()" class="text-gold border border-gold/40 px-4 py-1.5 text-[10px] hover:bg-gold hover:text-black rounded-md transition font-bold tracking-wider" id="btn-back">⬅️</button>
-            <h2 id="active-game-title" class="text-sm font-bold tracking-[5px] uppercase text-white shadow-gold-glow"></h2>
-            <div class="w-12"></div>
+        <div class="flex justify-between items-center mb-4 bg-panel/90 p-3 rounded-xl border border-gold/40 backdrop-blur-lg shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+            <button onclick="goBack()" class="text-gold border border-gold/50 px-3 py-2 text-[11px] hover:bg-gold hover:text-black rounded-lg transition font-extrabold tracking-wider bg-black/50">⬅️ <span id="text-back">BACK</span></button>
+            <h2 id="active-game-title" class="text-[13px] font-black tracking-[4px] uppercase text-white shadow-gold-glow drop-shadow-[0_0_8px_#FFD700] text-center flex-1"></h2>
+            <button onclick="resetGame()" class="text-gold border border-gold/50 px-3 py-2 text-[11px] hover:bg-gold hover:text-black rounded-lg transition font-extrabold tracking-wider bg-black/50">🔄 <span id="text-restart">RESET</span></button>
         </div>
 
-        <div class="border border-danger/40 bg-black/80 p-3 rounded-lg mb-4 shadow-[0_0_15px_rgba(255,0,60,0.15)] flex items-center gap-3">
-            <span class="text-danger text-2xl animate-pulse">⚠️</span>
-            <p id="warning-text-game" class="text-[8px] text-white/80 leading-relaxed font-bold text-left uppercase tracking-wide"></p>
+        <div id="game-modes-container" class="hidden justify-center gap-4 mb-4 w-full"></div>
+
+        <div class="w-full text-center h-5 mb-2">
+            <p id="hack-log" class="text-[12px] text-gold font-bold italic uppercase tracking-[3px] drop-shadow-[0_0_5px_#FFD700]"></p>
         </div>
 
-        <div class="w-full text-center h-4 mb-2">
-            <p id="hack-log" class="text-[10px] text-gold italic uppercase tracking-widest"></p>
-        </div>
-
-        <div id="signal-container" class="w-full flex-1 bg-black/40 border border-gold/40 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden mb-6 p-4 shadow-[0_0_20px_rgba(255,215,0,0.15)] backdrop-blur-sm">
+        <div id="signal-container" class="w-full flex-1 bg-[#050400]/80 border border-gold/50 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden mb-6 p-4 shadow-gold-glow backdrop-blur-md">
             <div class="scan-line" id="scanline"></div>
-            
-            <div id="signal-render-area" class="w-full h-full flex flex-col items-center text-center overflow-y-auto scrollable-y py-4 px-2">
-            </div>
+            <div id="signal-render-area" class="w-full h-full flex flex-col items-center text-center overflow-y-auto scrollable-y py-4 px-2"></div>
         </div>
 
-        <button id="btn-hack" onclick="executeHack()" class="w-full bg-gradient-to-r from-[#FFD700] to-[#B8860B] text-black font-extrabold text-lg py-5 rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)] uppercase tracking-[4px] active:scale-[0.97] transition-all disabled:opacity-40 disabled:cursor-not-allowed mb-2">
+        <button id="btn-hack" onclick="executeHack()" class="w-full bg-gradient-to-r from-[#FFD700] via-[#FFF8DC] to-[#B8860B] text-black font-black text-xl py-5 rounded-xl shadow-gold-glow-intense uppercase tracking-[5px] active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-2">
             ⚡️ SIGNAL OLISH
         </button>
     </div>
@@ -161,85 +177,94 @@
 
         const translations = {
             uz: {
-                warning: "DIQQAT: Agar RICHI28 promokodidan o‘tmagan bo‘lsangiz yoki hisobingizda minimal 60,000 UZS bo‘lmasa, tizim bloklashi mumkin!",
+                warning: "DIQQAT: RICHI28 promokodisiz yoki minimal 60,000 UZS depozitsiz tizim ishlash kafolatlanmaydi!",
                 support: "TAKLIF VA MUROJAAT YUBORISH",
                 back: "ORTGA",
+                reset: "YANGILASH",
                 get_signal: "⚡️ SIGNAL OLISH",
                 next_step: "⬆️ KEYINGI QADAM",
                 restart: "🔄 QAYTA BOSHLASH",
                 analyzing: "TAHLIL QILINMOQDA...",
                 crash_wait: "KUTING! KEYINGI SIGNALGACHA:",
+                mode_2x: "2x Ustun",
+                mode_3x: "3x Ustun",
+                ball_1: "1 ta Shar",
+                ball_2: "2 ta Shar"
             },
             ru: {
-                warning: "ВНИМАНИЕ: Без промокода RICHI28 или депозита минимум 500 RUB система может выдать неверный сигнал!",
-                support: "ОТПРАВИТЬ ПРЕДЛОЖЕНИЕ",
+                warning: "ВНИМАНИЕ: Без промокода RICHI28 или депозита 500 RUB система может работать некорректно!",
+                support: "ОТПРАВИТЬ ОБРАЩЕНИЕ",
                 back: "НАЗАД",
-                get_signal: "⚡️ ПОЛУЧИТЬ СИГНАЛ",
-                next_step: "⬆️ СЛЕДУЮЩИЙ ШАГ",
-                restart: "🔄 НАЧАТЬ ЗАНОВО",
+                reset: "СБРОСИТЬ",
+                get_signal: "⚡️ СИГНАЛ",
+                next_step: "⬆️ СЛЕД. ШАГ",
+                restart: "🔄 ЗАНОВО",
                 analyzing: "АНАЛИЗ...",
-                crash_wait: "ОЖИДАЙТЕ! ДО СЛЕДУЮЩЕГО СИГНАЛА:",
+                crash_wait: "ОЖИДАЙТЕ! ДО СИГНАЛА:",
+                mode_2x: "2x Столбцы",
+                mode_3x: "3x Столбцы",
+                ball_1: "1 Шар",
+                ball_2: "2 Шара"
             },
             en: {
-                warning: "ATTENTION: Without RICHI28 promo code or minimum 5 USD deposit, the system may block your account!",
+                warning: "ATTENTION: Without RICHI28 promo code or min deposit, the 4K AI system may block signals!",
                 support: "SEND FEEDBACK",
                 back: "BACK",
+                reset: "RESET",
                 get_signal: "⚡️ GET SIGNAL",
                 next_step: "⬆️ NEXT STEP",
                 restart: "🔄 RESTART",
                 analyzing: "ANALYZING...",
                 crash_wait: "WAIT! NEXT SIGNAL IN:",
+                mode_2x: "2x Columns",
+                mode_3x: "3x Columns",
+                ball_1: "1 Ball",
+                ball_2: "2 Balls"
             }
         };
 
         const gamesList = [
-            { id: 'apple', name: 'Apple of Fortune', icon: '🍎', kf: 'x1.23 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
+            { id: 'apple', name: 'Apple of Fortune', icon: '🍎', kf: 'x1.93 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
             { id: 'crash', name: 'Crash', icon: '🚀', kf: 'x1.00 - x100+', type: 'multiplier' },
             { id: 'kamikaze', name: 'Kamikaze', icon: '✈️', kf: 'x1.21 - x15.4', type: 'ladder', grid: {cols: 5, rows: 10} },
-            { id: 'nights', name: 'Eastern Nights', icon: '🪔', kf: 'x1.18 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
-            { id: 'wild', name: 'Wild West Gold', icon: '💰', kf: 'x2.00 - x3.00', type: 'ladder', grid: {cols: 3, rows: 10} },
-            { id: 'dragon', name: 'Dragon\'s Gold', icon: '🪙', kf: 'x1.23 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
-            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.20 - x14.5', type: 'ladder', grid: {cols: 5, rows: 5} },
-            { id: 'mines', name: 'Gems & Mines', icon: '💣', kf: 'x1.05 - x100+', type: 'mines' },
+            { id: 'nights', name: 'Eastern Nights', icon: '🪔', kf: 'x1.93 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
+            { id: 'wild', name: 'Wild West Gold', icon: '💰', kf: 'x2.00 - x3.00', type: 'ladder', grid: {cols: 2, rows: 10} },
+            { id: 'dragon', name: 'Dragon\'s Gold', icon: '🪙', kf: 'x1.93 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
+            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.30 - x27.16', type: 'ladder', grid: {cols: 5, rows: 4} },
+            { id: 'mines', name: 'Gems & Mines', icon: '💎', kf: 'x1.05 - x100+', type: 'mines' },
             { id: 'dice', name: 'Under/Over 7', icon: '🎲', kf: 'x2.3 - x5.8', type: 'dice' },
             { id: 'thimbles', name: 'Thimbles', icon: '🥤', kf: 'x1.45 - x2.91', type: 'thimbles' }
         ];
 
+        // 4K Matrix Canvas Engine
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@*";
-        const fontSize = 16;
+        const chars = "RICHI28VIPHACK4K$#@*0101";
+        const fontSize = 18;
         const columns = canvas.width / fontSize;
         const drops = Array.from({length: Math.floor(columns)}).fill(1);
 
         function drawMatrix() {
-            /* Matritsa oq-qora fonga mos tushishi uchun to'q qora-tillarang aralashma */
-            ctx.fillStyle = "rgba(5, 4, 0, 0.2)"; 
+            ctx.fillStyle = "rgba(0, 0, 0, 0.15)"; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = fontSize + "px monospace";
+            ctx.font = "bold " + fontSize + "px monospace";
             for (let i = 0; i < drops.length; i++) {
                 const text = chars[Math.floor(Math.random() * chars.length)];
-                
-                if (Math.random() > 0.95) {
-                    ctx.fillStyle = "#FFFFFF"; 
-                } else {
-                    ctx.fillStyle = "#FFD700"; 
-                }
-                
+                ctx.fillStyle = Math.random() > 0.85 ? "#FFFFFF" : "#FFD700"; 
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
                 if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
             }
         }
-        setInterval(drawMatrix, 50);
+        setInterval(drawMatrix, 45);
 
         window.onload = () => {
             let progress = 0;
             const bar = document.getElementById('boot-bar');
             const txt = document.getElementById('boot-text');
             const bootTimer = setInterval(() => {
-                progress += Math.floor(Math.random() * 8) + 2;
+                progress += Math.floor(Math.random() * 6) + 2;
                 if(progress >= 100) {
                     progress = 100;
                     clearInterval(bootTimer);
@@ -247,11 +272,11 @@
                         document.getElementById('boot-screen').style.display = 'none';
                         document.getElementById('lobby').style.display = 'flex';
                         tg.HapticFeedback.notificationOccurred('success');
-                    }, 500);
+                    }, 600);
                 }
                 bar.style.width = progress + '%';
-                txt.innerText = `[ LOADING CORE: ${progress}% ]`;
-            }, 100);
+                txt.innerText = `[ INJECTING 4K UI: ${progress}% ]`;
+            }, 80);
 
             renderLobby();
             applyLanguage();
@@ -263,9 +288,9 @@
             gamesList.forEach(g => {
                 container.innerHTML += `
                     <div class="glass-card flex flex-col items-center justify-center p-6 rounded-2xl cursor-pointer" onclick="openGame('${g.id}')">
-                        <span class="text-[40px] mb-3 filter drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">${g.icon}</span>
-                        <h3 class="text-[11px] font-bold text-white uppercase tracking-wider mb-2 text-center h-8 flex items-center">${g.name}</h3>
-                        <span class="text-[9px] text-gold bg-gold/10 px-3 py-1 rounded border border-gold/20 font-bold">${g.kf}</span>
+                        <span class="text-[45px] mb-4 filter drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]">${g.icon}</span>
+                        <h3 class="text-[11px] font-black text-white uppercase tracking-widest mb-3 text-center h-8 flex items-center drop-shadow-[0_0_5px_#000]">${g.name}</h3>
+                        <span class="text-[10px] text-[#000] bg-gold px-3 py-1.5 rounded-md font-extrabold tracking-wide shadow-gold-glow">${g.kf}</span>
                     </div>
                 `;
             });
@@ -280,10 +305,19 @@
         function applyLanguage() {
             const t = translations[currentLang];
             document.getElementById('warning-text-lobby').innerText = t.warning;
-            document.getElementById('warning-text-game').innerText = t.warning;
             document.getElementById('support-text').innerText = t.support;
-            document.getElementById('btn-back').innerText = `⬅️ ${t.back}`;
+            document.getElementById('text-back').innerText = t.back;
+            document.getElementById('text-restart').innerText = t.reset;
             
+            if(document.getElementById('mode-2x')) {
+                document.getElementById('mode-2x').innerText = t.mode_2x;
+                document.getElementById('mode-3x').innerText = t.mode_3x;
+            }
+            if(document.getElementById('mode-1b')) {
+                document.getElementById('mode-1b').innerText = t.ball_1;
+                document.getElementById('mode-2b').innerText = t.ball_2;
+            }
+
             const btn = document.getElementById('btn-hack');
             if(activeGame && activeGame.type === 'ladder') {
                 if (ladderCurrentStep === 0) btn.innerText = t.get_signal;
@@ -299,16 +333,54 @@
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-view').style.display = 'flex';
             document.getElementById('active-game-title').innerText = activeGame.name;
+            
+            // Rejimlar uchun logika
+            const modesBox = document.getElementById('game-modes-container');
+            modesBox.innerHTML = '';
+            modesBox.style.display = 'none';
+
+            if(activeGame.id === 'wild') {
+                activeGame.grid.cols = 2; // Boshlang'ich
+                modesBox.style.display = 'flex';
+                modesBox.innerHTML = `
+                    <button onclick="setGameMode(2, 'wild')" id="mode-2x" class="mode-btn active-mode">2x Ustun</button>
+                    <button onclick="setGameMode(3, 'wild')" id="mode-3x" class="mode-btn">3x Ustun</button>
+                `;
+            } else if(activeGame.id === 'thimbles') {
+                activeGame.thimblesBalls = 1; // Boshlang'ich
+                modesBox.style.display = 'flex';
+                modesBox.innerHTML = `
+                    <button onclick="setGameMode(1, 'thimbles')" id="mode-1b" class="mode-btn active-mode">1 ta Shar</button>
+                    <button onclick="setGameMode(2, 'thimbles')" id="mode-2b" class="mode-btn">2 ta Shar</button>
+                `;
+            }
+
+            resetGame();
+        }
+
+        function setGameMode(val, type) {
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active-mode'));
+            if(type === 'wild') {
+                document.getElementById(`mode-${val}x`).classList.add('active-mode');
+                activeGame.grid.cols = val;
+            } else if(type === 'thimbles') {
+                document.getElementById(`mode-${val}b`).classList.add('active-mode');
+                activeGame.thimblesBalls = val;
+            }
+            resetGame();
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function resetGame() {
+            ladderCurrentStep = 0;
             document.getElementById('hack-log').innerText = '';
             
-            ladderCurrentStep = 0; 
-            applyLanguage(); 
-
             if(activeGame.type === 'ladder') {
                 renderEmptyGrid();
             } else {
-                document.getElementById('signal-render-area').innerHTML = `<span class="text-[12px] opacity-30 tracking-widest text-white mt-auto mb-auto">[ SYSTEM READY ]</span>`;
+                document.getElementById('signal-render-area').innerHTML = `<span class="text-[13px] opacity-40 font-bold tracking-[5px] text-white mt-auto mb-auto">[ SYSTEM READY ]</span>`;
             }
+            applyLanguage();
             tg.HapticFeedback.impactOccurred('light');
         }
 
@@ -316,7 +388,7 @@
             document.getElementById('game-view').style.display = 'none';
             document.getElementById('lobby').style.display = 'flex';
             activeGame = null;
-            tg.HapticFeedback.impactOccurred('light');
+            tg.HapticFeedback.impactOccurred('medium');
         }
 
         function renderEmptyGrid() {
@@ -324,13 +396,11 @@
             const cols = activeGame.grid.cols;
             const rows = activeGame.grid.rows;
             
-            // max-w kengaytirildi va gap oshirildi, kataklar aniq turishi uchun
-            let html = `<div class="flex flex-col-reverse gap-3 w-full max-w-[300px] mx-auto mt-auto mb-auto" id="ladder-grid">`;
+            let html = `<div class="flex flex-col-reverse gap-3 w-full max-w-[320px] mx-auto mt-auto mb-auto" id="ladder-grid">`;
             for(let r = 0; r < rows; r++) {
-                html += `<div class="grid gap-3 w-full px-2" id="row-${r}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
+                html += `<div class="grid gap-3 w-full px-2 transition-all duration-500" id="row-${r}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
                 for(let c = 0; c < cols; c++) {
-                    // opacity-20 butunlay OLIb TASHLANDI. Endi kataklar tiniq ko'rinadi.
-                    html += `<div class="game-cell h-[48px] w-full" id="cell-${r}-${c}"></div>`;
+                    html += `<div class="game-cell h-[52px] w-full" id="cell-${r}-${c}"></div>`;
                 }
                 html += `</div>`;
             }
@@ -342,24 +412,20 @@
             const btn = document.getElementById('btn-hack');
             const log = document.getElementById('hack-log');
             const scanline = document.getElementById('scanline');
-            const area = document.getElementById('signal-render-area');
             const t = translations[currentLang];
 
             if(activeGame.type === 'ladder') {
                 if(ladderCurrentStep >= activeGame.grid.rows) {
-                    ladderCurrentStep = 0;
-                    renderEmptyGrid();
-                    btn.innerText = t.get_signal;
+                    resetGame();
                     log.innerText = 'GRID RESET SUCCESSFUL';
-                    tg.HapticFeedback.impactOccurred('medium');
                     return;
                 }
 
                 btn.disabled = true;
                 btn.innerText = t.analyzing;
                 scanline.style.display = 'block';
-                log.innerText = "BYPASSING ALGORITHM...";
-                tg.HapticFeedback.impactOccurred('light');
+                log.innerText = "BYPASSING 4K ALGORITHM...";
+                tg.HapticFeedback.impactOccurred('medium');
 
                 setTimeout(() => {
                     const cols = activeGame.grid.cols;
@@ -367,34 +433,31 @@
                     
                     for(let i=0; i<ladderCurrentStep; i++) {
                         const oldRow = document.getElementById(`row-${i}`);
-                        if(oldRow) oldRow.style.opacity = '0.7';
+                        if(oldRow) oldRow.style.opacity = '0.5';
                     }
 
                     const targetCell = document.getElementById(`cell-${ladderCurrentStep}-${safeCol}`);
                     const targetRow = document.getElementById(`row-${ladderCurrentStep}`);
                     
                     if(targetCell) {
-                        targetCell.className = "game-cell active-signal h-[48px] w-full";
+                        targetCell.className = "game-cell active-signal h-[52px] w-full";
                         targetCell.innerHTML = activeGame.icon;
                     }
                     
                     if(targetRow) {
-                        targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                     
                     ladderCurrentStep++;
-                    
                     scanline.style.display = 'none';
                     log.innerText = `STEP ${ladderCurrentStep} SECURED`;
                     btn.disabled = false;
                     
-                    if(ladderCurrentStep >= activeGame.grid.rows) {
-                        btn.innerText = t.restart; 
-                    } else {
-                        btn.innerText = t.next_step; 
-                    }
+                    if(ladderCurrentStep >= activeGame.grid.rows) btn.innerText = t.restart; 
+                    else btn.innerText = t.next_step; 
+                    
                     tg.HapticFeedback.notificationOccurred('success');
-                }, 800);
+                }, 1000);
                 return;
             }
 
@@ -411,8 +474,8 @@
             btn.disabled = true;
             btn.innerText = t.analyzing;
             scanline.style.display = 'block';
-            log.innerText = "EXTRACTING DATA...";
-            tg.HapticFeedback.impactOccurred('medium');
+            log.innerText = "EXTRACTING RAW DATA...";
+            tg.HapticFeedback.impactOccurred('heavy');
 
             setTimeout(() => {
                 scanline.style.display = 'none';
@@ -421,7 +484,7 @@
                 btn.disabled = false;
                 btn.innerText = t.get_signal;
                 tg.HapticFeedback.notificationOccurred('success');
-            }, 1200);
+            }, 1500);
         }
 
         function renderOtherSignals() {
@@ -429,55 +492,52 @@
             let html = '';
 
             if(activeGame.type === 'multiplier') {
-                const val = (Math.random() * 4 + 1.10).toFixed(2);
+                const val = (Math.random() * 5 + 1.15).toFixed(2);
                 html = `
-                    <div class="flex flex-col items-center animate-pulse mt-auto mb-auto">
-                        <span class="text-[90px] font-bold text-white drop-shadow-[0_0_25px_#FFD700]">x${val}</span>
-                        <span class="text-3xl mt-4 text-black font-black tracking-widest border-2 border-danger px-8 py-2 rounded-xl bg-danger shadow-danger-glow">STOP</span>
+                    <div class="flex flex-col items-center mt-auto mb-auto">
+                        <div class="relative mb-6">
+                            <span class="text-[100px] font-black text-white drop-shadow-[0_0_30px_#FFD700] tracking-tighter">x${val}</span>
+                            <div class="absolute inset-0 bg-gold/10 blur-xl rounded-full"></div>
+                        </div>
+                        <span class="text-4xl text-black font-black tracking-[8px] border-4 border-danger px-10 py-3 rounded-2xl bg-danger shadow-[0_0_40px_#ff2a2a] animate-pulse">STOP</span>
                     </div>
                 `;
             } 
             else if(activeGame.type === 'mines') {
-                html = `<div class="grid grid-cols-5 gap-3 w-full max-w-[300px] mx-auto mt-auto mb-auto px-2">`;
-                const safeCount = Math.floor(Math.random() * 5) + 5; 
+                html = `<div class="grid grid-cols-5 gap-3 w-full max-w-[320px] mx-auto mt-auto mb-auto px-2">`;
+                const safeCount = Math.floor(Math.random() * 4) + 6; // 6 to 9 safes
                 let safes = [];
                 while(safes.length < safeCount) {
                     let r = Math.floor(Math.random() * 25);
                     if(!safes.includes(r)) safes.push(r);
                 }
                 for(let i=0; i<25; i++) {
-                    if(safes.includes(i)) {
-                        html += `<div class="game-cell h-[48px] active-signal !text-3xl">💎</div>`;
-                    } else {
-                        html += `<div class="game-cell h-[48px]"></div>`;
-                    }
+                    if(safes.includes(i)) html += `<div class="game-cell h-[52px] active-signal !text-3xl">💎</div>`;
+                    else html += `<div class="game-cell h-[52px] border-gold/10 bg-black/60"></div>`;
                 }
                 html += `</div>`;
             }
             else if(activeGame.type === 'thimbles') {
-                const ballCount = Math.random() > 0.5 ? 1 : 2; 
+                const ballCount = activeGame.thimblesBalls || 1;
                 let ballPositions = [];
                 while(ballPositions.length < ballCount) {
                     let r = Math.floor(Math.random() * 3);
                     if(!ballPositions.includes(r)) ballPositions.push(r);
                 }
 
-                html = `<div class="flex flex-col items-center mt-auto mb-auto"><div class="flex gap-6 mb-8">`;
+                html = `<div class="flex flex-col items-center mt-auto mb-auto w-full"><div class="flex justify-center gap-6 w-full mb-10">`;
                 for(let i=0; i<3; i++) {
-                    if(ballPositions.includes(i)) {
-                        html += `<div class="game-cell w-20 h-24 active-signal !text-5xl">⚪️</div>`;
-                    } else {
-                        html += `<div class="game-cell w-20 h-24 !text-5xl opacity-40">🥤</div>`;
-                    }
+                    if(ballPositions.includes(i)) html += `<div class="game-cell w-24 h-28 active-signal !text-[60px]">⚪️</div>`;
+                    else html += `<div class="game-cell w-24 h-28 !text-[60px] opacity-30 bg-black/80">🥤</div>`;
                 }
-                html += `</div><span class="text-[12px] text-gold font-bold uppercase border border-gold/50 px-4 py-2 rounded-lg bg-gold/10">Game Mode: ${ballCount} Ball(s)</span></div>`;
+                html += `</div></div>`;
             }
             else if(activeGame.type === 'dice') {
                 const res = ["UNDER 7", "EXACT 7", "OVER 7"][Math.floor(Math.random() * 3)];
                 html = `
                     <div class="flex flex-col items-center mt-auto mb-auto">
-                        <span class="text-[80px] mb-6 animate-bounce filter drop-shadow-[0_0_15px_#fff]">🎲</span>
-                        <div class="bg-gradient-to-r from-gold to-yellow-600 text-black font-black text-3xl px-8 py-3 rounded-xl shadow-gold-glow">${res}</div>
+                        <span class="text-[90px] mb-8 animate-bounce filter drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">🎲</span>
+                        <div class="bg-gradient-to-r from-gold via-yellow-400 to-darkgold text-black font-black text-4xl px-10 py-4 rounded-2xl shadow-gold-glow-intense tracking-widest border-2 border-white/40">${res}</div>
                     </div>
                 `;
             }
