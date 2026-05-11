@@ -12,35 +12,52 @@
                 extend: {
                     colors: { neon: '#00ff41', darkbg: '#050505', danger: '#ff003c' },
                     fontFamily: { mono: ['"Courier New"', 'Courier', 'monospace'] },
-                    boxShadow: { 'neon-glow': '0 0 15px rgba(0, 255, 65, 0.5)', 'danger-glow': '0 0 15px rgba(255, 0, 60, 0.5)' }
+                    boxShadow: { 
+                        'neon-glow': '0 0 15px rgba(0, 255, 65, 0.5)', 
+                        'danger-glow': '0 0 15px rgba(255, 0, 60, 0.5)',
+                        'inner-neon': 'inset 0 0 10px rgba(0, 255, 65, 0.3)'
+                    }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: theme('colors.darkbg'); color: theme('colors.neon'); font-family: theme('fontFamily.mono'); overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
-        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.15; }
+        body { 
+            background-color: theme('colors.darkbg'); 
+            color: theme('colors.neon'); 
+            font-family: theme('fontFamily.mono'); 
+            overflow: hidden; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.2; }
         
-        /* Glassmorphism Cards */
-        .glass-card { background: rgba(0, 25px, 0, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(0, 255, 65, 0.3); transition: all 0.2s ease; }
+        /* Glassmorphism Elements */
+        .glass-card { background: rgba(0, 20, 0, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 65, 0.3); transition: all 0.2s ease; }
         .glass-card:active { transform: scale(0.96); border-color: theme('colors.neon'); box-shadow: theme('boxShadow.neon-glow'); }
         
-        /* Custom Scrollbar for Lobby */
         .scrollable-y { overflow-y: auto; scrollbar-width: none; }
         .scrollable-y::-webkit-scrollbar { display: none; }
 
         /* Game Grid Cells */
-        .game-cell { display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 4px; font-size: 1.2rem; transition: 0.3s; }
-        .game-cell.active-signal { background: rgba(0, 255, 65, 0.15); border-color: theme('colors.neon'); box-shadow: inset 0 0 10px rgba(0, 255, 65, 0.5); font-size: 1.5rem; text-shadow: 0 0 10px #fff; animation: pop 0.3s ease-out; }
+        .game-cell { 
+            display: flex; align-items: center; justify-content: center; 
+            background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(0, 255, 65, 0.2); 
+            border-radius: 6px; font-size: 1.5rem; transition: 0.3s; 
+        }
+        .game-cell.active-signal { 
+            background: rgba(0, 255, 65, 0.15); border-color: theme('colors.neon'); 
+            box-shadow: theme('boxShadow.inner-neon'); font-size: 2rem; 
+            text-shadow: 0 0 10px #fff; animation: pop 0.3s ease-out; 
+        }
         
         @keyframes pop { 0% { transform: scale(0.8); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         
-        /* Glitch Effect */
+        /* Glitch & Scanner Effects */
         .glitch { text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.5), -2px -2px 0px rgba(255, 0, 60, 0.5); animation: glitch-anim 1s infinite alternate-reverse; }
         @keyframes glitch-anim { 0% { text-shadow: 2px 2px 0 rgba(0,255,65,0.5), -2px -2px 0 rgba(255,0,60,0.5); } 100% { text-shadow: -2px -2px 0 rgba(0,255,65,0.5), 2px 2px 0 rgba(255,0,60,0.5); } }
 
-        /* Sanner line */
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: theme('colors.neon'); box-shadow: 0 0 10px theme('colors.neon'); animation: scan 2s linear infinite; opacity: 0.5; pointer-events: none; display: none; }
+        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: theme('colors.neon'); box-shadow: 0 0 10px theme('colors.neon'); animation: scan 1.5s linear infinite; opacity: 0.6; pointer-events: none; display: none; z-index: 50; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
     </style>
 </head>
@@ -49,119 +66,121 @@
     <canvas id="matrix-canvas"></canvas>
 
     <div id="boot-screen" class="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 text-center">
-        <h1 class="text-3xl font-bold mb-2 tracking-[8px] glitch text-neon">RICHI28 HACK</h1>
-        <p class="text-[10px] mb-8 opacity-60">ENCRYPTED TERMINAL v4.2</p>
-        
+        <h1 class="text-4xl font-bold mb-2 tracking-[8px] glitch text-neon">RICHI28</h1>
+        <p class="text-[12px] mb-8 opacity-60">SYSTEM INITIALIZATION...</p>
         <div class="w-full max-w-[250px] h-2 bg-gray-900 border border-neon rounded overflow-hidden">
             <div id="boot-bar" class="h-full bg-neon w-0 shadow-neon-glow transition-all duration-100"></div>
         </div>
-        <p id="boot-text" class="mt-4 text-[10px] animate-pulse uppercase tracking-wider">Analysing database...</p>
+        <p id="boot-text" class="mt-4 text-[10px] animate-pulse uppercase tracking-wider">Connecting to server...</p>
     </div>
 
-    <div id="lobby" class="hidden w-full h-full flex-col px-4 pt-4 pb-6 scrollable-y relative z-10 max-w-lg mx-auto">
+    <div id="lobby" class="hidden w-full h-full flex-col px-4 pt-4 pb-6 scrollable-y relative z-10 max-w-2xl mx-auto">
         <div class="flex justify-between items-center border-b border-neon/50 pb-3 mb-4 sticky top-0 bg-black/90 backdrop-blur z-20">
             <div class="text-[10px] font-bold tracking-widest">
                 <span class="opacity-50">USER:</span> ROOT<br>
                 <span class="opacity-50">STATUS:</span> <span class="text-neon animate-pulse">CONNECTED</span>
             </div>
-            <select id="lang-selector" onchange="switchLanguage()" class="bg-transparent border border-neon text-neon text-[10px] py-1 px-2 rounded outline-none cursor-pointer">
+            <select id="lang-selector" onchange="switchLanguage()" class="bg-black border border-neon text-neon text-[10px] py-1 px-2 rounded outline-none cursor-pointer">
                 <option value="uz">UZB</option>
                 <option value="ru">RUS</option>
                 <option value="en">ENG</option>
             </select>
         </div>
 
-        <div class="border border-danger bg-danger/10 p-3 rounded mb-5 shadow-danger-glow">
-            <p id="warning-text" class="text-[9px] text-danger leading-relaxed font-bold text-center uppercase"></p>
+        <div class="border border-danger bg-danger/10 p-4 rounded-lg mb-6 shadow-danger-glow">
+            <p id="warning-text-lobby" class="text-[10px] text-danger leading-relaxed font-bold text-center uppercase tracking-wide"></p>
         </div>
 
-        <div class="grid grid-cols-2 gap-3" id="games-container"></div>
+        <div class="grid grid-cols-2 gap-4" id="games-container"></div>
 
         <div class="mt-8 mb-4 text-center">
-            <button onclick="sendSupport()" class="text-[10px] text-neon/60 underline hover:text-neon transition" id="support-text">[ 💡 TAKLIF VA MUROJAAT ]</button>
+            <button onclick="sendSupport()" class="text-[10px] text-neon/60 hover:text-neon transition border border-neon/30 px-4 py-2 rounded-lg bg-black/50" id="support-text"></button>
         </div>
     </div>
 
-    <div id="game-view" class="hidden w-full h-full flex-col p-4 relative z-10 max-w-lg mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <button onclick="goBack()" class="border border-neon text-neon px-3 py-1 rounded text-[10px] hover:bg-neon hover:text-black transition" id="btn-back">⬅️ ORTGA</button>
+    <div id="game-view" class="hidden w-full h-full flex-col p-4 relative z-10 max-w-2xl mx-auto">
+        <div class="flex justify-between items-center mb-4 bg-black/80 p-2 rounded border border-neon/30 backdrop-blur">
+            <button onclick="goBack()" class="text-neon px-3 py-1 text-[12px] hover:bg-neon hover:text-black rounded transition font-bold" id="btn-back">⬅️</button>
             <h2 id="active-game-title" class="text-sm font-bold tracking-[4px] uppercase text-white shadow-neon-glow"></h2>
-            <div class="w-16"></div>
+            <div class="w-10"></div>
+        </div>
+
+        <div class="border border-danger/50 bg-black/80 p-3 rounded mb-4 shadow-[0_0_10px_rgba(255,0,60,0.2)]">
+            <p id="warning-text-game" class="text-[9px] text-danger leading-relaxed font-bold text-center uppercase"></p>
         </div>
 
         <div class="w-full text-center h-4 mb-2">
-            <p id="hack-log" class="text-[9px] opacity-70 italic uppercase tracking-wider"></p>
+            <p id="hack-log" class="text-[10px] text-white italic uppercase tracking-widest"></p>
         </div>
 
-        <div id="signal-container" class="w-full flex-1 bg-black/60 border border-neon/30 rounded-lg flex flex-col items-center justify-center relative overflow-hidden mb-6 p-4">
+        <div id="signal-container" class="w-full flex-1 bg-black/70 border-2 border-neon/50 rounded-xl flex flex-col items-center justify-center relative overflow-hidden mb-6 p-4 shadow-neon-glow">
             <div class="scan-line" id="scanline"></div>
             <div id="signal-render-area" class="w-full flex flex-col justify-center items-center h-full text-center">
-                <span class="text-[10px] opacity-30 tracking-widest">[ AWAITING COMMAND ]</span>
-            </div>
+                </div>
         </div>
 
-        <button id="btn-hack" onclick="executeHack()" class="w-full bg-neon text-black font-bold text-sm py-4 rounded shadow-neon-glow uppercase tracking-widest active:scale-[0.98] transition disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed mb-4">
-            ⚡️ GET SIGNAL
+        <button id="btn-hack" onclick="executeHack()" class="w-full bg-neon text-black font-bold text-lg py-5 rounded-lg shadow-neon-glow uppercase tracking-widest active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed mb-2">
+            ⚡️ SIGNAL OLISH
         </button>
     </div>
 
     <script>
-        // Telegram Web App API
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.enableClosingConfirmation();
 
-        // Data & State
         let currentLang = 'uz';
         let activeGame = null;
-        let crashCooldownTime = 0; // Crash uchun 30s timer
+        let crashCooldownTime = 0;
+        let ladderCurrentStep = 0; // Narvon o'yinlari uchun qadam(qator) hisoblagich
 
         const translations = {
             uz: {
                 warning: "⚠️ DIQQAT: Agar siz RICHI28 promokodidan o‘tmagan bo‘lsangiz yoki hisobingizda minimal 60,000 UZS depozit bo‘lmasa, tizim noto‘g‘ri signal berishi va hisobingizni bloklashi mumkin!",
-                support: "[ 💡 TAKLIF VA MUROJAAT ]",
+                support: "💡 TAKLIF VA MUROJAAT YUBORISH",
                 back: "ORTGA",
                 get_signal: "⚡️ SIGNAL OLISH",
+                restart: "🔄 QAYTA BOSHLASH",
+                analyzing: "TAHLIL QILINMOQDA...",
                 crash_wait: "KUTING! KEYINGI SIGNALGACHA:",
-                logs: ["Server bypass...", "Scanning grid...", "Injecting payload...", "Decrypting hash...", "Signal topildi!"]
             },
             ru: {
                 warning: "⚠️ ВНИМАНИЕ: Если вы не использовали промокод RICHI28 или ваш депозит составляет менее 500 RUB, система может выдать неверный сигнал и заблокировать ваш аккаунт!",
-                support: "[ 💡 ПРЕДЛОЖЕНИЯ И СВЯЗЬ ]",
+                support: "💡 ОТПРАВИТЬ ПРЕДЛОЖЕНИЕ",
                 back: "НАЗАД",
                 get_signal: "⚡️ ПОЛУЧИТЬ СИГНАЛ",
+                restart: "🔄 НАЧАТЬ ЗАНОВО",
+                analyzing: "АНАЛИЗ...",
                 crash_wait: "ОЖИДАЙТЕ! ДО СЛЕДУЮЩЕГО СИГНАЛА:",
-                logs: ["Обход сервера...", "Сканирование...", "Внедрение кода...", "Дешифровка...", "Сигнал найден!"]
             },
             en: {
                 warning: "⚠️ ATTENTION: If you haven't used the RICHI28 promo code or your deposit is less than 5 USD, the system may provide false signals and block your account!",
-                support: "[ 💡 FEEDBACK & SUPPORT ]",
+                support: "💡 SEND FEEDBACK",
                 back: "BACK",
                 get_signal: "⚡️ GET SIGNAL",
+                restart: "🔄 RESTART",
+                analyzing: "ANALYZING...",
                 crash_wait: "WAIT! NEXT SIGNAL IN:",
-                logs: ["Server bypass...", "Scanning grid...", "Injecting payload...", "Decrypting hash...", "Signal found!"]
             }
         };
 
         const gamesList = [
-            { id: 'apple', name: 'Apple of Fortune', icon: '🍎', kf: 'x1.23 - x349', grid: {cols: 5, rows: 10} },
+            { id: 'apple', name: 'Apple of Fortune', icon: '🍎', kf: 'x1.23 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
             { id: 'crash', name: 'Crash', icon: '🚀', kf: 'x1.00 - x100+', type: 'multiplier' },
-            { id: 'kamikaze', name: 'Kamikaze', icon: '✈️', kf: 'x1.21 - x15.4', grid: {cols: 5, rows: 10} },
-            { id: 'nights', name: 'Eastern Nights', icon: '🪔', kf: 'x1.18 - x349', grid: {cols: 5, rows: 10} },
-            { id: 'wild', name: 'Wild West Gold', icon: '💰', kf: 'x2.00 - x3.00', grid: {cols: 3, rows: 10} },
-            { id: 'dragon', name: 'Dragon\'s Gold', icon: '🪙', kf: 'x1.23 - x349', grid: {cols: 5, rows: 10} },
-            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.20 - x14.5', grid: {cols: 5, rows: 5} },
-            { id: 'dice', name: 'Under/Over 7', icon: '🎲', kf: 'x2.3 - x5.8', type: 'dice' },
-            { id: 'mines', name: 'Gems & Mines', icon: '💣', kf: 'x1.05 - x1,000+', type: 'mines' },
-            { id: 'thimbles', name: 'Thimbles', icon: '🥤', kf: 'x1.45 - x2.91', type: 'thimbles' }
+            { id: 'kamikaze', name: 'Kamikaze', icon: '✈️', kf: 'x1.21 - x15.4', type: 'ladder', grid: {cols: 5, rows: 10} },
+            { id: 'nights', name: 'Eastern Nights', icon: '🪔', kf: 'x1.18 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
+            { id: 'wild', name: 'Wild West Gold', icon: '💰', kf: 'x2.00 - x3.00', type: 'ladder', grid: {cols: 3, rows: 10} },
+            { id: 'dragon', name: 'Dragon\'s Gold', icon: '🪙', kf: 'x1.23 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
+            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.20 - x14.5', type: 'ladder', grid: {cols: 5, rows: 5} },
+            { id: 'mines', name: 'Gems & Mines', icon: '💣', kf: 'x1.05 - x100+', type: 'mines' }
         ];
 
         // --- MATRIX RAIN ANIMATION ---
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*";
-        const fontSize = 14;
+        const chars = "01".split("");
+        const fontSize = 16;
         const columns = canvas.width / fontSize;
         const drops = Array.from({length: Math.floor(columns)}).fill(1);
 
@@ -177,16 +196,15 @@
                 drops[i]++;
             }
         }
-        setInterval(drawMatrix, 40);
+        setInterval(drawMatrix, 50);
 
         // --- INITIALIZATION ---
-        function initApp() {
+        window.onload = () => {
             let progress = 0;
             const bar = document.getElementById('boot-bar');
             const txt = document.getElementById('boot-text');
-            
             const bootTimer = setInterval(() => {
-                progress += Math.floor(Math.random() * 8) + 2;
+                progress += Math.floor(Math.random() * 10) + 5;
                 if(progress >= 100) {
                     progress = 100;
                     clearInterval(bootTimer);
@@ -194,25 +212,25 @@
                         document.getElementById('boot-screen').style.display = 'none';
                         document.getElementById('lobby').style.display = 'flex';
                         tg.HapticFeedback.notificationOccurred('success');
-                    }, 600);
+                    }, 500);
                 }
                 bar.style.width = progress + '%';
-                txt.innerText = `Analysing database... ${progress}%`;
+                txt.innerText = `[ LOADING DATA: ${progress}% ]`;
             }, 100);
 
             renderLobby();
             applyLanguage();
-        }
+        };
 
         function renderLobby() {
             const container = document.getElementById('games-container');
             container.innerHTML = '';
             gamesList.forEach(g => {
                 container.innerHTML += `
-                    <div class="glass-card flex flex-col items-center justify-center p-4 rounded-lg" onclick="openGame('${g.id}')">
-                        <span class="text-3xl mb-2 filter drop-shadow-md">${g.icon}</span>
-                        <h3 class="text-[10px] font-bold text-white uppercase tracking-wider mb-1">${g.name}</h3>
-                        <span class="text-[8px] text-neon/70 bg-neon/10 px-2 py-1 rounded">${g.kf}</span>
+                    <div class="glass-card flex flex-col items-center justify-center p-5 rounded-xl cursor-pointer" onclick="openGame('${g.id}')">
+                        <span class="text-4xl mb-3 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">${g.icon}</span>
+                        <h3 class="text-[11px] font-bold text-white uppercase tracking-wider mb-2 text-center h-8 flex items-center">${g.name}</h3>
+                        <span class="text-[9px] text-neon/90 bg-neon/10 px-2 py-1 rounded border border-neon/20">${g.kf}</span>
                     </div>
                 `;
             });
@@ -227,10 +245,18 @@
 
         function applyLanguage() {
             const t = translations[currentLang];
-            document.getElementById('warning-text').innerText = t.warning;
+            document.getElementById('warning-text-lobby').innerText = t.warning;
+            document.getElementById('warning-text-game').innerText = t.warning;
             document.getElementById('support-text').innerText = t.support;
             document.getElementById('btn-back').innerText = `⬅️ ${t.back}`;
-            document.getElementById('btn-hack').innerText = t.get_signal;
+            
+            // Tugmani o'yin holatiga qarab yangilash
+            const btn = document.getElementById('btn-hack');
+            if(activeGame && activeGame.type === 'ladder' && ladderCurrentStep >= activeGame.grid.rows) {
+                btn.innerText = t.restart;
+            } else {
+                btn.innerText = t.get_signal;
+            }
         }
 
         function openGame(id) {
@@ -238,26 +264,98 @@
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-view').style.display = 'flex';
             document.getElementById('active-game-title').innerText = activeGame.name;
-            document.getElementById('signal-render-area').innerHTML = `<span class="text-[10px] opacity-30 tracking-widest">[ AWAITING COMMAND ]</span>`;
             document.getElementById('hack-log').innerText = '';
+            document.getElementById('btn-hack').innerText = translations[currentLang].get_signal;
+            
+            ladderCurrentStep = 0; // O'yinga kirganda narvon qadamini nollash
+
+            if(activeGame.type === 'ladder') {
+                renderEmptyGrid();
+            } else {
+                document.getElementById('signal-render-area').innerHTML = `<span class="text-[12px] opacity-30 tracking-widest">[ AWAITING COMMAND ]</span>`;
+            }
             tg.HapticFeedback.impactOccurred('light');
         }
 
         function goBack() {
             document.getElementById('game-view').style.display = 'none';
             document.getElementById('lobby').style.display = 'flex';
+            activeGame = null;
             tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function renderEmptyGrid() {
+            const area = document.getElementById('signal-render-area');
+            const cols = activeGame.grid.cols;
+            const rows = activeGame.grid.rows;
+            
+            // flex-col-reverse orqali r=0 (pastki qator) doim pastda turadi
+            let html = `<div class="flex flex-col-reverse gap-[6px] w-full px-4" id="ladder-grid">`;
+            for(let r = 0; r < rows; r++) {
+                html += `<div class="grid gap-[6px] w-full" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
+                for(let c = 0; c < cols; c++) {
+                    html += `<div class="game-cell h-12 w-full opacity-40" id="cell-${r}-${c}"></div>`;
+                }
+                html += `</div>`;
+            }
+            html += `</div>`;
+            area.innerHTML = html;
         }
 
         // --- CORE HACK ENGINE ---
         function executeHack() {
             const btn = document.getElementById('btn-hack');
             const log = document.getElementById('hack-log');
-            const area = document.getElementById('signal-render-area');
             const scanline = document.getElementById('scanline');
             const t = translations[currentLang];
 
-            // 1. Crash uchun 30s kutish vaqti tekshiruvi
+            // 1. Narvon (Ladder) O'yinlari (Har bosishda bitta qator beradi)
+            if(activeGame.type === 'ladder') {
+                if(ladderCurrentStep >= activeGame.grid.rows) {
+                    // Qayta boshlash
+                    ladderCurrentStep = 0;
+                    renderEmptyGrid();
+                    btn.innerText = t.get_signal;
+                    log.innerText = '';
+                    tg.HapticFeedback.impactOccurred('medium');
+                    return;
+                }
+
+                // Signal olish jarayoni
+                btn.disabled = true;
+                btn.innerText = t.analyzing;
+                scanline.style.display = 'block';
+                log.innerText = "SCANNING...";
+                tg.HapticFeedback.impactOccurred('light');
+
+                setTimeout(() => {
+                    const cols = activeGame.grid.cols;
+                    const safeCol = Math.floor(Math.random() * cols);
+                    const targetCell = document.getElementById(`cell-${ladderCurrentStep}-${safeCol}`);
+                    
+                    if(targetCell) {
+                        targetCell.className = "game-cell active-signal h-12 w-full";
+                        targetCell.innerHTML = activeGame.icon;
+                    }
+                    
+                    ladderCurrentStep++;
+                    
+                    scanline.style.display = 'none';
+                    log.innerText = "SIGNAL FOUND";
+                    btn.disabled = false;
+                    
+                    if(ladderCurrentStep >= activeGame.grid.rows) {
+                        btn.innerText = t.restart; // O'yin tugasa restart
+                    } else {
+                        btn.innerText = t.get_signal; // Davom etish
+                    }
+                    tg.HapticFeedback.notificationOccurred('success');
+                }, 800);
+                
+                return;
+            }
+
+            // 2. Boshqa o'yinlar uchun umumiy jarayon (Crash, Mines)
             if(activeGame.id === 'crash') {
                 const now = Date.now();
                 if(now - crashCooldownTime < 30000) {
@@ -269,132 +367,55 @@
             }
 
             btn.disabled = true;
+            btn.innerText = t.analyzing;
             scanline.style.display = 'block';
-            area.innerHTML = `<span class="text-3xl animate-pulse filter grayscale opacity-50">${activeGame.icon}</span>`;
+            log.innerText = "DECRYPTING HASH...";
             tg.HapticFeedback.impactOccurred('medium');
 
-            let step = 0;
-            const logTimer = setInterval(() => {
-                log.innerText = t.logs[step];
-                tg.HapticFeedback.selectionChanged();
-                step++;
-                if(step >= t.logs.length) {
-                    clearInterval(logTimer);
-                    scanline.style.display = 'none';
-                    renderSignalResult(btn);
-                }
-            }, 600);
+            setTimeout(() => {
+                scanline.style.display = 'none';
+                log.innerText = "SUCCESS";
+                renderOtherSignals();
+                btn.disabled = false;
+                btn.innerText = t.get_signal;
+                tg.HapticFeedback.notificationOccurred('success');
+            }, 1500);
         }
 
-        function renderSignalResult(btn) {
+        function renderOtherSignals() {
             const area = document.getElementById('signal-render-area');
             let html = '';
 
-            // 1. Narvon (Step-by-step) O'yinlari (Apple, Kamikaze, etc)
-            if(activeGame.grid) {
-                const cols = activeGame.grid.cols;
-                const rows = activeGame.grid.rows;
-                
-                html = `<div class="flex flex-col-reverse gap-1 w-full max-w-[200px]" id="ladder-grid">`;
-                for(let r = 0; r < rows; r++) {
-                    html += `<div class="grid gap-1 w-full" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
-                    for(let c = 0; c < cols; c++) {
-                        html += `<div class="game-cell h-10 w-full opacity-30 transition-all duration-300" id="cell-${r}-${c}"></div>`;
-                    }
-                    html += `</div>`;
-                }
-                html += `</div>`;
-                area.innerHTML = html;
-
-                // Animatsiyali ravishda pastdan tepaga chiqarish
-                let currentRow = 0;
-                const climbTimer = setInterval(() => {
-                    if(currentRow >= rows) {
-                        clearInterval(climbTimer);
-                        btn.disabled = false;
-                        tg.HapticFeedback.notificationOccurred('success');
-                        return;
-                    }
-                    const safeCol = Math.floor(Math.random() * cols);
-                    const targetCell = document.getElementById(`cell-${currentRow}-${safeCol}`);
-                    if(targetCell) {
-                        targetCell.className = "game-cell active-signal h-10 w-full";
-                        targetCell.innerHTML = activeGame.icon;
-                        tg.HapticFeedback.impactOccurred('light');
-                    }
-                    currentRow++;
-                }, 400); // Har bir qator uchun 400ms
-                return; // Return so we don't enable the button immediately
-            } 
-            
-            // 2. Crash
-            else if(activeGame.type === 'multiplier') {
-                const val = (Math.random() * 4 + 1.05).toFixed(2);
+            if(activeGame.type === 'multiplier') {
+                const val = (Math.random() * 4 + 1.10).toFixed(2);
                 html = `
                     <div class="flex flex-col items-center animate-pulse">
-                        <span class="text-6xl font-bold text-white drop-shadow-[0_0_15px_#fff]">x${val}</span>
-                        <span class="text-4xl mt-4">🛑 STOP</span>
+                        <span class="text-[80px] font-bold text-white drop-shadow-[0_0_20px_#fff]">x${val}</span>
+                        <span class="text-3xl mt-2 text-danger font-bold tracking-widest border border-danger px-4 py-1 rounded bg-danger/20">STOP</span>
                     </div>
                 `;
             } 
-            
-            // 3. Mines (5 dan 10 gacha xavfsiz joylar)
             else if(activeGame.type === 'mines') {
-                html = `<div class="grid grid-cols-5 gap-1 w-full max-w-[220px]">`;
-                const safeCount = Math.floor(Math.random() * 6) + 5; // 5 dan 10 gacha
+                html = `<div class="grid grid-cols-5 gap-2 w-full px-4">`;
+                const safeCount = Math.floor(Math.random() * 5) + 4; // 4 to 8 safes
                 let safes = [];
                 while(safes.length < safeCount) {
                     let r = Math.floor(Math.random() * 25);
                     if(!safes.includes(r)) safes.push(r);
                 }
-
                 for(let i=0; i<25; i++) {
                     if(safes.includes(i)) {
-                        html += `<div class="game-cell h-10 active-signal !text-xl">💎</div>`;
+                        html += `<div class="game-cell h-12 active-signal">💎</div>`;
                     } else {
-                        html += `<div class="game-cell h-10 opacity-20 !text-xl"></div>`; // Qolganlari yopiq
+                        html += `<div class="game-cell h-12 opacity-30"></div>`;
                     }
                 }
                 html += `</div>`;
-            } 
-            
-            // 4. Thimbles (1-ta yoki 2-ta koptok)
-            else if(activeGame.type === 'thimbles') {
-                const ballCount = Math.random() > 0.5 ? 1 : 2; // 50% ehtimollik bilan 1 yoki 2
-                let ballPositions = [];
-                while(ballPositions.length < ballCount) {
-                    let r = Math.floor(Math.random() * 3);
-                    if(!ballPositions.includes(r)) ballPositions.push(r);
-                }
-
-                html = `<div class="flex flex-col items-center"><div class="flex gap-4 mb-4">`;
-                for(let i=0; i<3; i++) {
-                    if(ballPositions.includes(i)) {
-                        html += `<div class="game-cell w-16 h-20 active-signal !text-4xl">⚪️</div>`;
-                    } else {
-                        html += `<div class="game-cell w-16 h-20 !text-4xl opacity-50">🥤</div>`;
-                    }
-                }
-                html += `</div><span class="text-[10px] text-neon uppercase border border-neon px-2 py-1 rounded">Mode: ${ballCount} Ball(s)</span></div>`;
-            } 
-            
-            // 5. Under/Over 7
-            else if(activeGame.type === 'dice') {
-                const res = ["UNDER 7", "EXACT 7", "OVER 7"][Math.floor(Math.random() * 3)];
-                html = `
-                    <div class="flex flex-col items-center">
-                        <span class="text-6xl mb-4 animate-bounce">🎲</span>
-                        <div class="bg-neon text-black font-bold text-2xl px-6 py-2 rounded shadow-neon-glow">${res}</div>
-                    </div>
-                `;
             }
-
+            
             area.innerHTML = html;
-            btn.disabled = false;
-            tg.HapticFeedback.notificationOccurred('success');
         }
 
-        // Support Integration
         function sendSupport() {
             const promptText = currentLang === 'uz' ? "Murojaat yoki taklifingizni yozing:" : 
                                (currentLang === 'ru' ? "Оставьте ваше обращение:" : "Leave your message/feedback:");
@@ -404,9 +425,6 @@
                 alert(currentLang === 'uz' ? "Yuborildi!" : (currentLang === 'ru' ? "Отправлено!" : "Sent!"));
             }
         }
-
-        // Run
-        window.onload = initApp;
     </script>
 </body>
 </html>
