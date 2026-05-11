@@ -93,8 +93,8 @@
         /* Mode Toggle Buttons */
         .mode-btn {
             border: 1px solid rgba(255,215,0,0.4); color: rgba(255,215,0,0.6); 
-            padding: 6px 20px; border-radius: 8px; font-size: 11px; font-weight: 800; 
-            text-transform: uppercase; transition: all 0.3s; background: rgba(0,0,0,0.5);
+            padding: 8px 20px; border-radius: 8px; font-size: 12px; font-weight: 800; 
+            text-transform: uppercase; transition: all 0.3s; background: rgba(0,0,0,0.6);
             letter-spacing: 1px;
         }
         .active-mode {
@@ -122,34 +122,39 @@
                 <span class="opacity-50">USER:</span> <span class="text-gold text-[12px] drop-shadow-[0_0_5px_#FFD700]">VIP_ROOT_4K</span><br>
                 <span class="opacity-50">STATUS:</span> <span class="text-green-500 animate-pulse">CONNECTED</span>
             </div>
-            <select id="lang-selector" onchange="switchLanguage()" class="bg-[#050400] border border-gold/50 text-gold font-bold text-[11px] py-1.5 px-4 rounded-md outline-none cursor-pointer focus:border-gold transition shadow-[0_0_10px_rgba(255,215,0,0.2)]">
+            <select id="lang-selector" onchange="switchLanguage()" class="bg-[#050400] border border-gold/50 text-gold font-bold text-[12px] py-2 px-4 rounded-md outline-none cursor-pointer focus:border-gold transition shadow-[0_0_10px_rgba(255,215,0,0.2)]">
                 <option value="uz">UZB</option>
                 <option value="ru">RUS</option>
                 <option value="en">ENG</option>
             </select>
         </div>
 
-        <div class="border border-danger/60 bg-[#120000]/90 p-4 rounded-xl mb-6 shadow-danger-glow relative overflow-hidden backdrop-blur-sm">
+        <div class="border border-danger/60 bg-[#120000]/95 p-4 rounded-xl mb-6 shadow-danger-glow relative overflow-hidden backdrop-blur-md">
             <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a]"></div>
-            <p id="warning-text-lobby" class="text-[11px] text-white/90 leading-relaxed font-bold text-center uppercase tracking-wider"></p>
+            <p id="warning-text-lobby" class="text-[11px] text-white/95 leading-loose font-bold text-center uppercase tracking-wide"></p>
         </div>
 
         <div class="grid grid-cols-2 gap-4" id="games-container"></div>
 
         <div class="mt-8 mb-4 text-center">
-            <button onclick="sendSupport()" class="text-[11px] text-gold/70 hover:text-gold transition border border-gold/30 px-6 py-3 rounded-lg bg-[#050400]/90 tracking-widest uppercase font-bold shadow-[0_0_15px_rgba(255,215,0,0.1)]" id="support-text"></button>
+            <button onclick="sendSupport()" class="text-[12px] text-gold/80 hover:text-gold transition border border-gold/40 px-8 py-4 rounded-xl bg-[#050400]/90 tracking-widest uppercase font-bold shadow-[0_0_20px_rgba(255,215,0,0.15)]" id="support-text"></button>
         </div>
     </div>
 
     <div id="game-view" class="hidden w-full h-full flex-col p-4 relative z-10 max-w-2xl mx-auto">
         
         <div class="flex justify-between items-center mb-4 bg-panel/90 p-3 rounded-xl border border-gold/40 backdrop-blur-lg shadow-[0_0_20px_rgba(0,0,0,0.8)]">
-            <button onclick="goBack()" class="text-gold border border-gold/50 px-3 py-2 text-[11px] hover:bg-gold hover:text-black rounded-lg transition font-extrabold tracking-wider bg-black/50">⬅️ <span id="text-back">BACK</span></button>
-            <h2 id="active-game-title" class="text-[13px] font-black tracking-[4px] uppercase text-white shadow-gold-glow drop-shadow-[0_0_8px_#FFD700] text-center flex-1"></h2>
-            <button onclick="resetGame()" class="text-gold border border-gold/50 px-3 py-2 text-[11px] hover:bg-gold hover:text-black rounded-lg transition font-extrabold tracking-wider bg-black/50">🔄 <span id="text-restart">RESET</span></button>
+            <button onclick="goBack()" class="text-gold border border-gold/50 px-4 py-2 text-[12px] hover:bg-gold hover:text-black rounded-lg transition font-extrabold tracking-wider bg-black/50">⬅️ <span id="text-back">BACK</span></button>
+            <h2 id="active-game-title" class="text-[14px] font-black tracking-[4px] uppercase text-white shadow-gold-glow drop-shadow-[0_0_8px_#FFD700] text-center flex-1"></h2>
+            <button onclick="resetGame()" class="text-gold border border-gold/50 px-4 py-2 text-[12px] hover:bg-gold hover:text-black rounded-lg transition font-extrabold tracking-wider bg-black/50">🔄 <span id="text-restart">RESET</span></button>
         </div>
 
         <div id="game-modes-container" class="hidden justify-center gap-4 mb-4 w-full"></div>
+
+        <div class="border border-danger/60 bg-[#120000]/95 p-3 rounded-xl mb-4 shadow-danger-glow relative overflow-hidden backdrop-blur-md">
+            <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a]"></div>
+            <p id="warning-text-game" class="text-[9px] text-white/95 leading-relaxed font-bold text-center uppercase tracking-wide"></p>
+        </div>
 
         <div class="w-full text-center h-5 mb-2">
             <p id="hack-log" class="text-[12px] text-gold font-bold italic uppercase tracking-[3px] drop-shadow-[0_0_5px_#FFD700]"></p>
@@ -160,7 +165,7 @@
             <div id="signal-render-area" class="w-full h-full flex flex-col items-center text-center overflow-y-auto scrollable-y py-4 px-2"></div>
         </div>
 
-        <button id="btn-hack" onclick="executeHack()" class="w-full bg-gradient-to-r from-[#FFD700] via-[#FFF8DC] to-[#B8860B] text-black font-black text-xl py-5 rounded-xl shadow-gold-glow-intense uppercase tracking-[5px] active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-2">
+        <button id="btn-hack" onclick="executeHack()" class="w-full bg-gradient-to-r from-[#FFD700] via-[#FFF8DC] to-[#B8860B] text-black font-black text-xl py-6 rounded-xl shadow-gold-glow-intense uppercase tracking-[5px] active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-2">
             ⚡️ SIGNAL OLISH
         </button>
     </div>
@@ -175,10 +180,11 @@
         let crashCooldownTime = 0;
         let ladderCurrentStep = 0; 
 
+        // TRANSLATIONS (Updated with new rules)
         const translations = {
             uz: {
-                warning: "DIQQAT: RICHI28 promokodisiz yoki minimal 60,000 UZS depozitsiz tizim ishlash kafolatlanmaydi!",
-                support: "TAKLIF VA MUROJAAT YUBORISH",
+                warning: "⚠️ DIQQAT: RICHI28 PROMOKODIDAN O'TMAGAN, HISOBIDA KAMIDA 60,000 UZS BO'LMAGAN YOKI 3 TA REFERAL (ODAM) OLIB KELMAGAN FOYDALANUVCHILARGA TIZIM NOTO'G'RI SIGNAL BERISHI VA BLOKLASHI MUMKIN!",
+                support: "💡 TAKLIF VA MUROJAAT YUBORISH",
                 back: "ORTGA",
                 reset: "YANGILASH",
                 get_signal: "⚡️ SIGNAL OLISH",
@@ -192,8 +198,8 @@
                 ball_2: "2 ta Shar"
             },
             ru: {
-                warning: "ВНИМАНИЕ: Без промокода RICHI28 или депозита 500 RUB система может работать некорректно!",
-                support: "ОТПРАВИТЬ ОБРАЩЕНИЕ",
+                warning: "⚠️ ВНИМАНИЕ: БЕЗ ПРОМОКОДА RICHI28, ДЕПОЗИТА 500 RUB ИЛИ 3-Х РЕФЕРАЛОВ СИСТЕМА МОЖЕТ ВЫДАТЬ НЕВЕРНЫЙ СИГНАЛ И ЗАБЛОКИРОВАТЬ АККАУНТ!",
+                support: "💡 ОТПРАВИТЬ ОБРАЩЕНИЕ",
                 back: "НАЗАД",
                 reset: "СБРОСИТЬ",
                 get_signal: "⚡️ СИГНАЛ",
@@ -207,8 +213,8 @@
                 ball_2: "2 Шара"
             },
             en: {
-                warning: "ATTENTION: Without RICHI28 promo code or min deposit, the 4K AI system may block signals!",
-                support: "SEND FEEDBACK",
+                warning: "⚠️ ATTENTION: WITHOUT RICHI28 PROMO, 5 USD DEPOSIT, OR AT LEAST 3 REFERRALS, THE SYSTEM MAY PROVIDE FALSE SIGNALS AND BLOCK YOUR ACCOUNT!",
+                support: "💡 SEND FEEDBACK TO ADMIN",
                 back: "BACK",
                 reset: "RESET",
                 get_signal: "⚡️ GET SIGNAL",
@@ -224,13 +230,13 @@
         };
 
         const gamesList = [
-            { id: 'apple', name: 'Apple of Fortune', icon: '🍎', kf: 'x1.93 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
+            { id: 'apple', name: 'Apple of Fortune', icon: '🍎', kf: 'x1.23 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
             { id: 'crash', name: 'Crash', icon: '🚀', kf: 'x1.00 - x100+', type: 'multiplier' },
             { id: 'kamikaze', name: 'Kamikaze', icon: '✈️', kf: 'x1.21 - x15.4', type: 'ladder', grid: {cols: 5, rows: 10} },
-            { id: 'nights', name: 'Eastern Nights', icon: '🪔', kf: 'x1.93 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
+            { id: 'nights', name: 'Eastern Nights', icon: '🪔', kf: 'x1.18 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
             { id: 'wild', name: 'Wild West Gold', icon: '💰', kf: 'x2.00 - x3.00', type: 'ladder', grid: {cols: 2, rows: 10} },
-            { id: 'dragon', name: 'Dragon\'s Gold', icon: '🪙', kf: 'x1.93 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
-            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.30 - x27.16', type: 'ladder', grid: {cols: 5, rows: 4} },
+            { id: 'dragon', name: 'Dragon\'s Gold', icon: '🪙', kf: 'x1.23 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
+            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.20 - x14.5', type: 'ladder', grid: {cols: 5, rows: 5} },
             { id: 'mines', name: 'Gems & Mines', icon: '💎', kf: 'x1.05 - x100+', type: 'mines' },
             { id: 'dice', name: 'Under/Over 7', icon: '🎲', kf: 'x2.3 - x5.8', type: 'dice' },
             { id: 'thimbles', name: 'Thimbles', icon: '🥤', kf: 'x1.45 - x2.91', type: 'thimbles' }
@@ -288,8 +294,8 @@
             gamesList.forEach(g => {
                 container.innerHTML += `
                     <div class="glass-card flex flex-col items-center justify-center p-6 rounded-2xl cursor-pointer" onclick="openGame('${g.id}')">
-                        <span class="text-[45px] mb-4 filter drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]">${g.icon}</span>
-                        <h3 class="text-[11px] font-black text-white uppercase tracking-widest mb-3 text-center h-8 flex items-center drop-shadow-[0_0_5px_#000]">${g.name}</h3>
+                        <span class="text-[50px] mb-4 filter drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]">${g.icon}</span>
+                        <h3 class="text-[12px] font-black text-white uppercase tracking-widest mb-3 text-center h-8 flex items-center drop-shadow-[0_0_5px_#000]">${g.name}</h3>
                         <span class="text-[10px] text-[#000] bg-gold px-3 py-1.5 rounded-md font-extrabold tracking-wide shadow-gold-glow">${g.kf}</span>
                     </div>
                 `;
@@ -305,6 +311,7 @@
         function applyLanguage() {
             const t = translations[currentLang];
             document.getElementById('warning-text-lobby').innerText = t.warning;
+            document.getElementById('warning-text-game').innerText = t.warning;
             document.getElementById('support-text').innerText = t.support;
             document.getElementById('text-back').innerText = t.back;
             document.getElementById('text-restart').innerText = t.reset;
@@ -334,20 +341,19 @@
             document.getElementById('game-view').style.display = 'flex';
             document.getElementById('active-game-title').innerText = activeGame.name;
             
-            // Rejimlar uchun logika
             const modesBox = document.getElementById('game-modes-container');
             modesBox.innerHTML = '';
             modesBox.style.display = 'none';
 
             if(activeGame.id === 'wild') {
-                activeGame.grid.cols = 2; // Boshlang'ich
+                activeGame.grid.cols = 2; 
                 modesBox.style.display = 'flex';
                 modesBox.innerHTML = `
                     <button onclick="setGameMode(2, 'wild')" id="mode-2x" class="mode-btn active-mode">2x Ustun</button>
                     <button onclick="setGameMode(3, 'wild')" id="mode-3x" class="mode-btn">3x Ustun</button>
                 `;
             } else if(activeGame.id === 'thimbles') {
-                activeGame.thimblesBalls = 1; // Boshlang'ich
+                activeGame.thimblesBalls = 1; 
                 modesBox.style.display = 'flex';
                 modesBox.innerHTML = `
                     <button onclick="setGameMode(1, 'thimbles')" id="mode-1b" class="mode-btn active-mode">1 ta Shar</button>
@@ -378,7 +384,7 @@
             if(activeGame.type === 'ladder') {
                 renderEmptyGrid();
             } else {
-                document.getElementById('signal-render-area').innerHTML = `<span class="text-[13px] opacity-40 font-bold tracking-[5px] text-white mt-auto mb-auto">[ SYSTEM READY ]</span>`;
+                document.getElementById('signal-render-area').innerHTML = `<span class="text-[14px] opacity-40 font-bold tracking-[5px] text-white mt-auto mb-auto">[ SYSTEM READY ]</span>`;
             }
             applyLanguage();
             tg.HapticFeedback.impactOccurred('light');
@@ -396,11 +402,11 @@
             const cols = activeGame.grid.cols;
             const rows = activeGame.grid.rows;
             
-            let html = `<div class="flex flex-col-reverse gap-3 w-full max-w-[320px] mx-auto mt-auto mb-auto" id="ladder-grid">`;
+            let html = `<div class="flex flex-col-reverse gap-3 w-full max-w-[340px] mx-auto mt-auto mb-auto" id="ladder-grid">`;
             for(let r = 0; r < rows; r++) {
                 html += `<div class="grid gap-3 w-full px-2 transition-all duration-500" id="row-${r}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
                 for(let c = 0; c < cols; c++) {
-                    html += `<div class="game-cell h-[52px] w-full" id="cell-${r}-${c}"></div>`;
+                    html += `<div class="game-cell h-[56px] w-full" id="cell-${r}-${c}"></div>`;
                 }
                 html += `</div>`;
             }
@@ -414,6 +420,7 @@
             const scanline = document.getElementById('scanline');
             const t = translations[currentLang];
 
+            // 1. Narvon O'yinlari
             if(activeGame.type === 'ladder') {
                 if(ladderCurrentStep >= activeGame.grid.rows) {
                     resetGame();
@@ -440,7 +447,7 @@
                     const targetRow = document.getElementById(`row-${ladderCurrentStep}`);
                     
                     if(targetCell) {
-                        targetCell.className = "game-cell active-signal h-[52px] w-full";
+                        targetCell.className = "game-cell active-signal h-[56px] w-full";
                         targetCell.innerHTML = activeGame.icon;
                     }
                     
@@ -461,6 +468,7 @@
                 return;
             }
 
+            // 2. Crash Cooldown Tekshiruvi
             if(activeGame.id === 'crash') {
                 const now = Date.now();
                 if(now - crashCooldownTime < 30000) {
@@ -504,7 +512,7 @@
                 `;
             } 
             else if(activeGame.type === 'mines') {
-                html = `<div class="grid grid-cols-5 gap-3 w-full max-w-[320px] mx-auto mt-auto mb-auto px-2">`;
+                html = `<div class="grid grid-cols-5 gap-3 w-full max-w-[340px] mx-auto mt-auto mb-auto px-2">`;
                 const safeCount = Math.floor(Math.random() * 4) + 6; // 6 to 9 safes
                 let safes = [];
                 while(safes.length < safeCount) {
@@ -512,8 +520,8 @@
                     if(!safes.includes(r)) safes.push(r);
                 }
                 for(let i=0; i<25; i++) {
-                    if(safes.includes(i)) html += `<div class="game-cell h-[52px] active-signal !text-3xl">💎</div>`;
-                    else html += `<div class="game-cell h-[52px] border-gold/10 bg-black/60"></div>`;
+                    if(safes.includes(i)) html += `<div class="game-cell h-[56px] active-signal !text-4xl">💎</div>`;
+                    else html += `<div class="game-cell h-[56px] border-gold/10 bg-black/60"></div>`;
                 }
                 html += `</div>`;
             }
@@ -527,8 +535,8 @@
 
                 html = `<div class="flex flex-col items-center mt-auto mb-auto w-full"><div class="flex justify-center gap-6 w-full mb-10">`;
                 for(let i=0; i<3; i++) {
-                    if(ballPositions.includes(i)) html += `<div class="game-cell w-24 h-28 active-signal !text-[60px]">⚪️</div>`;
-                    else html += `<div class="game-cell w-24 h-28 !text-[60px] opacity-30 bg-black/80">🥤</div>`;
+                    if(ballPositions.includes(i)) html += `<div class="game-cell w-28 h-32 active-signal !text-[70px]">⚪️</div>`;
+                    else html += `<div class="game-cell w-28 h-32 !text-[70px] opacity-30 bg-black/80">🥤</div>`;
                 }
                 html += `</div></div>`;
             }
@@ -536,7 +544,7 @@
                 const res = ["UNDER 7", "EXACT 7", "OVER 7"][Math.floor(Math.random() * 3)];
                 html = `
                     <div class="flex flex-col items-center mt-auto mb-auto">
-                        <span class="text-[90px] mb-8 animate-bounce filter drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">🎲</span>
+                        <span class="text-[100px] mb-8 animate-bounce filter drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">🎲</span>
                         <div class="bg-gradient-to-r from-gold via-yellow-400 to-darkgold text-black font-black text-4xl px-10 py-4 rounded-2xl shadow-gold-glow-intense tracking-widest border-2 border-white/40">${res}</div>
                     </div>
                 `;
@@ -545,13 +553,17 @@
             area.innerHTML = html;
         }
 
+        // Support yuborish (Web App'dan botga qaytadi)
         function sendSupport() {
-            const promptText = currentLang === 'uz' ? "Murojaat yoki taklifingizni yozing:" : 
-                               (currentLang === 'ru' ? "Оставьте ваше обращение:" : "Leave your message/feedback:");
+            const promptText = currentLang === 'uz' ? "Admin panelga murojaatingizni yozing:" : 
+                               (currentLang === 'ru' ? "Оставьте ваше обращение админу:" : "Leave your message to admin:");
             const msg = prompt(promptText);
+            
             if(msg && msg.trim() !== '') {
+                // Bu ma'lumot botning "bot.on('web_app_data')" qismida ushlanadi
                 tg.sendData(JSON.stringify({ type: 'support', text: msg }));
-                alert(currentLang === 'uz' ? "Yuborildi!" : (currentLang === 'ru' ? "Отправлено!" : "Sent!"));
+                alert(currentLang === 'uz' ? "Xabar botga yuborildi! Iltimos botga qayting." : 
+                     (currentLang === 'ru' ? "Отправлено! Пожалуйста, вернитесь в бота." : "Sent! Please return to the bot."));
             }
         }
     </script>
