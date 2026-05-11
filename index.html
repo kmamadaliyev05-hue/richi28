@@ -12,7 +12,7 @@
                 extend: {
                     colors: { 
                         gold: '#FFD700', 
-                        darkbg: '#000000', /* Fon qop-qora qilindi */
+                        darkbg: '#050400', /* Qora-oltin fon uchun zamin */
                         danger: '#ff3131',
                         panel: '#0a0a0a'
                     },
@@ -20,7 +20,7 @@
                     boxShadow: { 
                         'gold-glow': '0 0 15px rgba(255, 215, 0, 0.4)', 
                         'danger-glow': '0 0 15px rgba(255, 0, 60, 0.4)',
-                        'inner-gold': 'inset 0 0 12px rgba(255, 215, 0, 0.2)'
+                        'inner-gold': 'inset 0 0 15px rgba(255, 215, 0, 0.3)'
                     }
                 }
             }
@@ -28,17 +28,20 @@
     </script>
     <style>
         body { 
-            background-color: theme('colors.darkbg'); color: theme('colors.gold'); 
+            /* Qora va to'q oltin rangli zamonaviy gradient fon */
+            background: radial-gradient(circle at center, #1f1700 0%, #000000 100%); 
+            color: theme('colors.gold'); 
             font-family: theme('fontFamily.mono'); overflow: hidden; 
             user-select: none; -webkit-tap-highlight-color: transparent; 
+            margin: 0; padding: 0;
+            min-height: 100vh;
         }
         
-        /* Matritsa kodlar yomg'iri ko'rinishi kuchaytirildi */
-        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.4; }
+        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.5; }
         
         /* Glassmorphism VIP Cards */
         .glass-card { 
-            background: linear-gradient(145deg, rgba(15,15,15,0.95) 0%, rgba(0,0,0,0.9) 100%);
+            background: linear-gradient(145deg, rgba(20,15,0,0.95) 0%, rgba(0,0,0,0.9) 100%);
             backdrop-filter: blur(10px); border: 1px solid rgba(255, 215, 0, 0.3); 
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
         }
@@ -51,16 +54,22 @@
         .scrollable-y { overflow-y: auto; scrollbar-width: none; }
         .scrollable-y::-webkit-scrollbar { display: none; }
 
-        /* Game Grid Cells */
+        /* MUKAMMAL KATAKLAR (GAME CELLS) - Ajralib turadigan qilindi */
         .game-cell { 
             display: flex; align-items: center; justify-content: center; 
-            background: rgba(10, 10, 10, 0.9); border: 1px solid rgba(255, 215, 0, 0.2); 
-            border-radius: 8px; font-size: 1.5rem; transition: 0.4s ease; 
+            background: rgba(30, 20, 0, 0.7); /* To'q qora-tillarang fon */
+            border: 2px solid rgba(255, 215, 0, 0.3); /* Ajralib turadigan qalinroq rom */
+            border-radius: 10px; font-size: 1.5rem; transition: 0.4s ease; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8); /* Ichki soya hajmi */
         }
+        
+        /* YONIB TURGAN (FAOL) KATAKLAR */
         .game-cell.active-signal { 
-            background: rgba(255, 215, 0, 0.2); border-color: theme('colors.gold'); 
-            box-shadow: theme('boxShadow.inner-gold'); font-size: 2.2rem; 
+            background: rgba(255, 215, 0, 0.25); border-color: theme('colors.gold'); 
+            box-shadow: 0 0 15px rgba(255,215,0,0.5), inset 0 0 15px rgba(255, 215, 0, 0.4); 
+            font-size: 2.2rem; 
             text-shadow: 0 0 15px #FFD700; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+            z-index: 10;
         }
         
         @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -77,7 +86,7 @@
 
     <canvas id="matrix-canvas"></canvas>
 
-    <div id="boot-screen" class="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 text-center">
+    <div id="boot-screen" class="absolute inset-0 z-50 bg-[#020202] flex flex-col items-center justify-center p-6 text-center">
         <h1 class="text-4xl font-bold mb-2 tracking-[8px] glitch text-gold">RICHI28 VIP</h1>
         <p class="text-[12px] mb-8 opacity-50 text-white">SECURE CONNECTION ESTABLISHING...</p>
         <div class="w-full max-w-[280px] h-[6px] bg-gray-900 border border-gold/50 rounded-full overflow-hidden">
@@ -87,7 +96,7 @@
     </div>
 
     <div id="lobby" class="hidden w-full h-full flex-col px-4 pt-4 pb-8 scrollable-y relative z-10 max-w-2xl mx-auto">
-        <div class="flex justify-between items-center border-b border-gold/30 pb-4 mb-5 sticky top-0 bg-black/95 backdrop-blur-md z-20">
+        <div class="flex justify-between items-center border-b border-gold/30 pb-4 mb-5 sticky top-0 bg-transparent backdrop-blur-md z-20">
             <div class="text-[10px] font-bold tracking-widest text-white">
                 <span class="opacity-40">USER:</span> <span class="text-gold">VIP_ROOT</span><br>
                 <span class="opacity-40">STATUS:</span> <span class="text-green-500 animate-pulse">CONNECTED</span>
@@ -113,13 +122,13 @@
 
     <div id="game-view" class="hidden w-full h-full flex-col p-4 relative z-10 max-w-2xl mx-auto">
         
-        <div class="flex justify-between items-center mb-4 bg-panel/90 p-3 rounded-xl border border-gold/30 backdrop-blur-md">
+        <div class="flex justify-between items-center mb-4 bg-panel/80 p-3 rounded-xl border border-gold/30 backdrop-blur-md">
             <button onclick="goBack()" class="text-gold border border-gold/40 px-4 py-1.5 text-[10px] hover:bg-gold hover:text-black rounded-md transition font-bold tracking-wider" id="btn-back">⬅️</button>
             <h2 id="active-game-title" class="text-sm font-bold tracking-[5px] uppercase text-white shadow-gold-glow"></h2>
             <div class="w-12"></div>
         </div>
 
-        <div class="border border-danger/40 bg-black/90 p-3 rounded-lg mb-4 shadow-[0_0_15px_rgba(255,0,60,0.15)] flex items-center gap-3">
+        <div class="border border-danger/40 bg-black/80 p-3 rounded-lg mb-4 shadow-[0_0_15px_rgba(255,0,60,0.15)] flex items-center gap-3">
             <span class="text-danger text-2xl animate-pulse">⚠️</span>
             <p id="warning-text-game" class="text-[8px] text-white/80 leading-relaxed font-bold text-left uppercase tracking-wide"></p>
         </div>
@@ -128,15 +137,14 @@
             <p id="hack-log" class="text-[10px] text-gold italic uppercase tracking-widest"></p>
         </div>
 
-        <div id="signal-container" class="w-full flex-1 bg-[#050505] border border-gold/30 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden mb-6 p-2 shadow-gold-glow">
+        <div id="signal-container" class="w-full flex-1 bg-black/40 border border-gold/40 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden mb-6 p-4 shadow-[0_0_20px_rgba(255,215,0,0.15)] backdrop-blur-sm">
             <div class="scan-line" id="scanline"></div>
             
-            <!-- TO'G'RILANGAN QISM: justify-center olib tashlandi, endi qatorlar yuqoridan kesilmaydi -->
-            <div id="signal-render-area" class="w-full h-full flex flex-col items-center text-center overflow-y-auto scrollable-y pb-4 pt-4 px-2">
+            <div id="signal-render-area" class="w-full h-full flex flex-col items-center text-center overflow-y-auto scrollable-y py-4 px-2">
             </div>
         </div>
 
-        <button id="btn-hack" onclick="executeHack()" class="w-full bg-gradient-to-r from-[#FFD700] to-[#B8860B] text-black font-extrabold text-lg py-5 rounded-xl shadow-gold-glow uppercase tracking-[4px] active:scale-[0.97] transition-all disabled:opacity-40 disabled:cursor-not-allowed mb-2">
+        <button id="btn-hack" onclick="executeHack()" class="w-full bg-gradient-to-r from-[#FFD700] to-[#B8860B] text-black font-extrabold text-lg py-5 rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)] uppercase tracking-[4px] active:scale-[0.97] transition-all disabled:opacity-40 disabled:cursor-not-allowed mb-2">
             ⚡️ SIGNAL OLISH
         </button>
     </div>
@@ -197,7 +205,6 @@
             { id: 'thimbles', name: 'Thimbles', icon: '🥤', kf: 'x1.45 - x2.91', type: 'thimbles' }
         ];
 
-        // --- YAXSHILANGAN MATRITSA KODLAR YOMG'IRI ---
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
@@ -207,17 +214,17 @@
         const drops = Array.from({length: Math.floor(columns)}).fill(1);
 
         function drawMatrix() {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.15)"; // Orqa fonni asta qoraytirish
+            /* Matritsa oq-qora fonga mos tushishi uchun to'q qora-tillarang aralashma */
+            ctx.fillStyle = "rgba(5, 4, 0, 0.2)"; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.font = fontSize + "px monospace";
             for (let i = 0; i < drops.length; i++) {
                 const text = chars[Math.floor(Math.random() * chars.length)];
                 
-                // Ba'zi kodlar oq bo'lib yonib o'chishi uchun (realistik effekt)
                 if (Math.random() > 0.95) {
                     ctx.fillStyle = "#FFFFFF"; 
                 } else {
-                    ctx.fillStyle = "#FFD700"; // Tillarang
+                    ctx.fillStyle = "#FFD700"; 
                 }
                 
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
@@ -227,7 +234,6 @@
         }
         setInterval(drawMatrix, 50);
 
-        // --- INIT ---
         window.onload = () => {
             let progress = 0;
             const bar = document.getElementById('boot-bar');
@@ -301,7 +307,6 @@
             if(activeGame.type === 'ladder') {
                 renderEmptyGrid();
             } else {
-                // MARKAZLASHTIRISH UCHUN mt-auto qO'SHILDI
                 document.getElementById('signal-render-area').innerHTML = `<span class="text-[12px] opacity-30 tracking-widest text-white mt-auto mb-auto">[ SYSTEM READY ]</span>`;
             }
             tg.HapticFeedback.impactOccurred('light');
@@ -319,12 +324,13 @@
             const cols = activeGame.grid.cols;
             const rows = activeGame.grid.rows;
             
-            // TO'G'RILANGAN QISM: mt-auto mb-auto qo'shildi - shunda ro'yxat ekrandan tepaga o'tib ketmaydi
-            let html = `<div class="flex flex-col-reverse gap-[8px] w-full max-w-[250px] mx-auto py-4 mt-auto mb-auto" id="ladder-grid">`;
+            // max-w kengaytirildi va gap oshirildi, kataklar aniq turishi uchun
+            let html = `<div class="flex flex-col-reverse gap-3 w-full max-w-[300px] mx-auto mt-auto mb-auto" id="ladder-grid">`;
             for(let r = 0; r < rows; r++) {
-                html += `<div class="grid gap-[8px] w-full" id="row-${r}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
+                html += `<div class="grid gap-3 w-full px-2" id="row-${r}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
                 for(let c = 0; c < cols; c++) {
-                    html += `<div class="game-cell h-14 w-full opacity-20" id="cell-${r}-${c}"></div>`;
+                    // opacity-20 butunlay OLIb TASHLANDI. Endi kataklar tiniq ko'rinadi.
+                    html += `<div class="game-cell h-[48px] w-full" id="cell-${r}-${c}"></div>`;
                 }
                 html += `</div>`;
             }
@@ -332,7 +338,6 @@
             area.innerHTML = html;
         }
 
-        // --- CORE HACK ENGINE ---
         function executeHack() {
             const btn = document.getElementById('btn-hack');
             const log = document.getElementById('hack-log');
@@ -340,7 +345,6 @@
             const area = document.getElementById('signal-render-area');
             const t = translations[currentLang];
 
-            // 1. NARVON (LADDER) O'YINLARI MANTIG'I
             if(activeGame.type === 'ladder') {
                 if(ladderCurrentStep >= activeGame.grid.rows) {
                     ladderCurrentStep = 0;
@@ -361,22 +365,19 @@
                     const cols = activeGame.grid.cols;
                     const safeCol = Math.floor(Math.random() * cols);
                     
-                    // Oldingi qatorlarni biroz xiralashtirish
                     for(let i=0; i<ladderCurrentStep; i++) {
                         const oldRow = document.getElementById(`row-${i}`);
-                        if(oldRow) oldRow.style.opacity = '0.6';
+                        if(oldRow) oldRow.style.opacity = '0.7';
                     }
 
-                    // Yangi qatorni ochish
                     const targetCell = document.getElementById(`cell-${ladderCurrentStep}-${safeCol}`);
                     const targetRow = document.getElementById(`row-${ladderCurrentStep}`);
                     
                     if(targetCell) {
-                        targetCell.className = "game-cell active-signal h-14 w-full";
+                        targetCell.className = "game-cell active-signal h-[48px] w-full";
                         targetCell.innerHTML = activeGame.icon;
                     }
                     
-                    // EKRANNI YURGIZISH (SCROLL INTO VIEW) - muammosiz ishlashi uchun to'g'rilandi
                     if(targetRow) {
                         targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
@@ -397,7 +398,6 @@
                 return;
             }
 
-            // 2. BOSHQA O'YINLAR (Crash, Mines, Thimbles)
             if(activeGame.id === 'crash') {
                 const now = Date.now();
                 if(now - crashCooldownTime < 30000) {
@@ -438,7 +438,7 @@
                 `;
             } 
             else if(activeGame.type === 'mines') {
-                html = `<div class="grid grid-cols-5 gap-2 w-full max-w-[280px] mx-auto py-4 mt-auto mb-auto">`;
+                html = `<div class="grid grid-cols-5 gap-3 w-full max-w-[300px] mx-auto mt-auto mb-auto px-2">`;
                 const safeCount = Math.floor(Math.random() * 5) + 5; 
                 let safes = [];
                 while(safes.length < safeCount) {
@@ -447,9 +447,9 @@
                 }
                 for(let i=0; i<25; i++) {
                     if(safes.includes(i)) {
-                        html += `<div class="game-cell h-14 active-signal !text-3xl">💎</div>`;
+                        html += `<div class="game-cell h-[48px] active-signal !text-3xl">💎</div>`;
                     } else {
-                        html += `<div class="game-cell h-14 opacity-20"></div>`;
+                        html += `<div class="game-cell h-[48px]"></div>`;
                     }
                 }
                 html += `</div>`;
