@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RICHI28 HACK VIP</title>
+    <title>RICHI28 VIP HACK 4K</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -131,7 +131,7 @@
 
         <div class="border border-danger/60 bg-[#120000]/95 p-4 rounded-xl mb-6 shadow-danger-glow relative overflow-hidden backdrop-blur-md">
             <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a]"></div>
-            <p id="warning-text-lobby" class="text-[11px] text-white/95 leading-loose font-bold text-center uppercase tracking-wide"></p>
+            <p id="warning-text-lobby" class="relative z-10 text-[11px] text-white/95 leading-loose font-bold text-center uppercase tracking-wide"></p>
         </div>
 
         <div class="grid grid-cols-2 gap-4" id="games-container"></div>
@@ -145,18 +145,16 @@
         
         <div class="flex justify-between items-center mb-4 bg-panel/90 p-3 rounded-xl border border-gold/40 backdrop-blur-lg shadow-[0_0_20px_rgba(0,0,0,0.8)]">
             <button onclick="goBack()" class="text-gold border border-gold/50 px-4 py-2 text-[12px] hover:bg-gold hover:text-black rounded-lg transition font-extrabold tracking-wider bg-black/50">⬅️ <span id="text-back">BACK</span></button>
-            <h2 id="active-game-title" class="text-[14px] font-black tracking-[4px] uppercase text-white shadow-gold-glow drop-shadow-[0_0_8px_#FFD700] text-center flex-1"></h2>
+            <div class="flex-1 flex flex-col items-center justify-center px-2">
+                <h2 id="active-game-title" class="text-[14px] font-black tracking-[3px] uppercase text-white shadow-gold-glow drop-shadow-[0_0_8px_#FFD700] text-center w-full leading-tight"></h2>
+                <span id="active-game-kf" class="text-[9px] text-black bg-gold px-2 py-0.5 rounded mt-1.5 font-extrabold tracking-widest shadow-[0_0_5px_#FFD700]"></span>
+            </div>
             <button onclick="resetGame()" class="text-gold border border-gold/50 px-4 py-2 text-[12px] hover:bg-gold hover:text-black rounded-lg transition font-extrabold tracking-wider bg-black/50">🔄 <span id="text-restart">RESET</span></button>
         </div>
 
         <div id="game-modes-container" class="hidden justify-center gap-4 mb-4 w-full"></div>
 
-        <div class="border border-danger/60 bg-[#120000]/95 p-3 rounded-xl mb-4 shadow-danger-glow relative overflow-hidden backdrop-blur-md">
-            <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a]"></div>
-            <p id="warning-text-game" class="text-[9px] text-white/95 leading-relaxed font-bold text-center uppercase tracking-wide"></p>
-        </div>
-
-        <div class="w-full text-center h-5 mb-2">
+        <div class="w-full text-center h-5 mb-2 mt-2">
             <p id="hack-log" class="text-[12px] text-gold font-bold italic uppercase tracking-[3px] drop-shadow-[0_0_5px_#FFD700]"></p>
         </div>
 
@@ -165,9 +163,14 @@
             <div id="signal-render-area" class="w-full h-full flex flex-col items-center text-center overflow-y-auto scrollable-y py-4 px-2"></div>
         </div>
 
-        <button id="btn-hack" onclick="executeHack()" class="w-full bg-gradient-to-r from-[#FFD700] via-[#FFF8DC] to-[#B8860B] text-black font-black text-xl py-6 rounded-xl shadow-gold-glow-intense uppercase tracking-[5px] active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-2">
+        <button id="btn-hack" onclick="executeHack()" class="w-full bg-gradient-to-r from-[#FFD700] via-[#FFF8DC] to-[#B8860B] text-black font-black text-xl py-6 rounded-xl shadow-gold-glow-intense uppercase tracking-[5px] active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-4">
             ⚡️ SIGNAL OLISH
         </button>
+
+        <div class="border border-danger/60 bg-[#120000]/95 p-3 rounded-xl mt-auto shadow-danger-glow relative overflow-hidden backdrop-blur-md w-full">
+            <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a]"></div>
+            <p id="warning-text-game" class="relative z-10 text-[9px] text-white/95 leading-relaxed font-bold text-center uppercase tracking-wide"></p>
+        </div>
     </div>
 
     <script>
@@ -180,7 +183,7 @@
         let crashCooldownTime = 0;
         let ladderCurrentStep = 0; 
 
-        // TRANSLATIONS
+        // TRANSLATIONS (Updated with new rules)
         const translations = {
             uz: {
                 warning: "⚠️ DIQQAT: RICHI28 PROMOKODIDAN O'TMAGAN, HISOBIDA KAMIDA 60,000 UZS BO'LMAGAN YOKI 3 TA REFERAL (ODAM) OLIB KELMAGAN FOYDALANUVCHILARGA TIZIM NOTO'G'RI SIGNAL BERISHI VA BLOKLASHI MUMKIN!",
@@ -236,7 +239,7 @@
             { id: 'nights', name: 'Eastern Nights', icon: '🪔', kf: 'x1.18 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
             { id: 'wild', name: 'Wild West Gold', icon: '💰', kf: 'x2.00 - x3.00', type: 'ladder', grid: {cols: 2, rows: 10} },
             { id: 'dragon', name: 'Dragon\'s Gold', icon: '🪙', kf: 'x1.23 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
-            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.20 - x14.5', type: 'ladder', grid: {cols: 5, rows: 5} },
+            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.20 - x14.5', type: 'ladder', grid: {cols: 5, rows: 4} }, // <-- Swamp Land qatorlari 4 taga o'zgartirildi
             { id: 'mines', name: 'Gems & Mines', icon: '💎', kf: 'x1.05 - x100+', type: 'mines' },
             { id: 'dice', name: 'Under/Over 7', icon: '🎲', kf: 'x2.3 - x5.8', type: 'dice' },
             { id: 'thimbles', name: 'Thimbles', icon: '🥤', kf: 'x1.45 - x2.91', type: 'thimbles' }
@@ -294,8 +297,8 @@
             gamesList.forEach(g => {
                 container.innerHTML += `
                     <div class="glass-card flex flex-col items-center justify-center p-6 rounded-2xl cursor-pointer" onclick="openGame('${g.id}')">
-                        <span class="text-[45px] mb-4 filter drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]">${g.icon}</span>
-                        <h3 class="text-[11px] font-black text-white uppercase tracking-widest mb-3 text-center h-8 flex items-center drop-shadow-[0_0_5px_#000]">${g.name}</h3>
+                        <span class="text-[50px] mb-4 filter drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]">${g.icon}</span>
+                        <h3 class="text-[12px] font-black text-white uppercase tracking-widest mb-3 text-center h-8 flex items-center drop-shadow-[0_0_5px_#000]">${g.name}</h3>
                         <span class="text-[10px] text-[#000] bg-gold px-3 py-1.5 rounded-md font-extrabold tracking-wide shadow-gold-glow">${g.kf}</span>
                     </div>
                 `;
@@ -340,6 +343,7 @@
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-view').style.display = 'flex';
             document.getElementById('active-game-title').innerText = activeGame.name;
+            document.getElementById('active-game-kf').innerText = activeGame.kf;
             
             const modesBox = document.getElementById('game-modes-container');
             modesBox.innerHTML = '';
