@@ -426,7 +426,10 @@
                 html += `<div class="flex items-center gap-2 w-full px-1 transition-all duration-500" id="row-${r}">`;
                 
                 // Ko'zga tashlanmaydigan KF ustuni dizayni (ingichka, ortiqcha fonsiz)
-                html += `<div class="flex items-center justify-end text-gold/50 text-[10px] font-bold w-[35px] flex-shrink-0 tracking-wider pr-1">x${kfText}</div>`;
+                // O'ZGARISH: kamikaze va wild uchun kf ustuni yashirildi
+                if (activeGame.id !== 'kamikaze' && activeGame.id !== 'wild') {
+                    html += `<div class="flex items-center justify-end text-gold/50 text-[10px] font-bold w-[35px] flex-shrink-0 tracking-wider pr-1">x${kfText}</div>`;
+                }
                 
                 // O'yin qatorlari va kataklar
                 html += `<div class="grid gap-2 flex-1" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
@@ -537,7 +540,8 @@
                 `;
             } 
             else if(activeGame.type === 'mines') {
-                html = `<div class="grid grid-cols-5 gap-3 w-full max-w-[340px] mx-auto mt-auto mb-auto px-2">`;
+                // O'ZGARISH: Mines kataklari to'liq sig'ishi uchun aspect-square, w-full va gap-2 lardan foydalanildi. Max-w biroz kichraytirildi.
+                html = `<div class="grid grid-cols-5 gap-2 w-full max-w-[300px] mx-auto mt-auto mb-auto px-2">`;
                 const safeCount = Math.floor(Math.random() * 4) + 6; 
                 let safes = [];
                 while(safes.length < safeCount) {
@@ -545,8 +549,8 @@
                     if(!safes.includes(r)) safes.push(r);
                 }
                 for(let i=0; i<25; i++) {
-                    if(safes.includes(i)) html += `<div class="game-cell h-[56px] active-signal !text-4xl">💎</div>`;
-                    else html += `<div class="game-cell h-[56px] border-gold/10 bg-black/60"></div>`;
+                    if(safes.includes(i)) html += `<div class="game-cell w-full aspect-square active-signal !text-3xl">💎</div>`;
+                    else html += `<div class="game-cell w-full aspect-square border-gold/10 bg-black/60 rounded-md"></div>`;
                 }
                 html += `</div>`;
             }
