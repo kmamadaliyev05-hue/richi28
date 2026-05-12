@@ -129,9 +129,10 @@
             </select>
         </div>
 
-        <div class="border border-danger/60 bg-[#120000]/95 p-4 rounded-xl mb-6 shadow-danger-glow relative overflow-hidden backdrop-blur-md">
-            <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a]"></div>
-            <p id="warning-text-lobby" class="relative z-10 text-[11px] text-white/95 leading-loose font-bold text-center uppercase tracking-wide"></p>
+        <!-- 1-TUZATISH: Lobby ogohlantirish matni to'g'irlandi -->
+        <div class="flex items-center min-h-[80px] border border-danger/60 bg-[#120000]/95 p-4 rounded-xl mb-6 shadow-danger-glow relative backdrop-blur-md">
+            <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a] rounded-l-xl"></div>
+            <p id="warning-text-lobby" class="relative z-10 w-full text-[10px] sm:text-[11px] text-white/95 leading-normal font-bold text-center uppercase tracking-wide whitespace-normal break-words px-2"></p>
         </div>
 
         <div class="grid grid-cols-2 gap-4" id="games-container"></div>
@@ -167,9 +168,10 @@
             ⚡️ SIGNAL OLISH
         </button>
 
-        <div class="border border-danger/60 bg-[#120000]/95 p-3 rounded-xl mt-auto shadow-danger-glow relative overflow-hidden backdrop-blur-md w-full">
-            <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a]"></div>
-            <p id="warning-text-game" class="relative z-10 text-[9px] text-white/95 leading-relaxed font-bold text-center uppercase tracking-wide"></p>
+        <!-- 1-TUZATISH: O'yin ichidagi ogohlantirish matni to'g'irlandi -->
+        <div class="flex items-center min-h-[70px] border border-danger/60 bg-[#120000]/95 p-3 rounded-xl mt-auto shadow-danger-glow relative backdrop-blur-md w-full">
+            <div class="absolute top-0 left-0 w-1.5 h-full bg-danger shadow-[0_0_10px_#ff2a2a] rounded-l-xl"></div>
+            <p id="warning-text-game" class="relative z-10 w-full text-[9px] sm:text-[10px] text-white/95 leading-normal font-bold text-center uppercase tracking-wide whitespace-normal break-words px-2"></p>
         </div>
     </div>
 
@@ -183,7 +185,7 @@
         let crashCooldownTime = 0;
         let ladderCurrentStep = 0; 
 
-        // TRANSLATIONS (Updated with new rules)
+        // TRANSLATIONS
         const translations = {
             uz: {
                 warning: "⚠️ DIQQAT: RICHI28 PROMOKODIDAN O'TMAGAN, HISOBIDA KAMIDA 60,000 UZS BO'LMAGAN YOKI 3 TA REFERAL (ODAM) OLIB KELMAGAN FOYDALANUVCHILARGA TIZIM NOTO'G'RI SIGNAL BERISHI VA BLOKLASHI MUMKIN!",
@@ -239,7 +241,7 @@
             { id: 'nights', name: 'Eastern Nights', icon: '🪔', kf: 'x1.18 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
             { id: 'wild', name: 'Wild West Gold', icon: '💰', kf: 'x2.00 - x3.00', type: 'ladder', grid: {cols: 2, rows: 10} },
             { id: 'dragon', name: 'Dragon\'s Gold', icon: '🪙', kf: 'x1.23 - x349', type: 'ladder', grid: {cols: 5, rows: 10} },
-            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.20 - x14.5', type: 'ladder', grid: {cols: 5, rows: 4} }, // <-- Swamp Land qatorlari 4 taga o'zgartirildi
+            { id: 'swamp', name: 'Swamp Land', icon: '🐸', kf: 'x1.20 - x14.5', type: 'ladder', grid: {cols: 5, rows: 4} },
             { id: 'mines', name: 'Gems & Mines', icon: '💎', kf: 'x1.05 - x100+', type: 'mines' },
             { id: 'dice', name: 'Under/Over 7', icon: '🎲', kf: 'x2.3 - x5.8', type: 'dice' },
             { id: 'thimbles', name: 'Thimbles', icon: '🥤', kf: 'x1.45 - x2.91', type: 'thimbles' }
@@ -394,25 +396,33 @@
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        function goBack() {
-            document.getElementById('game-view').style.display = 'none';
-            document.getElementById('lobby').style.display = 'flex';
-            activeGame = null;
-            tg.HapticFeedback.impactOccurred('medium');
-        }
-
+        // 2-TUZATISH: KF ustuni kiritildi
         function renderEmptyGrid() {
             const area = document.getElementById('signal-render-area');
             const cols = activeGame.grid.cols;
             const rows = activeGame.grid.rows;
             
-            let html = `<div class="flex flex-col-reverse gap-3 w-full max-w-[340px] mx-auto mt-auto mb-auto" id="ladder-grid">`;
+            // KF (Koeffitsiyentlar) ro'yxati (eng keng tarqalgan 10 qator uchun)
+            const kfList = ['1.23', '1.54', '1.93', '2.41', '4.02', '6.71', '11.18', '27.97', '69.93', '349.68'];
+
+            // O'lchamlarni biroz kattalashtiramiz chunki KF qutisi joy olishi kerak
+            let html = `<div class="flex flex-col-reverse gap-2 w-full max-w-[360px] mx-auto mt-auto mb-auto" id="ladder-grid">`;
             for(let r = 0; r < rows; r++) {
-                html += `<div class="grid gap-3 w-full px-2 transition-all duration-500" id="row-${r}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
+                
+                // Agar o'yinda o'zgaruvchi KF bo'lsa yo ro'yxatdan yetishmasa o'zi taxminiy KF qo'yadi
+                let kfText = kfList[r] ? kfList[r] : (1.2 + r*0.5).toFixed(2);
+
+                html += `<div class="flex items-center gap-2 w-full px-1 transition-all duration-500" id="row-${r}">`;
+                
+                // YON PANELDA KF QUTISI Qo'shildi
+                html += `<div class="flex items-center justify-center bg-black/60 border border-gold/40 text-gold text-[10px] font-black rounded-lg w-[48px] h-[56px] shadow-[inset_0_0_8px_rgba(255,215,0,0.2)] flex-shrink-0 tracking-wider">x${kfText}</div>`;
+                
+                // O'yin qatorlari va kataklar
+                html += `<div class="grid gap-2 flex-1" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">`;
                 for(let c = 0; c < cols; c++) {
                     html += `<div class="game-cell h-[56px] w-full" id="cell-${r}-${c}"></div>`;
                 }
-                html += `</div>`;
+                html += `</div></div>`; // End grid and flex-row
             }
             html += `</div>`;
             area.innerHTML = html;
@@ -517,7 +527,7 @@
             } 
             else if(activeGame.type === 'mines') {
                 html = `<div class="grid grid-cols-5 gap-3 w-full max-w-[340px] mx-auto mt-auto mb-auto px-2">`;
-                const safeCount = Math.floor(Math.random() * 4) + 6; // 6 to 9 safes
+                const safeCount = Math.floor(Math.random() * 4) + 6; 
                 let safes = [];
                 while(safes.length < safeCount) {
                     let r = Math.floor(Math.random() * 25);
@@ -557,14 +567,12 @@
             area.innerHTML = html;
         }
 
-        // Support yuborish (Web App'dan botga qaytadi)
         function sendSupport() {
             const promptText = currentLang === 'uz' ? "Admin panelga murojaatingizni yozing:" : 
                                (currentLang === 'ru' ? "Оставьте ваше обращение админу:" : "Leave your message to admin:");
             const msg = prompt(promptText);
             
             if(msg && msg.trim() !== '') {
-                // Bu ma'lumot botning "bot.on('web_app_data')" qismida ushlanadi
                 tg.sendData(JSON.stringify({ type: 'support', text: msg }));
                 alert(currentLang === 'uz' ? "Xabar botga yuborildi! Iltimos botga qayting." : 
                      (currentLang === 'ru' ? "Отправлено! Пожалуйста, вернитесь в бота." : "Sent! Please return to the bot."));
