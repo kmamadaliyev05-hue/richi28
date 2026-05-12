@@ -256,6 +256,7 @@ bot.start(async (ctx) => {
 
 bot.action(/^setlang_(uz|ru|en)$/, async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const lang = ctx.match[1];
         const user = await User.findOneAndUpdate({ userId: ctx.from.id }, { lang }, { new: true });
         
@@ -269,6 +270,7 @@ bot.action(/^setlang_(uz|ru|en)$/, async (ctx) => {
 
 bot.action(/^updatelang_(uz|ru|en)$/, async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const lang = ctx.match[1];
         const user = await User.findOneAndUpdate({ userId: ctx.from.id }, { lang }, { new: true });
         const s = strings[lang];
@@ -346,6 +348,7 @@ bot.action("open_console", async (ctx) => {
 
 bot.action("menu_signals", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang] || strings.uz;
@@ -365,6 +368,7 @@ bot.action("menu_signals", async (ctx) => {
 
 bot.action(/^app_(.+)$/, async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         initSession(ctx);
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
@@ -400,6 +404,7 @@ bot.action("verify_id_start", async (ctx) => {
 
 bot.action("menu_settings", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang];
@@ -417,6 +422,7 @@ bot.action("menu_settings", async (ctx) => {
 
 bot.action("settings_lang", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang];
@@ -450,6 +456,7 @@ bot.action("settings_notif", async (ctx) => {
 
 bot.action("settings_profile", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang];
@@ -459,6 +466,7 @@ bot.action("settings_profile", async (ctx) => {
 
 bot.action("menu_network", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang];
@@ -469,6 +477,7 @@ bot.action("menu_network", async (ctx) => {
 
 bot.action("menu_wallet", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang];
@@ -480,6 +489,7 @@ bot.action("withdraw_start", async (ctx) => { initSession(ctx); ctx.session.step
 
 bot.action("menu_guide", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang];
@@ -499,6 +509,7 @@ bot.action("menu_guide", async (ctx) => {
 
 bot.action("menu_wins", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang];
@@ -520,6 +531,7 @@ bot.action("menu_wins", async (ctx) => {
 
 bot.action("menu_support", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         initSession(ctx); ctx.session.step = 'support';
@@ -533,12 +545,14 @@ bot.action("menu_support", async (ctx) => {
 // ==========================================
 
 bot.action("admin_panel", async (ctx) => {
+    ctx.answerCbQuery().catch(() => {});
     if (ctx.from.id !== ADMIN_ID) return await ctx.answerCbQuery("Kechirasiz, bu bo'lim administratorlar uchun!", { show_alert: true });
     initSession(ctx); ctx.session.step = null;
     return await safeEdit(ctx, "👑 <b>ADMINISTRATOR PANELI</b>\n\nBoshqaruv bo'limlaridan birini tanlang:", { parse_mode: 'HTML', ...getAdminMenu() });
 });
 
 bot.action("admin_console", async (ctx) => {
+    ctx.answerCbQuery().catch(() => {});
     return await safeEdit(ctx, "🖥 <b>KONSOL SOZLAMALARI</b>", {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
@@ -564,6 +578,7 @@ bot.action("admin_signals", async (ctx) => {
 bot.action("admin_add_app", async (ctx) => { initSession(ctx); ctx.session.step = 'admin_add_app_name'; return await ctx.reply("Yangi platforma nomini kiriting (Masalan: 1WIN):"); });
 bot.action(/^admin_del_app_(.+)$/, async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         await Config.findByIdAndDelete(ctx.match[1]);
         await ctx.answerCbQuery("✅ Platforma o'chirildi!", { show_alert: true });
         return bot.action("admin_signals")(ctx);
@@ -571,20 +586,23 @@ bot.action(/^admin_del_app_(.+)$/, async (ctx) => {
 });
 
 bot.action("admin_network", async (ctx) => {
+    ctx.answerCbQuery().catch(() => {});
     return await safeEdit(ctx, "👥 <b>TARMOQ (Referal tizimi)</b>", {
         parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("💵 Bonus miqdorini o'zgartirish", "admin_ref_bonus")], [Markup.button.callback("⬅️ Ortga", "admin_panel")]])
     });
 });
-bot.action("admin_ref_bonus", async (ctx) => { initSession(ctx); ctx.session.step = 'admin_ref_bonus'; return await ctx.reply("Yangi bonus summasini yozing:"); });
+bot.action("admin_ref_bonus", async (ctx) => { ctx.answerCbQuery().catch(() => {}); initSession(ctx); ctx.session.step = 'admin_ref_bonus'; return await ctx.reply("Yangi bonus summasini yozing:"); });
 
 bot.action("admin_wins", async (ctx) => {
+    ctx.answerCbQuery().catch(() => {});
     return await safeEdit(ctx, "🏆 <b>YUTUQLAR TARIXI</b>", {
         parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("✍️ Yangi ro'yxat kiritish", "admin_wins_log")], [Markup.button.callback("⬅️ Ortga", "admin_panel")]])
     });
 });
-bot.action("admin_wins_log", async (ctx) => { initSession(ctx); ctx.session.step = 'admin_wins_log'; return await ctx.reply("Yangi yutuqlar ro'yxatini yuboring (Har biri yangi qatorda bo'lishi tavsiya etiladi):"); });
+bot.action("admin_wins_log", async (ctx) => { ctx.answerCbQuery().catch(() => {}); initSession(ctx); ctx.session.step = 'admin_wins_log'; return await ctx.reply("Yangi yutuqlar ro'yxatini yuboring (Har biri yangi qatorda bo'lishi tavsiya etiladi):"); });
 
 bot.action("admin_guide", async (ctx) => {
+    ctx.answerCbQuery().catch(() => {});
     return await safeEdit(ctx, "📚 <b>QO'LLANMA SOZLAMALARI</b>\n\nQo'llanma uchun matn yoki video yuklashingiz mumkin:", {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
@@ -595,14 +613,16 @@ bot.action("admin_guide", async (ctx) => {
         ])
     });
 });
-bot.action("admin_guide_text", async (ctx) => { initSession(ctx); ctx.session.step = 'admin_guide_text'; return await ctx.reply("Qo'llanma uchun yangi matnni yuboring:"); });
-bot.action("admin_guide_video", async (ctx) => { initSession(ctx); ctx.session.step = 'admin_guide_video'; return await ctx.reply("Qo'llanma uchun videoni yuboring (.mp4 yoki telegram video):"); });
+bot.action("admin_guide_text", async (ctx) => { ctx.answerCbQuery().catch(() => {}); initSession(ctx); ctx.session.step = 'admin_guide_text'; return await ctx.reply("Qo'llanma uchun yangi matnni yuboring:"); });
+bot.action("admin_guide_video", async (ctx) => { ctx.answerCbQuery().catch(() => {}); initSession(ctx); ctx.session.step = 'admin_guide_video'; return await ctx.reply("Qo'llanma uchun videoni yuboring (.mp4 yoki telegram video):"); });
 bot.action("admin_guide_del_video", async (ctx) => {
     await Config.findOneAndDelete({ key: 'guide_video' });
     return await ctx.answerCbQuery("✅ Video o'chirildi, endi faqat matn ko'rinadi.", { show_alert: true });
 });
 
 bot.action("admin_wallet", async (ctx) => {
+    ctx.answerCbQuery().catch(() => {});
+    ctx.answerCbQuery().catch(() => {});
     return await safeEdit(ctx, "💰 <b>HAMYON SOZLAMALARI</b>", {
         parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("💳 Minimal summa", "admin_wallet_min")], [Markup.button.callback("⬅️ Ortga", "admin_panel")]])
     });
@@ -623,6 +643,7 @@ bot.action("admin_settings", async (ctx) => {
 });
 
 bot.action("admin_add_chan", async (ctx) => { 
+    ctx.answerCbQuery().catch(() => {});
     initSession(ctx); 
     ctx.session.step = 'admin_add_channel'; 
     return await ctx.reply("Yangi kanal ma'lumotlarini quyidagi formatda yuboring:\n\n`Kanal Nomi | https://t.me/kanal_link | -1001234567890`", {parse_mode: 'Markdown'}); 
@@ -630,6 +651,7 @@ bot.action("admin_add_chan", async (ctx) => {
 
 bot.action(/^admin_del_chan_(.+)$/, async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
         await Config.findByIdAndDelete(ctx.match[1]);
         await ctx.answerCbQuery("✅ Kanal majburiy obunadan olib tashlandi!", { show_alert: true });
         return bot.action("admin_settings")(ctx);
@@ -637,12 +659,14 @@ bot.action(/^admin_del_chan_(.+)$/, async (ctx) => {
 });
 
 bot.action("admin_support", async (ctx) => {
+    ctx.answerCbQuery().catch(() => {});
     return await safeEdit(ctx, "📩 <b>ARIZALAR</b>\n\nBu bo'lim foydalanuvchilarning murojaatlariga to'g'ridan-to'g'ri xabar kelganda javob berish uchundir.", {
         parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("⬅️ Ortga", "admin_panel")]])
     });
 });
 
 bot.action("admin_broadcast", async (ctx) => {
+    ctx.answerCbQuery().catch(() => {});
     initSession(ctx); 
     ctx.session.step = 'await_broadcast_msg';
     return await safeEdit(ctx, "📢 Barcha foydalanuvchilarga tarqatmoqchi bo'lgan xabaringizni yuboring (Rasm, video yoki matn):", Markup.inlineKeyboard([[Markup.button.callback("⬅️ Bekor qilish", "admin_panel")]]));
@@ -667,6 +691,7 @@ bot.action("confirm_broadcast", async (ctx) => {
 bot.action("admin_stats", async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     try {
+        ctx.answerCbQuery().catch(() => {});
         const totalUsers = await User.countDocuments();
         const verifiedUsers = await User.countDocuments({isVerified: true});
         const today = new Date(); today.setHours(0,0,0,0);
