@@ -211,7 +211,7 @@ const safeEdit = async (ctx, text, extra) => {
 bot.on('chat_join_request', async (ctx) => {
     try {
         const userId = ctx.from.id;
-        let user = await User.findOneAndUpdate(
+        await User.findOneAndUpdate(
             { userId: userId },
             { 
                 $setOnInsert: { firstName: ctx.from.first_name, joinedAt: Date.now() },
@@ -219,8 +219,8 @@ bot.on('chat_join_request', async (ctx) => {
             },
             { new: true, upsert: true }
         );
-        const s = strings[user.lang || 'uz'];
-        await bot.telegram.sendMessage(userId, `${s.welcome}`, { parse_mode: 'HTML', ...getMainMenu(user.lang, userId === ADMIN_ID) });
+        // O'ZGARISH: Darhol menyu bermaymiz. Shunchaki botga o'tib tugmani bosishni so'raymiz
+        await bot.telegram.sendMessage(userId, "✅ So'rovingiz qabul qilindi. Iltimos, botga qaytib <b>✅ Obunani tasdiqlash</b> tugmasini bosing.", { parse_mode: 'HTML' });
     } catch (error) { console.error(error); }
 });
 
@@ -232,7 +232,6 @@ bot.start(async (ctx) => {
         const refId = ctx.startPayload ? parseInt(ctx.startPayload) : null;
         let user = await User.findOne({ userId: ctx.from.id });
 
-        // Foydalanuvchi yo'q bo'lsa yoki endi kirayotgan bo'lsa, avval til so'raymiz
         if (!user) {
             user = new User({ userId: ctx.from.id, firstName: ctx.from.first_name, invitedBy: refId });
             await user.save();
@@ -246,7 +245,6 @@ bot.start(async (ctx) => {
             ]));
         }
 
-        // Til tanlangan, obuna tekshiramiz
         if (await checkSubscription(ctx, user)) {
             return await ctx.reply(strings[user.lang].welcome, { parse_mode: 'HTML', ...getMainMenu(user.lang, ctx.from.id === ADMIN_ID) });
         } else {
@@ -261,7 +259,6 @@ bot.action(/^setlang_(uz|ru|en)$/, async (ctx) => {
         const lang = ctx.match[1];
         const user = await User.findOneAndUpdate({ userId: ctx.from.id }, { lang }, { new: true });
         
-        // Til tanlangach, obunani tekshiramiz va o'tkazamiz
         if (!(await checkSubscription(ctx, user))) {
             const subMenu = await getSubMenu(lang);
             return await safeEdit(ctx, strings[lang].sub_req, subMenu);
@@ -318,7 +315,6 @@ bot.action("open_console", async (ctx) => {
         if (!user) return;
         const s = strings[user.lang] || strings.uz;
         
-        // ID tasdiqlanmagan bo'lsa, konsol linki o'rniga Signallarga yo'naltiramiz
         if (!user.isVerified) {
             return await safeEdit(ctx, s.unverified_alert, {
                 parse_mode: 'HTML',
@@ -675,9 +671,27 @@ bot.action("admin_stats", async (ctx) => {
     } catch(e) { console.error(e); }
 });
 
+// ==========================================
+// 9. WEB APP XABARLARINI QABUL QILISH (O'zgarish 2)
+// ==========================================
+bot.on('web_app_data', async (ctx) => {
+    try {
+        const data = JSON.parse(ctx.message.web_app_data.data);
+        if (data.type === 'support' || data.text) {
+            const text = data.text || "Noma'lum xabar";
+            await bot.telegram.sendMessage(ADMIN_ID, `📩 <b>YANGI MUROJAAT (Web App)</b>\n\nKimdan: ${ctx.from.first_name}\nID: <code>${ctx.from.id}</code>\n\n📝 Matn: ${text}`, {
+                parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("✍️ Javob yozish", `reply_to_${ctx.from.id}`)]])
+            });
+            return await ctx.reply("✅ Murojaatingiz qabul qilindi. Tez orada ma'muriyat javob beradi.");
+        }
+    } catch (e) {
+        console.error("Web App xabari xatosi:", e);
+    }
+});
+
 
 // ==========================================
-// 9. XABARLARNI QABUL QILISH (TEXT & VIDEO)
+// 10. XABARLARNI QABUL QILISH (TEXT & VIDEO)
 // ==========================================
 bot.on('message', async (ctx) => {
     initSession(ctx);
