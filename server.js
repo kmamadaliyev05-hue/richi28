@@ -368,10 +368,10 @@ bot.action(/^app_(.+)$/, async (ctx) => {
         if (!user) return;
         const s = strings[user.lang];
         const appId = ctx.match[1];
-        let name = "Platforma", regLink = "https://1xbet.com", dlLink = "https://t.me/richi28_apk";
+        let name = "Platforma", regLink = "https://refpa74525.com/L?tag=s_5580072m_6741C_&Site=5580072&ad=6741", dlLink = "https://t.me/richi28_apk";
 
         if (appId === "1xbet") { name = "1XBET"; } 
-        else if (appId === "linebet") { name = "LINEBET"; regLink = "https://linebet.com"; } 
+        else if (appId === "linebet") { name = "LINEBET"; regLink = "https://lb-aff.com/L?tag=d_5580122m_95873C_&Site=5580122&ad=95873"; } 
         else {
             if (mongoose.Types.ObjectId.isValid(appId)) {
                 const appInfo = await Config.findById(appId);
