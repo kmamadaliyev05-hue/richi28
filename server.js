@@ -287,6 +287,8 @@ bot.action(/^updatelang_(uz|ru|en)$/, async (ctx) => {
 
 bot.action("check_sub", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
+        
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return await ctx.answerCbQuery("Iltimos, botni qayta ishga tushiring: /start", { show_alert: true });
         
@@ -299,6 +301,8 @@ bot.action("check_sub", async (ctx) => {
 
 bot.action("home", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
+        
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return await ctx.answerCbQuery("Iltimos, botni qayta ishga tushiring: /start", { show_alert: true });
         return await safeEdit(ctx, strings[user.lang].welcome, { parse_mode: 'HTML', ...getMainMenu(user.lang, ctx.from.id === ADMIN_ID) });
@@ -311,6 +315,8 @@ bot.action("home", async (ctx) => {
 
 bot.action("open_console", async (ctx) => {
     try {
+        ctx.answerCbQuery().catch(() => {});
+        
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang] || strings.uz;
