@@ -19,12 +19,12 @@ const UserSchema = new mongoose.Schema({
     referrals: { type: Number, default: 0 },
     invitedBy: Number,
     notifications: { type: Boolean, default: true },
-    requestedChannels: { type: [String], default: [] },
+    requestedChannels: { type: [String], default: [] }, // Zayavka tashlagan kanallari
     joinedAt: { type: Date, default: Date.now }
 });
 
 const ConfigSchema = new mongoose.Schema({
-    key: { type: String }, // channel, app, guide, guide_video, webapp_url, ref_bonus, min_withdraw, wins_log
+    key: { type: String }, 
     name: String,
     url: String,
     chatId: String,
@@ -56,7 +56,7 @@ const strings = {
         lang_select: "🌐 Iltimos, o'zingizga qulay tilni tanlang / Выберите язык / Select language:",
         lang_changed: "✅ Tilingiz muvaffaqiyatli o'zgartirildi!",
         welcome: "⚡️ <b>[ RICHI28 HACK PORTAL ]</b> ⚡️\n\nHurmatli foydalanuvchi, tizimga xush kelibsiz!",
-        sub_req: "🔐 Botimizdan to'liq foydalanish uchun, iltimos, quyidagi kanallarga obuna bo'ling:",
+        sub_req: "🔐 Botimizdan to'liq foydalanish uchun, iltimos, quyidagi kanallarga obuna bo'ling yaki zayavka qoldiring:",
         verify_sub: "✅ Obunani tasdiqlash",
         signals_title: "🚀 O'zingizga qulay platformani tanlang va ro'yxatdan o'tib, o'yin ID raqamingizni yuboring:",
         wallet_title: (bal) => `💰 <b>SHAXSIY HAMYON</b>\n\nJoriy balansingiz: ${bal.toLocaleString()} UZS\n\n💡 <i>Eslatma: Mablag'ni yechib olish uchun hisobingizda yetarli mablag' bo'lishi kerak.</i>`,
@@ -86,7 +86,7 @@ const strings = {
         lang_select: "🌐 Выберите язык / Select language:",
         lang_changed: "✅ Язык успешно изменен!",
         welcome: "⚡️ <b>[ RICHI28 HACK PORTAL ]</b> ⚡️\n\nУважаемый пользователь, добро пожаловать в систему!",
-        sub_req: "🔐 Для полноценного использования бота, пожалуйста, подпишитесь на наши каналы:",
+        sub_req: "🔐 Для полноценного использования бота, пожалуйста, подпишитесь на наши каналы или отправьте заявку:",
         verify_sub: "✅ Подтвердить подписку",
         signals_title: "🚀 Выберите удобную платформу и отправьте свой ID:",
         wallet_title: (bal) => `💰 <b>КОШЕЛЕК</b>\n\nВаш баланс: ${bal.toLocaleString()} UZS`,
@@ -116,7 +116,7 @@ const strings = {
         lang_select: "🌐 Select language:",
         lang_changed: "✅ Language changed successfully!",
         welcome: "⚡️ <b>[ RICHI28 HACK PORTAL ]</b> ⚡️\n\nDear user, welcome to the system!",
-        sub_req: "🔐 To fully use our bot, please subscribe to our official channels:",
+        sub_req: "🔐 To fully use our bot, please subscribe to our official channels or send join request:",
         verify_sub: "✅ Verify Subscription",
         signals_title: "🚀 Please select a platform, register, and send your ID:",
         wallet_title: (bal) => `💰 <b>MY WALLET</b>\n\nCurrent balance: ${bal.toLocaleString()} UZS`,
@@ -145,7 +145,7 @@ const strings = {
 };
 
 // ==========================================
-// 4. KLAVIATURALAR VA TEKSHIRUVLAR
+// 4. KLAVIATURALAR VA TEKSHIRUVLAR (MUKAMMAL QILINGAN)
 // ==========================================
 const getMainMenu = (lang, isAdmin) => {
     const s = strings[lang] || strings.uz;
@@ -173,26 +173,34 @@ const getAdminMenu = () => {
 
 const getSubMenu = async (lang) => {
     const chans = await Config.find({ key: 'channel' });
-    const buttons = chans.map(c => [Markup.button.url(c.name || "Kanalga obuna bo'lish", c.url)]);
+    const buttons = chans.map(c => [Markup.button.url(c.name || "Kanalga o'tish", c.url)]);
     buttons.push([Markup.button.callback(strings[lang]?.verify_sub || strings.uz.verify_sub, "check_sub")]);
     return Markup.inlineKeyboard(buttons);
 };
 
+// MAJBURITY OBUNA ALGORITMI (XATOSIZ)
 const checkSubscription = async (ctx, user) => {
-    if (ctx.from.id === ADMIN_ID) return true;
+    if (ctx.from.id === ADMIN_ID) return true; // Admindan so'ramaydi
     const channels = await Config.find({ key: 'channel' });
-    if (channels.length === 0) return true;
+    if (channels.length === 0) return true; // Kanal yo'q bo'lsa o'tkazib yuboradi
     
     for (const chan of channels) {
         try {
+            // Agar foydalanuvchi bu kanalga zayavka tashlagan bo'lsa (bazada bo'lsa) obuna deb hisoblaymiz
             if (user && user.requestedChannels && user.requestedChannels.includes(chan.chatId)) continue; 
+            
+            // Kanalga obunani tekshirish
             const member = await ctx.telegram.getChatMember(chan.chatId, ctx.from.id);
-            if (['left', 'kicked'].includes(member.status)) return false;
+            if (['left', 'kicked'].includes(member.status)) {
+                return false; // Obuna yo'q yoki chiqib ketgan
+            }
         } catch (e) { 
+            // Xato bersa (Masalan zayavka yopiq kanal bo'lsa), bot uni o'qiy olmaydi, shuning uchun zayavkalarni yuqorida bazadan tekshirdik.
+            // Agar u ham, bu ham bo'lmasa, demak a'zo emas
             return false; 
         }
     }
-    return true;
+    return true; // Hamma kanallarga a'zo yoki zayavka tashlagan
 };
 
 const safeEdit = async (ctx, text, extra) => {
@@ -208,9 +216,11 @@ const safeEdit = async (ctx, text, extra) => {
     }
 };
 
+// ZAYAVKA USHLASH
 bot.on('chat_join_request', async (ctx) => {
     try {
         const userId = ctx.from.id;
+        // Foydalanuvchini bazada topib, u zayavka tashlagan kanalni saqlaymiz
         await User.findOneAndUpdate(
             { userId: userId },
             { 
@@ -219,8 +229,9 @@ bot.on('chat_join_request', async (ctx) => {
             },
             { new: true, upsert: true }
         );
-        // O'ZGARISH: Darhol menyu bermaymiz. Shunchaki botga o'tib tugmani bosishni so'raymiz
-        await bot.telegram.sendMessage(userId, "✅ So'rovingiz qabul qilindi. Iltimos, botga qaytib <b>✅ Obunani tasdiqlash</b> tugmasini bosing.", { parse_mode: 'HTML' });
+
+        // Foydalanuvchiga botga qaytishi kerakligini aytamiz
+        await bot.telegram.sendMessage(userId, "✅ <b>Zayavka yuborildi!</b>\n\nIltimos, endi <b>✅ Obunani tasdiqlash</b> tugmasini bosing.", { parse_mode: 'HTML' });
     } catch (error) { console.error(error); }
 });
 
@@ -295,9 +306,10 @@ bot.action("check_sub", async (ctx) => {
         if (!user) return await ctx.answerCbQuery("Iltimos, botni qayta ishga tushiring: /start", { show_alert: true });
         
         if (await checkSubscription(ctx, user)) {
+            // Hammasi joyida, asosiy menyuni beramiz
             return await safeEdit(ctx, strings[user.lang].welcome, { parse_mode: 'HTML', ...getMainMenu(user.lang, ctx.from.id === ADMIN_ID) });
         }
-        return await ctx.answerCbQuery("❌ Kechirasiz, siz barcha kanallarga a'zo bo'lmagansiz!", { show_alert: true });
+        return await ctx.answerCbQuery("❌ Kechirasiz, siz barcha kanallarga a'zo bo'lmagansiz yoki zayavka qabul qilinmagan!", { show_alert: true });
     } catch (error) { console.error(error); }
 });
 
@@ -307,7 +319,13 @@ bot.action("home", async (ctx) => {
         
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return await ctx.answerCbQuery("Iltimos, botni qayta ishga tushiring: /start", { show_alert: true });
-        return await safeEdit(ctx, strings[user.lang].welcome, { parse_mode: 'HTML', ...getMainMenu(user.lang, ctx.from.id === ADMIN_ID) });
+        
+        if (await checkSubscription(ctx, user)) {
+            return await safeEdit(ctx, strings[user.lang].welcome, { parse_mode: 'HTML', ...getMainMenu(user.lang, ctx.from.id === ADMIN_ID) });
+        } else {
+            const subMenu = await getSubMenu(user.lang);
+            return await safeEdit(ctx, strings[user.lang].sub_req, subMenu);
+        }
     } catch (error) { console.error(error); }
 });
 
@@ -703,7 +721,7 @@ bot.action("admin_stats", async (ctx) => {
 });
 
 // ==========================================
-// 9. WEB APP XABARLARINI QABUL QILISH (O'zgarish 2)
+// 9. WEB APP XABARLARINI QABUL QILISH
 // ==========================================
 bot.on('web_app_data', async (ctx) => {
     try {
