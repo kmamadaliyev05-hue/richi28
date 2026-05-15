@@ -4,7 +4,7 @@ const express = require('express');
 require('dotenv').config();
 
 const app = express();
-const ADMIN_ID = 6137845806; // O'zingizning ID raqamingiz
+const ADMIN_ID = Number(process.env.ADMIN_ID) || 6137845806;
 
 // ==========================================
 // 1. MA'LUMOTLAR BAZASI (MODELS)
@@ -19,7 +19,7 @@ const UserSchema = new mongoose.Schema({
     referrals: { type: Number, default: 0 },
     invitedBy: Number,
     notifications: { type: Boolean, default: true },
-    requestedChannels: { type: [String], default: [] }, // Zayavka tashlagan kanallari
+    requestedChannels: { type: [String], default: [] }, // Format: String Array
     joinedAt: { type: Date, default: Date.now }
 });
 
@@ -56,7 +56,7 @@ const strings = {
         lang_select: "🌐 Iltimos, o'zingizga qulay tilni tanlang / Выберите язык / Select language:",
         lang_changed: "✅ Tilingiz muvaffaqiyatli o'zgartirildi!",
         welcome: "⚡️ <b>[ RICHI28 HACK PORTAL ]</b> ⚡️\n\nHurmatli foydalanuvchi, tizimga xush kelibsiz!",
-        sub_req: "🔐 Botimizdan to'liq foydalanish uchun, iltimos, quyidagi kanallarga obuna bo'ling yaki zayavka qoldiring:",
+        sub_req: "🔐 Botimizdan to'liq foydalanish uchun, iltimos, quyidagi kanallarga obuna bo'ling yoki zayavka qoldiring:",
         verify_sub: "✅ Obunani tasdiqlash",
         signals_title: "🚀 O'zingizga qulay platformani tanlang va ro'yxatdan o'tib, o'yin ID raqamingizni yuboring:",
         wallet_title: (bal) => `💰 <b>SHAXSIY HAMYON</b>\n\nJoriy balansingiz: ${bal.toLocaleString()} UZS\n\n💡 <i>Eslatma: Mablag'ni yechib olish uchun hisobingizda yetarli mablag' bo'lishi kerak.</i>`,
@@ -145,7 +145,7 @@ const strings = {
 };
 
 // ==========================================
-// 4. KLAVIATURALAR VA TEKSHIRUVLAR (MUKAMMAL QILINGAN)
+// 4. KANALLARNI TEKSHIRISH (BUG FIX qilingan to'liq blok)
 // ==========================================
 const getMainMenu = (lang, isAdmin) => {
     const s = strings[lang] || strings.uz;
@@ -178,29 +178,35 @@ const getSubMenu = async (lang) => {
     return Markup.inlineKeyboard(buttons);
 };
 
-// MAJBURITY OBUNA ALGORITMI (XATOSIZ)
+// ENG ASOSIY QISM: XATOSIZ OBUNA TEKSHIRUVI
 const checkSubscription = async (ctx, user) => {
-    if (ctx.from.id === ADMIN_ID) return true; // Admindan so'ramaydi
+    if (ctx.from.id === ADMIN_ID) return true;
+    
     const channels = await Config.find({ key: 'channel' });
-    if (channels.length === 0) return true; // Kanal yo'q bo'lsa o'tkazib yuboradi
+    if (channels.length === 0) return true;
     
     for (const chan of channels) {
         try {
-            // Agar foydalanuvchi bu kanalga zayavka tashlagan bo'lsa (bazada bo'lsa) obuna deb hisoblaymiz
-            if (user && user.requestedChannels && user.requestedChannels.includes(chan.chatId)) continue; 
+            // ID ni aniq matn (String) ko'rinishiga o'tkazish
+            const chatIdStr = String(chan.chatId).trim();
             
-            // Kanalga obunani tekshirish
-            const member = await ctx.telegram.getChatMember(chan.chatId, ctx.from.id);
-            if (['left', 'kicked'].includes(member.status)) {
-                return false; // Obuna yo'q yoki chiqib ketgan
+            // 1-bosqich: Zayavka tekshirish. user.requestedChannels ichida chatIdStr bormi?
+            if (user && user.requestedChannels && user.requestedChannels.includes(chatIdStr)) {
+                continue; // Bu kanaldan o'tdi, keyingi kanalga o'tish
             }
-        } catch (e) { 
-            // Xato bersa (Masalan zayavka yopiq kanal bo'lsa), bot uni o'qiy olmaydi, shuning uchun zayavkalarni yuqorida bazadan tekshirdik.
-            // Agar u ham, bu ham bo'lmasa, demak a'zo emas
+            
+            // 2-bosqich: To'g'ridan-to'g'ri a'zolikni tekshirish
+            const member = await ctx.telegram.getChatMember(chatIdStr, ctx.from.id);
+            if (member.status === 'left' || member.status === 'kicked') {
+                return false; // Kanalga a'zo ham emas, zayavka ham yo'q
+            }
+        } catch (e) {
+            console.log(`[XATO] Kanalni tekshirishda xato (${chan.chatId}): ${e.message}`);
+            // Bot kanalga admin bo'lmasa xato beradi va false qaytaradi.
             return false; 
         }
     }
-    return true; // Hamma kanallarga a'zo yoki zayavka tashlagan
+    return true; // Barcha kanallardan muvaffaqiyatli o'tdi
 };
 
 const safeEdit = async (ctx, text, extra) => {
@@ -216,27 +222,33 @@ const safeEdit = async (ctx, text, extra) => {
     }
 };
 
-// ZAYAVKA USHLASH
+// ==========================================
+// 5. ZAYAVKANI (JOIN REQUEST) USHLASH
+// ==========================================
 bot.on('chat_join_request', async (ctx) => {
     try {
         const userId = ctx.from.id;
-        // Foydalanuvchini bazada topib, u zayavka tashlagan kanalni saqlaymiz
+        const chatIdStr = String(ctx.chat.id).trim(); // Qaysi kanalga tashlagani
+
+        // Foydalanuvchini bazada topish va zayavka kanalini qat'iy saqlash
         await User.findOneAndUpdate(
             { userId: userId },
             { 
                 $setOnInsert: { firstName: ctx.from.first_name, joinedAt: Date.now() },
-                $addToSet: { requestedChannels: ctx.chat.id.toString() }
+                $addToSet: { requestedChannels: chatIdStr } // ID raqam text formatida saqlanadi
             },
             { new: true, upsert: true }
         );
 
-        // Foydalanuvchiga botga qaytishi kerakligini aytamiz
-        await bot.telegram.sendMessage(userId, "✅ <b>Zayavka yuborildi!</b>\n\nIltimos, endi <b>✅ Obunani tasdiqlash</b> tugmasini bosing.", { parse_mode: 'HTML' });
-    } catch (error) { console.error(error); }
+        // Zayavka tushgan zahoti foydalanuvchiga xabar
+        await bot.telegram.sendMessage(userId, "✅ <b>Zayavka qabul qilindi!</b>\n\nIltimos, botga qaytib <b>✅ Obunani tasdiqlash</b> tugmasini bosing.", { parse_mode: 'HTML' });
+    } catch (error) { 
+        console.error("Join request xatosi:", error); 
+    }
 });
 
 // ==========================================
-// 5. BOTNI BOSHASH VA TIL TANLASH
+// 6. BOTNI BOSHLASH VA TIL TANLASH
 // ==========================================
 bot.start(async (ctx) => {
     try {
@@ -298,18 +310,19 @@ bot.action(/^updatelang_(uz|ru|en)$/, async (ctx) => {
     } catch (error) { console.error(error); }
 });
 
+// TASDIQLASH TUGMASI BOSILGANDA
 bot.action("check_sub", async (ctx) => {
     try {
         ctx.answerCbQuery().catch(() => {});
         
+        // Yangi user holatini olib kelamiz (Zayavka yangilangan bo'lishi mumkin)
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return await ctx.answerCbQuery("Iltimos, botni qayta ishga tushiring: /start", { show_alert: true });
         
         if (await checkSubscription(ctx, user)) {
-            // Hammasi joyida, asosiy menyuni beramiz
             return await safeEdit(ctx, strings[user.lang].welcome, { parse_mode: 'HTML', ...getMainMenu(user.lang, ctx.from.id === ADMIN_ID) });
         }
-        return await ctx.answerCbQuery("❌ Kechirasiz, siz barcha kanallarga a'zo bo'lmagansiz yoki zayavka qabul qilinmagan!", { show_alert: true });
+        return await ctx.answerCbQuery("❌ Kechirasiz, siz majburiy kanallarga a'zo bo'lmagansiz yoki zayavka tashlamagansiz!", { show_alert: true });
     } catch (error) { console.error(error); }
 });
 
@@ -330,13 +343,11 @@ bot.action("home", async (ctx) => {
 });
 
 // ==========================================
-// 6. ASOSIY BO'LIMLAR VA MANTIQ
+// 7. ASOSIY BO'LIMLAR VA MANTIQ
 // ==========================================
-
 bot.action("open_console", async (ctx) => {
     try {
         ctx.answerCbQuery().catch(() => {});
-        
         const user = await User.findOne({ userId: ctx.from.id });
         if (!user) return;
         const s = strings[user.lang] || strings.uz;
@@ -561,7 +572,6 @@ bot.action("menu_support", async (ctx) => {
 // ==========================================
 // 8. ADMIN PANEL VA BOSHQARUV
 // ==========================================
-
 bot.action("admin_panel", async (ctx) => {
     ctx.answerCbQuery().catch(() => {});
     if (ctx.from.id !== ADMIN_ID) return await ctx.answerCbQuery("Kechirasiz, bu bo'lim administratorlar uchun!", { show_alert: true });
@@ -639,7 +649,6 @@ bot.action("admin_guide_del_video", async (ctx) => {
 });
 
 bot.action("admin_wallet", async (ctx) => {
-    ctx.answerCbQuery().catch(() => {});
     ctx.answerCbQuery().catch(() => {});
     return await safeEdit(ctx, "💰 <b>HAMYON SOZLAMALARI</b>", {
         parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.callback("💳 Minimal summa", "admin_wallet_min")], [Markup.button.callback("⬅️ Ortga", "admin_panel")]])
@@ -792,7 +801,7 @@ bot.on('message', async (ctx) => {
                     ctx.session.step = null;
                     return await ctx.reply("✅ Majburiy kanal bazaga muvaffaqiyatli qo'shildi!");
                 } else {
-                    return await ctx.reply("❌ Format xato. Iltimos: `Nomi | https://t.me/link | ID` shaklida yozing.", {parse_mode: 'Markdown'});
+                    return await ctx.reply("❌ Format xato. Iltimos: `Nomi | https://t.me/link | -1001234567890` shaklida yozing.", {parse_mode: 'Markdown'});
                 }
             }
 
